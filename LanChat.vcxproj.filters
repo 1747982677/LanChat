@@ -41,5 +41,14 @@
     <None Include="doc\核心开发工具(IDE &amp; Framework).md">
       <Filter>doc</Filter>
     </None>
+    <None Include="build.ps1" />
+    <None Include="build.sh" />
+    <None Include="CMAKE_MIGRATION.md" />
+    <None Include="CMAKE_SUMMARY.md" />
+    <None Include="QUICK_REFERENCE.md" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

@@ -11,71 +11,31 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # 查找 Qt
-find_package(Qt6 COMPONENTS Core Widgets Network Sql QUIET)
+find_package(Qt6 COMPONENTS Core Widgets QUIET)
 if (NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Core Widgets Network Sql REQUIRED)
+    find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 endif()
 
 # 包含目录
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-# UI 文件目录
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/src/ui/main_window)
-
 # 源文件
 set(SOURCES
     src/main.cpp
-    src/ui/main_window/main_window.cpp
-    src/utils/logger.cpp
-    src/utils/config.cpp
-    src/network/socket_client.cpp
-    src/service/chat_service.cpp
-)
-
-set(HEADERS
-    src/ui/main_window/main_window.h
-    src/common/global.h
-    src/common/types.h
-    src/utils/logger.h
-    src/utils/config.h
-    src/network/socket_client.h
-    src/service/chat_service.h
-)
-
-set(UI_FILES
-    src/ui/main_window/main_window.ui
-)
-
-set(RESOURCES
-    src/ui/assets/resources.qrc
 )
 
 # 创建可执行文件
 if (Qt6_FOUND)
-    qt_add_executable(LanChat
-        ${SOURCES}
-        ${HEADERS}
-        ${UI_FILES}
-        ${RESOURCES}
-    )
+    qt_add_executable(LanChat ${SOURCES})
     target_link_libraries(LanChat PRIVATE
         Qt6::Core
         Qt6::Widgets
-        Qt6::Network
-        Qt6::Sql
     )
 else()
-    add_executable(LanChat
-        ${SOURCES}
-        ${HEADERS}
-        ${UI_FILES}
-        ${RESOURCES}
-    )
+    add_executable(LanChat ${SOURCES})
     target_link_libraries(LanChat
         Qt5::Core
         Qt5::Widgets
-        Qt5::Network
-        Qt5::Sql
     )
 endif()
 
@@ -84,6 +44,13 @@ if(WIN32)
     set_target_properties(LanChat PROPERTIES
         WIN32_EXECUTABLE ON
     )
+endif()
+
+# 设置编译器警告级别
+if(MSVC)
+    target_compile_options(LanChat PRIVATE /W3)
+else()
+    target_compile_options(LanChat PRIVATE -Wall -Wextra)
 endif()
 
 # 安装规则
