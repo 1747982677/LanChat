@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/lanchat">
+        <!-- Icons and image resources will be added here -->
+    </qresource>
+</RCC>

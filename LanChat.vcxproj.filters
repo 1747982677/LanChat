@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{8C7FD1B1-9C5A-4F8E-B5E1-1A2B3C4D5E6F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\common">
+      <UniqueIdentifier>{A1B2C3D4-E5F6-4A1B-9C8D-7E6F5A4B3C2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui">
+      <UniqueIdentifier>{B2C3D4E5-F6A7-4B2C-8D9E-6F7A5B4C3D2E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui\main_window">
+      <UniqueIdentifier>{C3D4E5F6-A7B8-4C3D-9E8F-7A6B5C4D3E2F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui\assets">
+      <UniqueIdentifier>{D4E5F6A7-B8C9-4D4E-8F9A-6B7C5D4E3F2A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\service">
+      <UniqueIdentifier>{E5F6A7B8-C9DA-4E5F-9A8B-7C6D5E4F3A2B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\network">
+      <UniqueIdentifier>{F6A7B8C9-DAEB-4F6A-8B9C-6D7E5F4A3B2C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utils">
+      <UniqueIdentifier>{A7B8C9DA-EBFC-4A7B-9C8D-7E6F5A4B3C2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="doc">
+      <UniqueIdentifier>{b1dfaedc-172d-45f9-8a3e-3e61cba74b35}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="doc\LanChat-Lite 系统架构设计方案.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="doc\核心开发工具(IDE &amp; Framework).md">
+      <Filter>doc</Filter>
+    </None>
+  </ItemGroup>
+</Project>
