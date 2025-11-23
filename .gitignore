@@ -9,6 +9,12 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.aps
+*.ncb
+*.tlog          # 编译日志
+*.vcxproj.user  # 用户自定义的 vcxproj 配置
+*.vcxproj.filters # 可选，如果不想提交筛选器也忽略
+*.sln.docstates # VS 文档状态
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -378,6 +384,7 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 _deps/
+CMakeUserPresets.json
 
 # CMake generated files
 *.cmake
