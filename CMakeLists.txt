@@ -7,53 +7,77 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Êä³öÄ¿Â¼
+# è¾“å‡ºç›®å½•
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# ²éÕÒ Qt
-find_package(Qt6 COMPONENTS Core Widgets QUIET)
+# æŸ¥æ‰¾ Qt
+find_package(Qt6 COMPONENTS Core Widgets Sql QUIET)
 if (NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+    find_package(Qt5 COMPONENTS Core Widgets Sql REQUIRED)
 endif()
 
-# °üº¬Ä¿Â¼
+# åŒ…å«ç›®å½•
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-# Ô´ÎÄ¼ş
+set(UI_FILES src/ui/main_window/main_window.ui)
+
+# æºæ–‡ä»¶
 set(SOURCES
     src/main.cpp
+
+    # utils
+    src/utils/logger.cpp
+    src/utils/config.cpp
+    src/utils/db_manager.cpp
+    src/utils/datebase.cpp
+
+    # model
+    src/model/message_dao.cpp
+
+     # service
+    src/service/chat_service.cpp
+    src/ui/main_window/main_window.cpp
+    src/ui/db_qwidget/DbQWidget.cpp
+
+
+
+    # network
+    # src/network/socket_client.cpp
+    ${UI_FILES} # å°† .ui æ–‡ä»¶åŠ å…¥åˆ°ç›®æ ‡æºä¸­ï¼Œå¯ç”¨ AUTOUIC ç”Ÿæˆ ui_main_window.h
 )
 
-# ´´½¨¿ÉÖ´ĞĞÎÄ¼ş
+# åˆ›å»ºå¯æ‰§è¡Œæ–‡ä»¶
 if (Qt6_FOUND)
     qt_add_executable(LanChat ${SOURCES})
     target_link_libraries(LanChat PRIVATE
         Qt6::Core
         Qt6::Widgets
+        Qt6::Sql
     )
 else()
     add_executable(LanChat ${SOURCES})
     target_link_libraries(LanChat
         Qt5::Core
         Qt5::Widgets
+        Qt5::Sql
     )
 endif()
 
-# ÉèÖÃ Windows ×ÓÏµÍ³£¨±ÜÃâ¿ØÖÆÌ¨´°¿Ú£©
+# è®¾ç½® Windows å­ç³»ç»Ÿï¼ˆé¿å…æ§åˆ¶å°çª—å£ï¼‰
 if(WIN32)
     set_target_properties(LanChat PROPERTIES
         WIN32_EXECUTABLE ON
     )
 endif()
 
-# ÉèÖÃ±àÒëÆ÷¾¯¸æ¼¶±ğ
+# è®¾ç½®ç¼–è¯‘å™¨è­¦å‘Šçº§åˆ«
 if(MSVC)
     target_compile_options(LanChat PRIVATE /W3)
 else()
     target_compile_options(LanChat PRIVATE -Wall -Wextra)
 endif()
 
-# °²×°¹æÔò
+# å®‰è£…è§„åˆ™
 install(TARGETS LanChat
     RUNTIME DESTINATION bin
 )
