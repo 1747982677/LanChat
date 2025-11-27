@@ -11,9 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # 查找 Qt
-find_package(Qt6 COMPONENTS Core Widgets Sql QUIET)
+find_package(Qt6 COMPONENTS Core Widgets Sql WebSockets Network QUIET)
 if (NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Core Widgets Sql REQUIRED)
+    find_package(Qt5 COMPONENTS Core Widgets Sql WebSockets Network REQUIRED)
 endif()
 
 # 包含目录
@@ -30,18 +30,18 @@ set(SOURCES
     # utils (来自 feature/mty/db)
     src/utils/logger.cpp
     src/utils/config.cpp
-    src/utils/db_manager.cpp
-    src/utils/datebase.cpp
+    #src/utils/db_manager.cpp
+    #src/utils/datebase.cpp
 
     # model (来自 feature/mty/db)
-    src/model/message_dao.cpp
+    #src/model/message_dao.cpp
 
     # service (来自 feature/mty/db)
-    src/service/chat_service.cpp
+    #src/service/chat_service.cpp
     
     # ui - main_window (来自 feature/mty/db 和 dev)
     src/ui/main_window/main_window.cpp
-    src/ui/db_qwidget/DbQWidget.cpp
+    #src/ui/db_qwidget/DbQWidget.cpp
     
     # ui - dev 新增的 UI 文件
     src/ui/main_window/main_window.h
@@ -56,6 +56,9 @@ set(SOURCES
     
     # network (来自 feature/mty/db)
     # src/network/socket_client.cpp
+    src/network/socket_client.cpp
+    src/network/socket_client.h
+  
     
     # UI 文件变量 (来自 feature/mty/db)
     ${UI_FILES} # 将 .ui 文件加入到目标源中，启用 AUTOUIC 生成 ui_main_window.h
@@ -70,6 +73,8 @@ if (Qt6_FOUND)
         Qt6::Core
         Qt6::Widgets
         Qt6::Sql
+        Qt6::WebSockets
+        Qt6::Network
     )
 else()
     add_executable(LanChat ${SOURCES}
@@ -79,6 +84,8 @@ else()
         Qt5::Core
         Qt5::Widgets
         Qt5::Sql
+        Qt5::WebSockets
+        Qt5::Network
     )
 endif()
 
