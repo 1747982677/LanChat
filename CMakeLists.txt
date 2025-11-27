@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+ï»¿cmake_minimum_required(VERSION 3.16)
 project(LanChat VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -7,53 +7,77 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Êä³öÄ¿Â¼
+# è¾“å‡ºç›®å½•
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# ²éÕÒ Qt
+# æŸ¥æ‰¾ Qt
 find_package(Qt6 COMPONENTS Core Widgets QUIET)
 if (NOT Qt6_FOUND)
     find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 endif()
 
-# °üº¬Ä¿Â¼
+# åŒ…å«ç›®å½•
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-# Ô´ÎÄ¼ş
+# æºæ–‡ä»¶
 set(SOURCES
     src/main.cpp
+    src/ui/main_window/main_window.cpp
+    src/ui/main_window/main_window.h
+    src/ui/main_window/ChatWindow.cpp
+    src/ui/main_window/ChatWindow.h
+    src/ui/main_window/ContactList.cpp
+    src/ui/main_window/ContactList.h
+    src/ui/main_window/MessageList.cpp
+    src/ui/main_window/MessageList.h
+    src/ui/main_window/ContactItem.cpp
+    src/ui/main_window/ContactItem.h
+
+    
+
+     
 )
 
-# ´´½¨¿ÉÖ´ĞĞÎÄ¼ş
+# åˆ›å»ºå¯æ‰§è¡Œæ–‡ä»¶
 if (Qt6_FOUND)
-    qt_add_executable(LanChat ${SOURCES})
+    qt_add_executable(LanChat ${SOURCES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+    )
     target_link_libraries(LanChat PRIVATE
         Qt6::Core
         Qt6::Widgets
     )
 else()
-    add_executable(LanChat ${SOURCES})
+    add_executable(LanChat ${SOURCES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+    )
     target_link_libraries(LanChat
         Qt5::Core
         Qt5::Widgets
     )
 endif()
 
-# ÉèÖÃ Windows ×ÓÏµÍ³£¨±ÜÃâ¿ØÖÆÌ¨´°¿Ú£©
+
+
+
+# è®¾ç½® Windows å­ç³»ç»Ÿï¼ˆé¿å…æ§åˆ¶å°çª—å£ï¼‰
 if(WIN32)
     set_target_properties(LanChat PROPERTIES
         WIN32_EXECUTABLE ON
     )
 endif()
 
-# ÉèÖÃ±àÒëÆ÷¾¯¸æ¼¶±ğ
+# è®¾ç½®ç¼–è¯‘å™¨è­¦å‘Šçº§åˆ«
 if(MSVC)
-    target_compile_options(LanChat PRIVATE /W3)
+    target_compile_options(LanChat PRIVATE
+        /W3
+        /utf-8
+    )
 else()
     target_compile_options(LanChat PRIVATE -Wall -Wextra)
 endif()
 
-# °²×°¹æÔò
+# å®‰è£…è§„åˆ™
 install(TARGETS LanChat
     RUNTIME DESTINATION bin
 )
