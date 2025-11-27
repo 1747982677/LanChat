@@ -21,7 +21,7 @@ public:
     void close();
     
 private:
-    Logger() : stream(nullptr), initialized(false) {}
+    Logger();
     ~Logger();
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
