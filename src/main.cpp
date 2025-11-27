@@ -2,28 +2,28 @@
 #include <QWidget>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QDebug>
 #include "utils/config.h"
 #include "utils/db_manager.h"
 #include "utils/logger.h"
-#include "ui/main_window/main_window.h"
+#include "ui/main_window/main_window.h" // ä¸¤ä¸ªåˆ†æ”¯éƒ½æœ‰ï¼Œåªä¿ç•™ä¸€ä¸ª
 #include "ui/db_qwidget/DbQWidget.h"
-#include <QDebug>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
-    // ³õÊ¼»¯ÈÕÖ¾
-   /* Logger::getInstance().init("lanchat.log");
+ // åˆå§‹åŒ–æ—¥å¿— (ä¿ç•™ feature/mty/db çš„ä»£ç )
+    /* Logger::getInstance().init("lanchat.log");
     Logger::getInstance().warning("111");*/
 
-    //// ¼ÓÔØÅäÖÃ
+    //// åˆå§‹åŒ–é…ç½® (ä¿ç•™ feature/mty/db çš„ä»£ç )
     //Config::getInstance().load("config.ini");
 
-    //// ´ÓÅäÖÃ¶ÁÈ¡Êı¾İ¿âÂ·¾¶£¨¿ÉÎª¿Õ£¬DatabaseManager »áÊ¹ÓÃÄ¬ÈÏÂ·¾¶£©
+    //// å°è¯•è¯»å–æ•°æ®åº“è·¯å¾„...
     //QString dbPath = Config::getInstance().getString("database/path", QString());
 
-    // ³õÊ¼»¯Êı¾İ¿â£¨Ê¾Àı£º×¢Òâ·´Ğ±¸ÜĞèÒª×ªÒå£©
+    // åˆå§‹åŒ–æ•°æ®åº“ (ä¿ç•™ feature/mty/db çš„ä»£ç )
     if (!DatabaseManager::getInstance().init(QStringLiteral("C:\\mty\\LanChat\\src\\model\\lanchat.db"))) {
         //Logger::getInstance().error("");
         qDebug().noquote() << "Failed to initialize database";
@@ -33,29 +33,16 @@ int main(int argc, char *argv[])
         qDebug().noquote() << "Database initialized";
     }
     
-   /* QWidget window;
-    window.setWindowTitle("LanChat");
-    window.resize(800, 600);
+    /* ä¸´æ—¶ UI ä»£ç ï¼ˆä¸ä¿ç•™ï¼Œæˆ–æ³¨é‡Šæ‰ï¼‰*/
     
-    QVBoxLayout* layout = new QVBoxLayout(&window);
-    QLabel* label = new QLabel("LanChat is working!", &window);
-    label->setAlignment(Qt::AlignCenter);
+    // æ˜¾ç¤º DbQWidget è¿›è¡Œè°ƒè¯• (æ ¹æ®éœ€è¦å†³å®šæ˜¯å¦ä¿ç•™)
+    //DbQWidget dbQWidget;
+    //dbQWidget.show();
     
-    QFont font = label->font();
-    font.setPointSize(14);
-    font.setBold(true);
-    label->setFont(font);
+    // æ˜¾ç¤ºä¸»çª—å£ (æ¥è‡ª dev åˆ†æ”¯ï¼Œè¿™æ˜¯åº”ç”¨æœ€ç»ˆçš„å…¥å£)
+    MainWindow::instance()->show();
     
-    layout->addWidget(label);
-    
-    window.show();*/
-
-    // ´´½¨²¢ÏÔÊ¾Ö÷´°¿Ú£¨MainWindow »áÔÚ¹¹ÔìÖĞ setupUi£©
-    DbQWidget dbQWidget;
-    dbQWidget.show();
-
-    
-    // ¹Ø±ÕÖ÷Ïß³Ì DB Á¬½Ó
+    // å…³é—­å½“å‰çº¿ç¨‹çš„ DB è¿æ¥ (ä¿ç•™ feature/mty/db çš„ä»£ç )
     DatabaseManager::getInstance().closeConnectionForCurrentThread();
     //Logger::getInstance().close();
     return app.exec();
