@@ -30,18 +30,18 @@ set(SOURCES
     # utils (来自 feature/mty/db)
     src/utils/logger.cpp
     src/utils/config.cpp
-    #src/utils/db_manager.cpp
-    #src/utils/datebase.cpp
+    src/utils/db_manager.cpp
+    src/utils/datebase.cpp
 
     # model (来自 feature/mty/db)
-    #src/model/message_dao.cpp
+    src/model/message_dao.cpp
 
     # service (来自 feature/mty/db)
-    #src/service/chat_service.cpp
+    src/service/chat_service.cpp
     
     # ui - main_window (来自 feature/mty/db 和 dev)
     src/ui/main_window/main_window.cpp
-    #src/ui/db_qwidget/DbQWidget.cpp
+    src/ui/db_qwidget/DbQWidget.cpp
     
     # ui - dev 新增的 UI 文件
     src/ui/main_window/main_window.h
@@ -55,7 +55,6 @@ set(SOURCES
     src/ui/main_window/ContactItem.h
     
     # network (来自 feature/mty/db)
-    # src/network/socket_client.cpp
     src/network/socket_client.cpp
     src/network/socket_client.h
   
