@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/chat_gray.svg</file>
+        <file>img/chat_highlight.svg</file>
+        <file>img/contact_gray.svg</file>
+        <file>img/contact_highlight.svg</file>
+        <file>img/search.svg</file>
+        <file>img/send.svg</file>
+        <file>img/setting_gray.svg</file>
+        <file>img/setting_highlight.svg</file>
+    </qresource>
+</RCC>
