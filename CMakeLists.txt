@@ -8,9 +8,16 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # 输出目录
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)                                                                             
 
 # 查找 Qt
+# 在查找 Qt 之前，临时修改 PATH，确保使用 Qt 的 rcc 而不是 Anaconda 的
+if(WIN32 AND DEFINED ENV{QTDIR})
+    # 将 Qt 的 bin 目录添加到 PATH 前面
+    set(ENV{PATH} "$ENV{QTDIR}/bin;$ENV{PATH}")
+    message(STATUS "Temporarily added Qt bin to PATH: $ENV{QTDIR}/bin")
+endif()
+
 find_package(Qt6 COMPONENTS Core Widgets Sql WebSockets Network QUIET)
 if (NOT Qt6_FOUND)
     find_package(Qt5 COMPONENTS Core Widgets Sql WebSockets Network REQUIRED)
@@ -38,10 +45,15 @@ set(SOURCES
 
     # service (来自 feature/mty/db)
     src/service/chat_service.cpp
+    src/service/auth_service.cpp
     
     # ui - main_window (来自 feature/mty/db 和 dev)
     src/ui/main_window/main_window.cpp
     src/ui/db_qwidget/DbQWidget.cpp
+    
+    # ui - login (S3: 登录窗口)
+    src/ui/login/login_window.cpp
+    src/ui/login/register_window.cpp
     
     # ui - dev 新增的 UI 文件
     src/ui/main_window/main_window.h

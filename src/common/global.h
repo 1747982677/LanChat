@@ -6,7 +6,7 @@
 namespace LanChat {
 	//全局错误码定义
 	enum class ErrorCode {
-		Success = 0;
+		Success = 0,
 		//网络与系统(1xxx)
 		NetworkError = 1001,     //网络连接失败
 		Timeout = 1002,          //网络请求超时
