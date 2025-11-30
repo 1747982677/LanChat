@@ -12,6 +12,7 @@
 #include "service/auth_service.h"
 #include "core/app_context.h"
 
+
 int main(int argc, char* argv[])
 {
 
@@ -56,17 +57,7 @@ int main(int argc, char* argv[])
     // 初始化数据库（在 Worker 线程中执行）
     context.dbLogicController()->initializeDatabase(context.databasePath());
 
-    // 显示主窗口
-    MainWindow::instance()->show();
 
-    int result = app.exec();
-
-    // 停止所有线程
-    context.stopAll();
-
-    return result;
-    
-    
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
     if (authService.isLoggedIn()) {
@@ -89,7 +80,16 @@ int main(int argc, char* argv[])
         
         loginWindow->show();
     }
-    
+
+
+    int result = app.exec();
+
+    // 停止所有线程
+    context.stopAll();
+
+    return result;
+
+
     //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
     //DatabaseManager::getInstance().closeConnectionForCurrentThread();
 }
