@@ -6,13 +6,13 @@
 #include <QJsonObject>
 
 /**
- * @brief Êý¾Ý¿âÓëÒµÎñÂß¼­ Worker
+ * @brief ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ß¼ï¿½ Worker
  * 
- * ÔËÐÐÔÚ¶ÀÁ¢µÄÂß¼­Ïß³ÌÖÐ£¬¸ºÔð£º
- * 1. Êý¾Ý¿âµÄÔöÉ¾¸Ä²é²Ù×÷
- * 2. ºÄÊ±µÄÒµÎñÂß¼­´¦Àí
- * 3. Êý¾Ý½âÎöºÍ×ª»»
- * 4. ÀúÊ·¼ÇÂ¼ËÑË÷¡¢ÎÄ¼þ´¦ÀíµÈ
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ß³ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½
+ * 1. ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½É¾ï¿½Ä²ï¿½ï¿½ï¿½ï¿½
+ * 2. ï¿½ï¿½Ê±ï¿½ï¿½Òµï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½
+ * 3. ï¿½ï¿½ï¿½Ý½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+ * 4. ï¿½ï¿½Ê·ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 class DbLogicWorker : public BaseWorker
 {
@@ -27,111 +27,111 @@ public:
 
 public slots:
     /**
-     * @brief ³õÊ¼»¯Êý¾Ý¿â
-     * @param dbPath Êý¾Ý¿âÂ·¾¶
+     * @brief ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½
+     * @param dbPath ï¿½ï¿½ï¿½Ý¿ï¿½Â·ï¿½ï¿½
      */
     void initializeDatabase(const QString& dbPath);
 
     /**
-     * @brief ±£´æÏûÏ¢µ½Êý¾Ý¿â
-     * @param message ÏûÏ¢¶ÔÏó
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½
+     * @param message ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
      */
     void saveMessage(const QJsonObject& message);
 
     /**
-     * @brief ¼ÓÔØÀúÊ·ÏûÏ¢
-     * @param contactId ÁªÏµÈË ID
-     * @param limit ¼ÓÔØÊýÁ¿ÏÞÖÆ
-     * @param offset Æ«ÒÆÁ¿
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê·ï¿½ï¿½Ï¢
+     * @param contactId ï¿½ï¿½Ïµï¿½ï¿½ ID
+     * @param limit ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     * @param offset Æ«ï¿½ï¿½ï¿½ï¿½
      */
-    // ÐÞ¸´£ºÌí¼Ó requestId ²ÎÊý
-    QString loadHistoryMessages(const QString& contactId, int limit = 50, int offset = 0);
+    // ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ requestId ï¿½ï¿½ï¿½ï¿½
+    void loadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset);
     /**
-     * @brief ËÑË÷ÏûÏ¢
-     * @param keyword ËÑË÷¹Ø¼ü´Ê
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+     * @param keyword ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½
      */
     void searchMessages(const QString& keyword);
 
     /**
-     * @brief ¸üÐÂÏûÏ¢×´Ì¬
-     * @param messageId ÏûÏ¢ ID
-     * @param status ×´Ì¬£¨Èç£ºpending, sent, delivered, read£©
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢×´Ì¬
+     * @param messageId ï¿½ï¿½Ï¢ ID
+     * @param status ×´Ì¬ï¿½ï¿½ï¿½ç£ºpending, sent, delivered, readï¿½ï¿½
      */
     void updateMessageStatus(const QString& messageId, const QString& status);
 
     /**
-     * @brief É¾³ýÏûÏ¢
-     * @param messageId ÏûÏ¢ ID
+     * @brief É¾ï¿½ï¿½ï¿½ï¿½Ï¢
+     * @param messageId ï¿½ï¿½Ï¢ ID
      */
     void deleteMessage(const QString& messageId);
 
     /**
-     * @brief ¼ÓÔØÁªÏµÈËÁÐ±í
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½Ð±ï¿½
      */
     void loadContactList();
 
     /**
-     * @brief Ìí¼ÓÁªÏµÈË
-     * @param contactInfo ÁªÏµÈËÐÅÏ¢
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+     * @param contactInfo ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Ï¢
      */
     void addContact(const QJsonObject& contactInfo);
 
     /**
-     * @brief ¸üÐÂÁªÏµÈËÐÅÏ¢
-     * @param contactId ÁªÏµÈË ID
-     * @param contactInfo ÁªÏµÈËÐÅÏ¢
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Ï¢
+     * @param contactId ï¿½ï¿½Ïµï¿½ï¿½ ID
+     * @param contactInfo ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Ï¢
      */
     void updateContact(const QString& contactId, const QJsonObject& contactInfo);
 
     /**
-     * @brief ´¦ÀíÎÄ¼þ£¨Ñ¹Ëõ¡¢×ªÂëµÈ£©
-     * @param filePath ÎÄ¼þÂ·¾¶
-     * @param options ´¦ÀíÑ¡Ïî
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½È£ï¿½
+     * @param filePath ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+     * @param options ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
      */
     void processFile(const QString& filePath, const QJsonObject& options);
 
 signals:
     /**
-     * @brief Êý¾Ý¿â³õÊ¼»¯Íê³É
+     * @brief ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void databaseInitialized(bool success);
 
     /**
-     * @brief ÏûÏ¢±£´æÍê³É
+     * @brief ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void messageSaved(bool success, const QString& messageId);
 
     /**
-     * @brief ÀúÊ·ÏûÏ¢¼ÓÔØÍê³É
-     * @param messages ÏûÏ¢ÁÐ±í£¨JSON Êý×é£©
-     * @param contactId ÁªÏµÈË ID
+     * @brief ï¿½ï¿½Ê·ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     * @param messages ï¿½ï¿½Ï¢ï¿½Ð±ï¿½ï¿½ï¿½JSON ï¿½ï¿½ï¿½é£©
+     * @param contactId ï¿½ï¿½Ïµï¿½ï¿½ ID
      */
-     // ÐÞ¸´£ºÐÅºÅÖÐ°üº¬ requestId
+     // ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½Åºï¿½ï¿½Ð°ï¿½ï¿½ï¿½ requestId
     void historyMessagesLoaded(const QString& requestId, const QJsonArray& messages, const QString& contactId);
 
     /**
-     * @brief ÏûÏ¢ËÑË÷Íê³É
-     * @param results ËÑË÷½á¹û£¨JSON Êý×é£©
+     * @brief ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     * @param results ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½JSON ï¿½ï¿½ï¿½é£©
      */
     void searchResultsReady(const QJsonArray& results);
 
     /**
-     * @brief ÏûÏ¢×´Ì¬¸üÐÂÍê³É
+     * @brief ï¿½ï¿½Ï¢×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void messageStatusUpdated(bool success, const QString& messageId);
 
     /**
-     * @brief ÁªÏµÈËÁÐ±í¼ÓÔØÍê³É
+     * @brief ï¿½ï¿½Ïµï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void contactListLoaded(const QJsonArray& contacts);
 
     /**
-     * @brief ÁªÏµÈË²Ù×÷Íê³É
+     * @brief ï¿½ï¿½Ïµï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void contactOperationCompleted(bool success, const QString& operation);
 
     /**
-     * @brief ÎÄ¼þ´¦ÀíÍê³É
+     * @brief ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void fileProcessed(bool success, const QString& filePath, const QString& resultPath);
 
