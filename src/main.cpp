@@ -10,10 +10,11 @@
 #include "ui/db_qwidget/DbQWidget.h"
 #include "ui/login/login_window.h"
 #include "service/auth_service.h"
+#include "core/app_context.h"
+
 
 int main(int argc, char* argv[])
 {
-    QApplication app(argc, argv);
 
  // 初始化日志 (保留 feature/mty/db 的代码)
     /* Logger::getInstance().init("lanchat.log");
@@ -35,12 +36,27 @@ int main(int argc, char* argv[])
         qDebug().noquote() << "Database initialized";
     }
     
-    /* 临时 UI 代码（不保留，或注释掉）*/
-    
-    // 显示 DbQWidget 进行调试 (根据需要决定是否保留)
-    //DbQWidget dbQWidget;
-    //dbQWidget.show();
-    
+
+    QApplication app(argc, argv);
+
+    // 初始化应用上下文
+    AppContext& context = AppContext::instance();
+
+    // 设置数据库路径
+    context.setDatabasePath("src\model\lanchat.db");
+
+    // 初始化所有模块
+    if (!context.initialize()) {
+        qCritical() << "Failed to initialize application";
+        return -1;
+    }
+
+    // 启动所有线程
+    context.startAll();
+
+    // 初始化数据库（在 Worker 线程中执行）
+    context.dbLogicController()->initializeDatabase(context.databasePath());
+
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
     if (authService.isLoggedIn()) {
@@ -63,9 +79,15 @@ int main(int argc, char* argv[])
         
         loginWindow->show();
     }
+
+    int result = app.exec();
+
+    // 停止所有线程
+    context.stopAll();
+
+    return result;
+
     
-    // 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
-    DatabaseManager::getInstance().closeConnectionForCurrentThread();
-    //Logger::getInstance().close();
-    return app.exec();
+    //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
+    //DatabaseManager::getInstance().closeConnectionForCurrentThread();
 }

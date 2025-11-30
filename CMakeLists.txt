@@ -10,17 +10,24 @@ set(CMAKE_AUTORCC ON)
 # 输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)                                                                             
 
-# 查找 Qt
-# 在查找 Qt 之前，临时修改 PATH，确保使用 Qt 的 rcc 而不是 Anaconda 的
-if(WIN32 AND DEFINED ENV{QTDIR})
-    # 将 Qt 的 bin 目录添加到 PATH 前面
-    set(ENV{PATH} "$ENV{QTDIR}/bin;$ENV{PATH}")
-    message(STATUS "Temporarily added Qt bin to PATH: $ENV{QTDIR}/bin")
-endif()
 
+
+# 查找 Qt（改进的逻辑）
 find_package(Qt6 COMPONENTS Core Widgets Sql WebSockets Network QUIET)
-if (NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Core Widgets Sql WebSockets Network REQUIRED)
+if (Qt6_FOUND)
+    message(STATUS "Found Qt6: ${Qt6_DIR}")
+    set(QT_VERSION_MAJOR 6)
+else()
+    message(STATUS "Qt6 not found, trying Qt5...")
+    find_package(Qt5 COMPONENTS Core Widgets Sql WebSockets Network QUIET)
+    if (Qt5_FOUND)
+        message(STATUS "Found Qt5: ${Qt5_DIR}")
+        set(QT_VERSION_MAJOR 5)
+    else()
+        message(FATAL_ERROR "Neither Qt6 nor Qt5 found!\n"
+                            "Please set CMAKE_PREFIX_PATH to your Qt installation directory.\n"
+                            "Example: cmake -DCMAKE_PREFIX_PATH=D:/ProgramData/qt/6.5.3/msvc2019_64 -S . -B build")
+    endif()
 endif()
 
 # 包含目录
@@ -33,6 +40,15 @@ set(UI_FILES src/ui/main_window/main_window.ui)
 set(SOURCES
     # Main
     src/main.cpp
+    
+    # core - 新增的多线程架构
+    src/core/base_controller.cpp
+    src/core/base_worker.cpp
+    src/core/network_controller.cpp
+    src/core/network_worker.cpp
+    src/core/dblogic_controller.cpp
+    src/core/dblogic_worker.cpp
+    src/core/app_context.cpp
     
     # utils (来自 feature/mty/db)
     src/utils/logger.cpp
@@ -76,9 +92,9 @@ set(SOURCES
 )
 
 # 创建可执行文件
-if (Qt6_FOUND)
+if (QT_VERSION_MAJOR EQUAL 6)
     qt_add_executable(LanChat ${SOURCES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
     )
     target_link_libraries(LanChat PRIVATE
         Qt6::Core
@@ -89,7 +105,7 @@ if (Qt6_FOUND)
     )
 else()
     add_executable(LanChat ${SOURCES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
     )
     target_link_libraries(LanChat
         Qt5::Core
