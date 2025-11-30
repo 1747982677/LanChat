@@ -8,6 +8,8 @@
 #include "utils/logger.h"
 #include "ui/main_window/main_window.h" // 两个分支都有，只保留一个
 #include "ui/db_qwidget/DbQWidget.h"
+#include "ui/login/login_window.h"
+#include "service/auth_service.h"
 #include "core/app_context.h"
 
 int main(int argc, char* argv[])
@@ -65,6 +67,28 @@ int main(int argc, char* argv[])
     return result;
     
     
+    // 检查是否已登录（有有效的 Token）
+    AuthService& authService = AuthService::getInstance();
+    if (authService.isLoggedIn()) {
+        // 如果已登录，直接显示主窗口
+        MainWindow::instance()->show();
+    } else {
+        // 如果未登录，显示登录窗口
+        LoginWindow* loginWindow = new LoginWindow();
+        
+        // 连接登录成功信号，登录成功后显示主窗口
+        QObject::connect(loginWindow, &LoginWindow::loginSucceeded, 
+                        [loginWindow]() {
+                            qDebug() << "main.cpp: 收到 loginSucceeded 信号";
+                            // 登录成功后，隐藏登录窗口，显示主窗口
+                            loginWindow->hide();
+                            qDebug() << "main.cpp: 隐藏登录窗口，准备显示主窗口";
+                            MainWindow::instance()->show();
+                            qDebug() << "main.cpp: 主窗口已显示";
+                        });
+        
+        loginWindow->show();
+    }
     
     //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
     //DatabaseManager::getInstance().closeConnectionForCurrentThread();
