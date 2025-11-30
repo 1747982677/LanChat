@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
     // 初始化数据库（在 Worker 线程中执行）
     context.dbLogicController()->initializeDatabase(context.databasePath());
 
+
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
     if (authService.isLoggedIn()) {
@@ -80,6 +81,7 @@ int main(int argc, char* argv[])
         loginWindow->show();
     }
 
+
     int result = app.exec();
 
     // 停止所有线程
@@ -87,7 +89,7 @@ int main(int argc, char* argv[])
 
     return result;
 
-    
+
     //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
     //DatabaseManager::getInstance().closeConnectionForCurrentThread();
 }
