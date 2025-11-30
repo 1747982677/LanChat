@@ -17,8 +17,8 @@ int main(int argc, char* argv[])
 {
 
  // 初始化日志 (保留 feature/mty/db 的代码)
-    /* Logger::getInstance().init("lanchat.log");
-    Logger::getInstance().warning("111");*/
+    Logger::getInstance().init("lanchat.log");
+    
 
     //// 初始化配置 (保留 feature/mty/db 的代码)
     //Config::getInstance().load("config.ini");
@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     //QString dbPath = Config::getInstance().getString("database/path", QString());
 
     // 初始化数据库 (保留 feature/mty/db 的代码)
+    
     if (!DatabaseManager::getInstance().init(QStringLiteral("C:\\mty\\LanChat\\src\\model\\lanchat.db"))) {
         //Logger::getInstance().error("");
         qDebug().noquote() << "Failed to initialize database";
