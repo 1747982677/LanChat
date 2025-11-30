@@ -19,7 +19,6 @@
 #include <QLabel>
 #include<QPixmap>
 
-
 MainWindow* MainWindow::m_instance = nullptr;
 
 MainWindow* MainWindow::instance()
@@ -102,6 +101,11 @@ void MainWindow::setupLeftNav()
                 m_contactPages->setCurrentIndex(id);
                 setRightPages(type);   // 使用你封装好的页面切换函数
             }
+            // 2: 设置 → 弹出设置弹窗
+            else if (type == SettingsPage) {
+                openSettingsDialog();   
+                return;
+            }
             else {
 
             }
@@ -181,6 +185,12 @@ void MainWindow::setupPages()
     //addRightPage(SettingsPage, m_settingsPage);
     addRightPage(NewFriendPage, m_newFriendPage);
 
+}
+void MainWindow::openSettingsDialog()
+{
+    // 以当前 MainWindow 作为父窗口
+    SettingDialog dlg(this);
+    dlg.exec();   // 模态对话框（阻塞当前，直到关闭）
 }
 
 void MainWindow::setupUi()
