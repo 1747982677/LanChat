@@ -18,10 +18,10 @@ public:
         return instance;
     }
     void Init(quint16 serverPort);
-    // Ê¹ÓÃ QString ÎÄ±¾Óë½ÓÊÕ·½µØÖ·
+    // Ê¹ï¿½ï¿½ QString ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½Õ·ï¿½ï¿½ï¿½Ö·
     void sendMessage(const QString& content, const QString& receiverId);
     QStringList getOnlineUsers() const;
-    // ¶¯Ì¬µ÷ÕûÔÚÏßÓÃ»§Ë¢ĞÂ¼ä¸ô(ms)£¬´«Èë <=0 ¹Ø±Õ¶¨Ê±Ë¢ĞÂ
+    // ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ë¢ï¿½Â¼ï¿½ï¿½(ms)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ <=0 ï¿½Ø±Õ¶ï¿½Ê±Ë¢ï¿½ï¿½
     void setOnlineRefreshInterval(int intervalMs);
 
 signals:
@@ -45,10 +45,10 @@ private:
 
     SocketClient* m_socketClient = nullptr;
     QStringList m_onlineUsers;
-    // ´ı·¢ËÍÏûÏ¢¶ÓÁĞ£º°´½ÓÊÕÕßµØÖ·´æ´¢ÎÄ±¾ÁĞ±í
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½Ö·ï¿½æ´¢ï¿½Ä±ï¿½ï¿½Ğ±ï¿½
     QMap<QString, QStringList> m_pendingMessages;
-    QTimer m_onlineRefreshTimer; // ¶¨Ê±Ë¢ĞÂÔÚÏßÓÃ»§
-    int m_refreshIntervalMs = 5000; // Ä¬ÈÏ 5 Ãë
+    QTimer m_onlineRefreshTimer; // ï¿½ï¿½Ê±Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½
+    int m_refreshIntervalMs = 5000; // Ä¬ï¿½ï¿½ 5 ï¿½ï¿½
 };
 
 #endif // CHAT_SERVICE_H

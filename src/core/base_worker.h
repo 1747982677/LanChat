@@ -4,10 +4,10 @@
 #include <QObject>
 
 /**
- * @brief Worker »ùÀà
+ * @brief Worker ï¿½ï¿½ï¿½ï¿½
  * 
- * ËùÓÐ Worker µÄ»ùÀà£¬ÔËÐÐÔÚ¶ÀÁ¢Ïß³ÌÖÐ
- * Worker ¸ºÔðÖ´ÐÐ¾ßÌåµÄºÄÊ±ÈÎÎñ
+ * ï¿½ï¿½ï¿½ï¿½ Worker ï¿½Ä»ï¿½ï¿½à£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½
+ * Worker ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð¾ï¿½ï¿½ï¿½Äºï¿½Ê±ï¿½ï¿½ï¿½ï¿½
  */
 class BaseWorker : public QObject
 {
@@ -18,29 +18,29 @@ public:
     virtual ~BaseWorker();
 
     /**
-     * @brief ³õÊ¼»¯ Worker
-     * @return ÊÇ·ñ³õÊ¼»¯³É¹¦
+     * @brief ï¿½ï¿½Ê¼ï¿½ï¿½ Worker
+     * @return ï¿½Ç·ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½É¹ï¿½
      */
     virtual bool initialize() = 0;
 
     /**
-     * @brief ÇåÀí Worker ×ÊÔ´
+     * @brief ï¿½ï¿½ï¿½ï¿½ Worker ï¿½ï¿½Ô´
      */
-    virtual void cleanup() = 0;
+    virtual void cleanup() {}
 
 signals:
     /**
-     * @brief Worker ³õÊ¼»¯Íê³ÉÐÅºÅ
+     * @brief Worker ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
      */
     void initialized();
 
     /**
-     * @brief Worker ´íÎóÐÅºÅ
+     * @brief Worker ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
      */
     void errorOccurred(const QString& error);
 
     /**
-     * @brief Worker ×´Ì¬±ä»¯ÐÅºÅ
+     * @brief Worker ×´Ì¬ï¿½ä»¯ï¿½Åºï¿½
      */
     void statusChanged(const QString& status);
 

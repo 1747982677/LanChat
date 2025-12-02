@@ -17,7 +17,7 @@ DatabaseManager::DatabaseManager() = default;
 
 DatabaseManager::~DatabaseManager()
 {
-    // 不在析构中移除各线程连接，线程应显式调用 closeConnectionForCurrentThread()
+    // 涓嶅湪鏋愭瀯涓Щ闄ゅ悇绾跨▼杩炴帴锛岀嚎绋嬪簲鏄惧紡璋冪敤 closeConnectionForCurrentThread()
 }
 
 QString DatabaseManager::defaultDbPath() const
@@ -57,7 +57,7 @@ bool DatabaseManager::init(const QString& dbFilePath)
         }
     }
 
-    // 性能相关 PRAGMA
+    // 鎬ц兘鐩稿叧 PRAGMA
     if (!exec("PRAGMA journal_mode = WAL;")) {
         Logger::getInstance().warning("Failed to set WAL mode");
     }
@@ -149,5 +149,22 @@ bool DatabaseManager::ensureSchema()
         return false;
     }
     exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender, receiver);");
+
+    // create chat_sessions table for unread counts
+    const QString createSessions = R"(
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            userId TEXT PRIMARY KEY,
+            nickname TEXT,
+            avatarPath TEXT,
+            lastMessage TEXT,
+            lastTime INTEGER,
+            unreadCount INTEGER DEFAULT 0
+        );
+    )";
+    if (!exec(createSessions)) {
+        Logger::getInstance().error("Failed to create chat_sessions table");
+        return false;
+    }
+
     return true;
 }

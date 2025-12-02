@@ -1,5 +1,5 @@
 #include "chat_service.h"
-#include "utils/logger.h" // ¼ÙÉèÓĞÈÕÖ¾¹¤¾ß
+#include "utils/logger.h" // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -7,19 +7,19 @@ ChatService::ChatService() : QObject(nullptr)
 {
     m_socketClient = new SocketClient(this);
 
-    // Á¬½Óµ×²ã socket ¿Í»§¶ËµÄĞÅºÅµ½±¾·şÎñµÄ²Û
+    // ï¿½ï¿½ï¿½Óµ×²ï¿½ socket ï¿½Í»ï¿½ï¿½Ëµï¿½ï¿½ÅºÅµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½
     connect(m_socketClient, &SocketClient::messageReceived, this, &ChatService::onSocketMessageReceived);
     connect(m_socketClient, &SocketClient::errorOccurred, this, &ChatService::onSocketError);
     connect(m_socketClient, &SocketClient::onlineAddressesReceived, this, &ChatService::onOnlineAddressesReceived);
     connect(m_socketClient, &SocketClient::connectedToServer, this, &ChatService::onConnectedToServer);
 
-    // ¶¨Ê±Æ÷£ºË¢ĞÂÔÚÏßÓÃ»§
+    // ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½
     connect(&m_onlineRefreshTimer, &QTimer::timeout, this, &ChatService::onRefreshOnlineUsers);
 }
 
 void ChatService::Init(quint16 serverPort)
 {
-    // 1. Æô¶¯ WebSocket ·şÎñÆ÷
+    // 1. ï¿½ï¿½ï¿½ï¿½ WebSocket ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (!m_socketClient->startServer(serverPort)) {
         Logger::getInstance().error("ChatService: Failed to start server.");
         emit errorOccurred("Failed to start server.");
@@ -27,10 +27,10 @@ void ChatService::Init(quint16 serverPort)
     }
     Logger::getInstance().log(QString("ChatService: Server started on port %1").arg(m_socketClient->getServerPort()));
 
-    // Ê×´Î¹ã²¥
+    // ï¿½×´Î¹ã²¥
     m_socketClient->broadcastGetOnlineAddresses();
 
-    // Æô¶¯¶¨Ê±Ë¢ĞÂ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ë¢ï¿½ï¿½
     if (m_refreshIntervalMs > 0) {
         m_onlineRefreshTimer.start(m_refreshIntervalMs);
     }
@@ -56,7 +56,7 @@ void ChatService::sendMessage(const QString& content, const QString& receiverId)
         return;
     }
 
-    // ¼ì²éÁ½ÖÖÁ¬½Ó£ºÎÒÃÇÁ¬³öÈ¥µÄ(client)ºÍ±ğÈËÁ¬½øÀ´µÄ(server)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½(client)ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(server)
     QStringList connectedClientAddrs = m_socketClient->getClientAddresses();
     QStringList connectedServerClientAddrs = m_socketClient->getServerClientAddresses();
 
@@ -64,7 +64,7 @@ void ChatService::sendMessage(const QString& content, const QString& receiverId)
     bool isAlreadyConnectedAsServer = connectedServerClientAddrs.contains(receiverAddress);
 
     if (isAlreadyConnectedAsClient || isAlreadyConnectedAsServer) {
-        // ÒÑ¾­Á¬½Ó£¬Ö±½Ó·¢ËÍÎÄ±¾
+        // ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ó£ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
         if (isAlreadyConnectedAsClient) {
             m_socketClient->sendMessageToServerByAddress(receiverAddress, content);
         } else {
@@ -74,13 +74,13 @@ void ChatService::sendMessage(const QString& content, const QString& receiverId)
         emit messageSent(content, receiverAddress);
     }
     else if (m_onlineUsers.contains(receiverAddress)) {
-        // ÔÚÏßµ«Î´Á¬½Ó£¬ÏÈÁ¬½ÓÔÙ·¢ËÍ
+        // ï¿½ï¿½ï¿½ßµï¿½Î´ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½
         Logger::getInstance().log(QString("User %1 is online but not connected. Queuing message and connecting...").arg(receiverAddress));
         
-        // ½«ÏûÏ¢¼ÓÈë´ı·¢ËÍ¶ÓÁĞ
+        // ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½
         m_pendingMessages[receiverAddress].append(content);
 
-        // Èç¹ûÕâÊÇµÚÒ»Ìõ´ı·¢ËÍÏûÏ¢£¬Ôò·¢ÆğÁ¬½Ó
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (m_pendingMessages[receiverAddress].size() == 1) {
             QStringList parts = receiverAddress.split(':');
             if (parts.size() == 2) {
@@ -96,7 +96,7 @@ void ChatService::sendMessage(const QString& content, const QString& receiverId)
         }
     }
     else {
-        // ÓÃ»§²»ÔÚÏß
+        // ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         Logger::getInstance().error(QString("Cannot send message: User %1 is not online.").arg(receiverAddress));
         emit errorOccurred(QString("User %1 is not online.").arg(receiverAddress));
     }
@@ -109,13 +109,13 @@ QStringList ChatService::getOnlineUsers() const
 
 void ChatService::onSocketMessageReceived(const QString& message, const QString& from)
 {
-    // Ö±½Ó×÷ÎªÎÄ±¾×ª·¢
+    // Ö±ï¿½ï¿½ï¿½ï¿½Îªï¿½Ä±ï¿½×ªï¿½ï¿½
     emit messageReceived(message, from);
 }
 
 void ChatService::onSocketError(const QString& error)
 {
-    // Ö±½Ó×ª·¢µ×²ãµÄ´íÎó
+    // Ö±ï¿½ï¿½×ªï¿½ï¿½ï¿½×²ï¿½Ä´ï¿½ï¿½ï¿½
     emit errorOccurred(error);
 }
 
@@ -128,10 +128,10 @@ void ChatService::onOnlineAddressesReceived(const QStringList& addresses)
 
 void ChatService::onConnectedToServer(const QString& address)
 {
-    // ³É¹¦Á¬½Óµ½Ò»¸ö·şÎñÆ÷ºó£¬¼ì²éÊÇ·ñÓĞ´ı·¢ËÍ¸øËüµÄÏûÏ¢
+    // ï¿½É¹ï¿½ï¿½ï¿½ï¿½Óµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó£¬¼ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ğ´ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     if (m_pendingMessages.contains(address)) {
         Logger::getInstance().log(QString("Connection to %1 established. Sending queued messages...").arg(address));
-        QStringList messagesToSend = m_pendingMessages.take(address); // È¡³ö²¢ÒÆ³ı
+        QStringList messagesToSend = m_pendingMessages.take(address); // È¡ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
         for (const auto& text : messagesToSend) {
             m_socketClient->sendMessageToServerByAddress(address, text);
             emit messageSent(text, address);
