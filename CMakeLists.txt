@@ -67,7 +67,7 @@ set(SOURCES
     # ui - main_window (来自 feature/mty/db 和 dev)
     src/ui/main_window/main_window.cpp
     src/ui/db_qwidget/DbQWidget.cpp
-    
+    src/ui/setting/settingdialog.cpp
     # ui - login (S3: 登录窗口)
     src/ui/login/login_window.cpp
     src/ui/login/register_window.cpp

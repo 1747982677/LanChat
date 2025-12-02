@@ -5,53 +5,69 @@
  * 用法：在ContactList集成
  */
 #include "ContactItem.h"
-#include <QHBoxLayout>
 #include <QPixmap>
-//
-
+#include <QPainter>
+#include <QMouseEvent>
+#include <QHBoxLayout>
+#include <QSizePolicy>
 
 ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget* parent)
     : QWidget(parent)
 {
+    m_defaultStyle = "background: transparent;";
+    m_hoverStyle = "background: rgba(0,0,0,0.04);";
+
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(5, 5, 5, 5);
+    layout->setContentsMargins(8, 6, 8, 6);
     layout->setSpacing(8);
 
     m_avatarLabel = new QLabel(this);
     m_avatarLabel->setFixedSize(40, 40);
     m_avatarLabel->setScaledContents(true);
-
-    QPixmap pixmap(avatarPath);
-    if (!pixmap.isNull()) {
-        m_avatarLabel->setPixmap(pixmap);
-    }
-    else {
-        m_avatarLabel->setStyleSheet("background-color:#666;");
-    }
+    QPixmap pix(avatarPath);
+    if (!pix.isNull()) m_avatarLabel->setPixmap(pix);
+    layout->addWidget(m_avatarLabel);
 
     m_nameLabel = new QLabel(name, this);
-
-    layout->addWidget(m_avatarLabel);
+    m_nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     layout->addWidget(m_nameLabel);
-    setLayout(layout);
 
-    // 设置默认和悬停样式
-    m_defaultStyle = "background-color: transparent; border-radius: 4px;";
-    m_hoverStyle = "background-color: #e0e0e0; border-radius: 4px;";
+    // 未读角标，初始隐藏
+    m_badgeLabel = new QLabel(this);
+    m_badgeLabel->setVisible(false);
+    m_badgeLabel->setStyleSheet(
+        "QLabel { background: red; color: white; border-radius: 10px; padding: 2px 6px; font-size: 12px; }");
+    layout->addWidget(m_badgeLabel);
 
     setStyleSheet(m_defaultStyle);
 }
 
+void ContactItem::setUnreadCount(int count)
+{
+    if (count <= 0) {
+        m_badgeLabel->setVisible(false);
+    } else {
+        m_badgeLabel->setText(count > 99 ? "99+" : QString::number(count));
+        m_badgeLabel->setVisible(true);
+    }
+}
+
 void ContactItem::enterEvent(QEnterEvent* event)
 {
-    setStyleSheet(m_hoverStyle);  // 鼠标悬停背景色
+    Q_UNUSED(event)
+    setStyleSheet(m_hoverStyle);
     emit hoverEntered(this);
-    QWidget::enterEvent(event);
 }
 
 void ContactItem::leaveEvent(QEvent* event)
 {
-    setStyleSheet(m_defaultStyle);  // 恢复默认背景
+    Q_UNUSED(event)
+    setStyleSheet(m_defaultStyle);
     emit hoverLeft(this);
-    QWidget::leaveEvent(event);
+}
+
+void ContactItem::mousePressEvent(QMouseEvent* event)
+{
+    QWidget::mousePressEvent(event);
+    emit clicked(this);
 }

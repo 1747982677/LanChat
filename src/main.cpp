@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QDebug>
+#include <QTimer>
+#include <QDateTime>
 #include "utils/config.h"
 #include "utils/db_manager.h"
 #include "utils/logger.h"
@@ -10,40 +12,29 @@
 #include "ui/db_qwidget/DbQWidget.h"
 #include "ui/login/login_window.h"
 #include "service/auth_service.h"
+#include "service/chat_service.h"
 #include "core/app_context.h"
 
 
 int main(int argc, char* argv[])
 {
-
- // 初始化日志 (保留 feature/mty/db 的代码)
-    /* Logger::getInstance().init("lanchat.log");
-    Logger::getInstance().warning("111");*/
-
-    //// 初始化配置 (保留 feature/mty/db 的代码)
-    //Config::getInstance().load("config.ini");
-
-    //// 尝试读取数据库路径...
-    //QString dbPath = Config::getInstance().getString("database/path", QString());
-
-    // 初始化数据库 (保留 feature/mty/db 的代码)
-    if (!DatabaseManager::getInstance().init(QStringLiteral("C:\\mty\\LanChat\\src\\model\\lanchat.db"))) {
-        //Logger::getInstance().error("");
-        qDebug().noquote() << "Failed to initialize database";
-    }
-    else {
-        //Logger::getInstance().log("Database initialized");
-        qDebug().noquote() << "Database initialized";
-    }
-    
+    // 初始化日志
+    Logger::getInstance().init("lanchat.log");
 
     QApplication app(argc, argv);
+
+    // 初始化数据库 (在创建 QApplication 后执行以保证 Qt 插件可用)
+    if (!DatabaseManager::getInstance().init(QStringLiteral("C:\\mty\\LanChat\\src\\model\\lanchat.db"))) {
+        qDebug().noquote() << "Failed to initialize database";
+    } else {
+        qDebug().noquote() << "Database initialized";
+    }
 
     // 初始化应用上下文
     AppContext& context = AppContext::instance();
 
     // 设置数据库路径
-    context.setDatabasePath("src\model\lanchat.db");
+    context.setDatabasePath("src\\model\\lanchat.db");
 
     // 初始化所有模块
     if (!context.initialize()) {
@@ -63,12 +54,25 @@ int main(int argc, char* argv[])
     if (authService.isLoggedIn()) {
         // 如果已登录，直接显示主窗口
         MainWindow::instance()->show();
+
+        // Debug: simulate incoming message to test unread count
+        #ifdef QT_DEBUG
+        QTimer::singleShot(1500, [](){
+            LanChat::Message msg;
+            msg.senderId = QString("user_张三");
+            msg.receiverId = QString("local_user");
+            msg.content = QStringLiteral("测试未读消息");
+            msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+            ChatService::getInstance().receiveMessage(msg);
+        });
+        #endif
+
     } else {
         // 如果未登录，显示登录窗口
         LoginWindow* loginWindow = new LoginWindow();
-        
+
         // 连接登录成功信号，登录成功后显示主窗口
-        QObject::connect(loginWindow, &LoginWindow::loginSucceeded, 
+        QObject::connect(loginWindow, &LoginWindow::loginSucceeded,
                         [loginWindow]() {
                             qDebug() << "main.cpp: 收到 loginSucceeded 信号";
                             // 登录成功后，隐藏登录窗口，显示主窗口
@@ -76,8 +80,20 @@ int main(int argc, char* argv[])
                             qDebug() << "main.cpp: 隐藏登录窗口，准备显示主窗口";
                             MainWindow::instance()->show();
                             qDebug() << "main.cpp: 主窗口已显示";
+
+                            // Debug: simulate incoming message after login to test unread count
+                            #ifdef QT_DEBUG
+                            QTimer::singleShot(1500, [](){
+                                LanChat::Message msg;
+                                msg.senderId = QString("user_张三");
+                                msg.receiverId = QString("local_user");
+                                msg.content = QStringLiteral("测试未读消息");
+                                msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+                                ChatService::getInstance().receiveMessage(msg);
+                            });
+                            #endif
                         });
-        
+
         loginWindow->show();
     }
 
@@ -92,4 +108,5 @@ int main(int argc, char* argv[])
     
     //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
     //DatabaseManager::getInstance().closeConnectionForCurrentThread();
+
 }

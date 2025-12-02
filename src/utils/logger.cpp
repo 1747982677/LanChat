@@ -1,66 +1,69 @@
 #include "logger.h"
 #include <QDebug>
-#include <QMutexLocker>
 
-Logger::Logger() : initialized(false), stream(nullptr) {} // Initialize member variables
-
-void Logger::init(const QString& filename) {
-    QMutexLocker locker(&mutex);
-    
-    logFile.setFileName(filename);
-    if (logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        stream = new QTextStream(&logFile);
-        initialized = true;
-        log("Logger initialized");
-    } else {
-        qWarning() << "Failed to open log file:" << filename;
-        stream = nullptr;
-        initialized = false;
-    }
+Logger::Logger()
+    : logFile()
+{
 }
 
-Logger::~Logger() {
+Logger::~Logger()
+{
     close();
 }
 
-void Logger::close() {
-    QMutexLocker locker(&mutex);
-    
-    if (stream) {
-        delete stream;
-        stream = nullptr;
-    }
-    
+void Logger::init(const QString& filename)
+{
     if (logFile.isOpen()) {
         logFile.close();
     }
-    
-    initialized = false;
-}
 
-void Logger::writeLog(const QString& level, const QString& message) {
-    QMutexLocker locker(&mutex);
-    
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-    QString logMessage = QString("[%1] %2: %3").arg(timestamp, level, message);
-    
-    if (initialized && stream) {
-        *stream << logMessage << Qt::endl;
-        stream->flush();
+    logFile.setFileName(filename);
+
+    if (!logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        qDebug() << "[LOGGER] Failed to open log file:" << filename;
     }
-    
-    // Also output to console
-    qDebug().noquote() << logMessage;
+    else {
+        qDebug() << "[LOGGER] Log file opened at:" << filename;
+    }
 }
 
-void Logger::log(const QString& message) {
-    writeLog("INFO", message);
+void Logger::write(const QString& levelName, const QString& message)
+{
+    QString timestamp = QDateTime::currentDateTime()
+        .toString("yyyy-MM-dd HH:mm:ss");
+    QString logLine = QString("[%1] %2: %3")
+        .arg(timestamp, levelName, message);
+
+    // VS 输出窗口
+    qDebug().noquote() << logLine;
+
+    // 文件
+    if (logFile.isOpen()) {
+        QTextStream out(&logFile);
+        out << logLine << "\n";
+        logFile.flush();
+    }
 }
 
-void Logger::error(const QString& message) {
-    writeLog("ERROR", message);
+void Logger::warning(const QString& message)
+{
+    write("WARNING", message);
 }
 
-void Logger::warning(const QString& message) {
-    writeLog("WARNING", message);
+void Logger::log(const QString& message)
+{
+    write("INFO", message);
 }
+
+void Logger::error(const QString& message)
+{
+    write("ERROR", message);
+}
+
+void Logger::close()
+{
+    if (logFile.isOpen()) {
+        logFile.close();
+    }
+}
+

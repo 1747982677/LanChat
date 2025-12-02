@@ -7,14 +7,14 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QButtonGroup>
-
+#include <QMap>  
 class MainWindow : public QWidget {
     Q_OBJECT
 public:
     enum PageType {
         ChatPage=0,//聊天页
         FriendInfo,//联系人资料页
-        //SettingsPage,//设置页
+        SettingsPage,//设置页
         NewFriendPage,//新朋友页
 
 
@@ -59,6 +59,6 @@ private:
 
     //页面映射
     void addRightPage(PageType type, QWidget* page);
-   
-
+    // 弹出设置弹窗
+    void openSettingsDialog();
 };
