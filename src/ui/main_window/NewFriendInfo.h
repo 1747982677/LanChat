@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QPushButton>
+#include <QLineEdit>
 
 class NewFriendInfo : public QDialog
 {
@@ -17,10 +18,13 @@ public:
 
 
 private:
-    QLabel* m_avatarLabel;
-    QLabel* m_nameLabel;
-    QLabel* m_accountLabel;
-    QPushButton* m_msgBtn;
+    QLabel* m_avatarLabel;//头像
+    QLabel* m_nameLabel;//昵称
+    QLabel* m_accountLabel;//账号
+    QLineEdit* m_contactRemark;//备注
+
+
+    QPushButton* m_msgBtn;//底部按钮
 
     QString m_name;
 
