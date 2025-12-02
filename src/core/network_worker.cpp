@@ -97,10 +97,12 @@ void NetworkWorker::sendMessage(const QJsonObject& message)
     }
 
     QJsonDocument doc(message);
+    // 将 QJsonObject 转换为紧凑的 JSON 字符串（字节流）
     QString jsonStr = doc.toJson(QJsonDocument::Compact);
     
     qDebug() << "Sending JSON message:" << jsonStr;
     try {
+        // 修复：发送消息到服务器
         m_socketClient->sendMessageToServer(0, jsonStr);
 
         // 修复：发送成功后发出信号

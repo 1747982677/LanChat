@@ -6,13 +6,13 @@
 #include <QJsonObject>
 
 /**
- * @brief ÍøÂçÍ¨ĞÅ Worker
+ * @brief ç½‘ç»œé€šä¿¡ Worker
  * 
- * ÔËĞĞÔÚ¶ÀÁ¢µÄÍøÂçÏß³ÌÖĞ£¬¸ºÔğ£º
- * 1. ÏûÏ¢ÊÕ·¢
- * 2. Á¬½Ó¹ÜÀí
- * 3. ĞÄÌøÎ¬»¤
- * 4. ÍøÂç×´Ì¬¼à¿Ø
+ * è¿è¡Œåœ¨ç‹¬ç«‹çš„ç½‘ç»œçº¿ç¨‹ä¸­ï¼Œè´Ÿè´£ï¼š
+ * 1. æ¶ˆæ¯æ”¶å‘
+ * 2. è¿æ¥ç®¡ç†
+ * 3. å¿ƒè·³ç»´æŠ¤
+ * 4. ç½‘ç»œçŠ¶æ€ç›‘æ§
  */
 class NetworkWorker : public BaseWorker
 {
@@ -27,70 +27,70 @@ public:
 
 public slots:
     /**
-     * @brief Á¬½Óµ½·şÎñÆ÷
-     * @param host ·şÎñÆ÷µØÖ·
-     * @param port ·şÎñÆ÷¶Ë¿Ú
+     * @brief è¿æ¥åˆ°æœåŠ¡å™¨
+     * @param host æœåŠ¡å™¨åœ°å€
+     * @param port æœåŠ¡å™¨ç«¯å£
      */
     void connectToServer(const QString& host, quint16 port);
 
     /**
-     * @brief ¶Ï¿ªÁ¬½Ó
+     * @brief æ–­å¼€è¿æ¥
      */
     void disconnectFromServer();
 
     /**
-     * @brief ·¢ËÍ JSON ÏûÏ¢
-     * @param message JSON ¶ÔÏó
+     * @brief å‘é€ JSON æ¶ˆæ¯
+     * @param message JSON å¯¹è±¡
      */
     void sendMessage(const QJsonObject& message);
 
     /**
-     * @brief ·¢ËÍÎÄ±¾ÏûÏ¢
-     * @param text ÎÄ±¾ÄÚÈİ
+     * @brief å‘é€æ–‡æœ¬æ¶ˆæ¯
+     * @param text æ–‡æœ¬å†…å®¹
      */
     void sendTextMessage(const QString& text);
 
     /**
-     * @brief Æô¶¯·şÎñÆ÷Ä£Ê½
-     * @param port ¼àÌı¶Ë¿Ú
+     * @brief å¯åŠ¨æœåŠ¡å™¨æ¨¡å¼
+     * @param port ç›‘å¬ç«¯å£
      */
     void startServer(quint16 port);
 
     /**
-     * @brief Í£Ö¹·şÎñÆ÷Ä£Ê½
+     * @brief åœæ­¢æœåŠ¡å™¨æ¨¡å¼
      */
     void stopServer();
 
 signals:
     /**
-     * @brief Á¬½Ó³É¹¦ĞÅºÅ
+     * @brief è¿æ¥æˆåŠŸä¿¡å·
      */
     void connected();
 
     /**
-     * @brief ¶Ï¿ªÁ¬½ÓĞÅºÅ
+     * @brief æ–­å¼€è¿æ¥ä¿¡å·
      */
     void disconnected();
 
     /**
-     * @brief ÊÕµ½ÏûÏ¢ĞÅºÅ
-     * @param message JSON ÏûÏ¢¶ÔÏó
-     * @param from ·¢ËÍÕßµØÖ·
+     * @brief æ”¶åˆ°æ¶ˆæ¯ä¿¡å·
+     * @param message JSON æ¶ˆæ¯å¯¹è±¡
+     * @param from å‘é€è€…åœ°å€
      */
     void messageReceived(const QJsonObject& message, const QString& from);
 
     /**
-     * @brief ÊÕµ½ÎÄ±¾ÏûÏ¢ĞÅºÅ
+     * @brief æ”¶åˆ°æ–‡æœ¬æ¶ˆæ¯ä¿¡å·
      */
     void textMessageReceived(const QString& text, const QString& from);
 
     /**
-     * @brief Á¬½Ó×´Ì¬±ä»¯ĞÅºÅ
+     * @brief è¿æ¥çŠ¶æ€å˜åŒ–ä¿¡å·
      */
     void connectionStateChanged(bool isConnected);
 
 
-    // ÏûÏ¢·¢ËÍ½á¹ûĞÅºÅ
+    // æ¶ˆæ¯å‘é€ç»“æœä¿¡å·
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
 

@@ -26,20 +26,20 @@ NetworkController& NetworkController::instance()
 
 bool NetworkController::initialize()
 {
-    // ´´½¨ Worker
+    // åˆ›å»º Worker
     QObject* worker = createWorker();
     if (!worker) {
         emit errorOccurred("Failed to create NetworkWorker");
         return false;
     }
 
-    // ÉèÖÃ Worker Ïß³Ì
+    // è®¾ç½® Worker çº¿ç¨‹
     setupWorkerThread(worker);
 
-    // Á¬½ÓĞÅºÅ
+    // è¿æ¥ä¿¡å·
     connectSignals();
 
-    // ³õÊ¼»¯ Worker£¨ĞèÒªÔÚ Worker Ïß³ÌÖĞÖ´ĞĞ£©
+    // åˆå§‹åŒ– Workerï¼ˆéœ€è¦åœ¨ Worker çº¿ç¨‹ä¸­æ‰§è¡Œï¼‰
     QMetaObject::invokeMethod(worker, "initialize", Qt::QueuedConnection);
 
     qDebug() << "NetworkController initialized";
@@ -63,7 +63,7 @@ void NetworkController::connectSignals()
         return;
     }
 
-    // Controller -> Worker ĞÅºÅ
+    // Controller -> Worker ä¿¡å·
     connect(this, &NetworkController::requestConnect,
             worker, &NetworkWorker::connectToServer);
     connect(this, &NetworkController::requestDisconnect,
@@ -77,7 +77,7 @@ void NetworkController::connectSignals()
     connect(this, &NetworkController::requestStopServer,
             worker, &NetworkWorker::stopServer);
 
-    // Worker -> Controller ĞÅºÅ£¨×ª·¢£©
+    // Worker -> Controller ä¿¡å·ï¼ˆè½¬å‘ï¼‰
     connect(worker, &NetworkWorker::connected,
             this, &NetworkController::connected);
     connect(worker, &NetworkWorker::disconnected,
@@ -91,7 +91,7 @@ void NetworkController::connectSignals()
     connect(worker, &NetworkWorker::errorOccurred,
             this, &NetworkController::errorOccurred);
 
-    // ĞÂÔö£º×ª·¢ÏûÏ¢·¢ËÍ½á¹û
+    // æ–°å¢ï¼šè½¬å‘æ¶ˆæ¯å‘é€ç»“æœ
     connect(worker, &NetworkWorker::messageSendSuccess,
         this, &NetworkController::messageSendSuccess);
     connect(worker, &NetworkWorker::messageSendFailed,
