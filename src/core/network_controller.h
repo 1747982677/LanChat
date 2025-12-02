@@ -21,6 +21,7 @@ public:
     ~NetworkController() override;
 
     bool initialize() override;
+    void start() override;
 
     /**
      * @brief 获取单例

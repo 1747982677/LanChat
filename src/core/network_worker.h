@@ -22,10 +22,10 @@ public:
     explicit NetworkWorker(QObject* parent = nullptr);
     ~NetworkWorker() override;
 
-    bool initialize() override;
     void cleanup() override;
 
 public slots:
+    bool initialize() override;
     /**
      * @brief 连接到服务器
      * @param host 服务器地址
