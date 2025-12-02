@@ -5,12 +5,12 @@
 #include <QJsonObject>
 
 /**
- * @brief ÍøÂçÍ¨ĞÅ¿ØÖÆÆ÷
+ * @brief ç½‘ç»œé€šä¿¡æ§åˆ¶å™¨
  * 
- * ÔËĞĞÔÚÖ÷Ïß³Ì£¬¸ºÔğ£º
- * 1. ¹ÜÀí NetworkWorker µÄÉúÃüÖÜÆÚ
- * 2. Ìá¹©ÍøÂç²Ù×÷µÄÍâ²¿½Ó¿Ú
- * 3. ×ª·¢ÍøÂçÊÂ¼şµ½ÉÏ²ã
+ * è¿è¡Œåœ¨ä¸»çº¿ç¨‹ï¼Œè´Ÿè´£ï¼š
+ * 1. ç®¡ç† NetworkWorker çš„ç”Ÿå‘½å‘¨æœŸ
+ * 2. æä¾›ç½‘ç»œæ“ä½œçš„å¤–éƒ¨æ¥å£
+ * 3. è½¬å‘ç½‘ç»œäº‹ä»¶åˆ°ä¸Šå±‚
  */
 class NetworkController : public BaseController
 {
@@ -21,45 +21,46 @@ public:
     ~NetworkController() override;
 
     bool initialize() override;
+    void start() override;
 
     /**
-     * @brief »ñÈ¡µ¥Àı
+     * @brief è·å–å•ä¾‹
      */
     static NetworkController& instance();
 
 public slots:
     /**
-     * @brief Á¬½Óµ½·şÎñÆ÷
+     * @brief è¿æ¥åˆ°æœåŠ¡å™¨
      */
     void connectToServer(const QString& host, quint16 port);
 
     /**
-     * @brief ¶Ï¿ªÁ¬½Ó
+     * @brief æ–­å¼€è¿æ¥
      */
     void disconnectFromServer();
 
     /**
-     * @brief ·¢ËÍÏûÏ¢
+     * @brief å‘é€æ¶ˆæ¯
      */
     void sendMessage(const QJsonObject& message);
 
     /**
-     * @brief ·¢ËÍÎÄ±¾ÏûÏ¢
+     * @brief å‘é€æ–‡æœ¬æ¶ˆæ¯
      */
     void sendTextMessage(const QString& text);
 
     /**
-     * @brief Æô¶¯·şÎñÆ÷
+     * @brief å¯åŠ¨æœåŠ¡å™¨
      */
     void startServer(quint16 port);
 
     /**
-     * @brief Í£Ö¹·şÎñÆ÷
+     * @brief åœæ­¢æœåŠ¡å™¨
      */
     void stopServer();
 
 signals:
-    // ·¢ËÍ¸ø Worker µÄĞÅºÅ
+    // å‘é€ç»™ Worker çš„ä¿¡å·
     void requestConnect(const QString& host, quint16 port);
     void requestDisconnect();
     void requestSendMessage(const QJsonObject& message);
@@ -67,14 +68,14 @@ signals:
     void requestStartServer(quint16 port);
     void requestStopServer();
 
-    // ´Ó Worker ½ÓÊÕµÄĞÅºÅ£¨×ª·¢£©
+    // ä» Worker æ¥æ”¶çš„ä¿¡å·ï¼ˆè½¬å‘ï¼‰
     void connected();
     void disconnected();
     void messageReceived(const QJsonObject& message, const QString& from);
     void textMessageReceived(const QString& text, const QString& from);
     void connectionStateChanged(bool isConnected);
 
-    // ÏûÏ¢·¢ËÍ½á¹ûĞÅºÅ
+    // æ¶ˆæ¯å‘é€ç»“æœä¿¡å·
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
 

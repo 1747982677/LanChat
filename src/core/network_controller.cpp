@@ -1,6 +1,8 @@
 #include "network_controller.h"
 #include "network_worker.h"
+#include "utils/logger.h"
 #include <QDebug>
+#include <QJsonDocument>
 
 NetworkController* NetworkController::s_instance = nullptr;
 
@@ -26,30 +28,40 @@ NetworkController& NetworkController::instance()
 
 bool NetworkController::initialize()
 {
-    // ´´½¨ Worker
+    // åˆ›å»º Worker
     QObject* worker = createWorker();
     if (!worker) {
         emit errorOccurred("Failed to create NetworkWorker");
         return false;
     }
 
-    // ÉèÖÃ Worker Ïß³Ì
+    // è®¾ç½® Worker çº¿ç¨‹
     setupWorkerThread(worker);
 
-    // Á¬½ÓĞÅºÅ
+    // è¿æ¥ä¿¡å·
     connectSignals();
 
-    // ³õÊ¼»¯ Worker£¨ĞèÒªÔÚ Worker Ïß³ÌÖĞÖ´ĞĞ£©
-    QMetaObject::invokeMethod(worker, "initialize", Qt::QueuedConnection);
-
-    qDebug() << "NetworkController initialized";
-    emit initialized();
+    // æ³¨æ„ï¼šWorker çš„ initialize() å°†åœ¨ start() åè°ƒç”¨ï¼ˆçº¿ç¨‹å¯åŠ¨åï¼‰
+    Logger::getInstance().log("[NetworkController] Controller initialized (Worker will be initialized after thread starts)");
     return true;
 }
 
 QObject* NetworkController::createWorker()
 {
     return new NetworkWorker();
+}
+
+void NetworkController::start()
+{
+    // å…ˆè°ƒç”¨çˆ¶ç±»çš„ start()ï¼Œå¯åŠ¨çº¿ç¨‹
+    BaseController::start();
+    
+    // çº¿ç¨‹å¯åŠ¨åï¼Œåˆå§‹åŒ– Worker
+    if (m_worker) {
+        Logger::getInstance().log("[NetworkController] Thread started, initializing worker...");
+        bool invoked = QMetaObject::invokeMethod(m_worker, "initialize", Qt::BlockingQueuedConnection);
+        Logger::getInstance().log(QString("[NetworkController] Worker initialization invoked: %1").arg(invoked));
+    }
 }
 
 void NetworkController::connectSignals()
@@ -63,7 +75,7 @@ void NetworkController::connectSignals()
         return;
     }
 
-    // Controller -> Worker ĞÅºÅ
+    // Controller -> Worker ä¿¡å·
     connect(this, &NetworkController::requestConnect,
             worker, &NetworkWorker::connectToServer);
     connect(this, &NetworkController::requestDisconnect,
@@ -77,13 +89,16 @@ void NetworkController::connectSignals()
     connect(this, &NetworkController::requestStopServer,
             worker, &NetworkWorker::stopServer);
 
-    // Worker -> Controller ĞÅºÅ£¨×ª·¢£©
+    // Worker -> Controller ä¿¡å·ï¼ˆè½¬å‘ï¼‰
     connect(worker, &NetworkWorker::connected,
             this, &NetworkController::connected);
     connect(worker, &NetworkWorker::disconnected,
             this, &NetworkController::disconnected);
     connect(worker, &NetworkWorker::messageReceived,
-            this, &NetworkController::messageReceived);
+            this, [this](const QJsonObject& msg, const QString& from) {
+                Logger::getInstance().log(QString("[NetworkController] messageReceived from worker, forwarding signal. from: %1").arg(from));
+                emit messageReceived(msg, from);
+            });
     connect(worker, &NetworkWorker::textMessageReceived,
             this, &NetworkController::textMessageReceived);
     connect(worker, &NetworkWorker::connectionStateChanged,
@@ -91,11 +106,20 @@ void NetworkController::connectSignals()
     connect(worker, &NetworkWorker::errorOccurred,
             this, &NetworkController::errorOccurred);
 
-    // ĞÂÔö£º×ª·¢ÏûÏ¢·¢ËÍ½á¹û
+    // æ–°å¢ï¼šè½¬å‘æ¶ˆæ¯å‘é€ç»“æœ
     connect(worker, &NetworkWorker::messageSendSuccess,
         this, &NetworkController::messageSendSuccess);
     connect(worker, &NetworkWorker::messageSendFailed,
         this, &NetworkController::messageSendFailed);
+    
+    // è½¬å‘ Worker çš„ initialized ä¿¡å·
+    connect(worker, &NetworkWorker::initialized,
+        this, [this](){
+            Logger::getInstance().log("[NetworkController] Worker initialized, emitting controller initialized signal");
+            emit initialized();
+        });
+    
+    Logger::getInstance().log("[NetworkController] All signals connected");
 }
 
 void NetworkController::connectToServer(const QString& host, quint16 port)
@@ -107,17 +131,23 @@ void NetworkController::connectToServer(const QString& host, quint16 port)
 void NetworkController::disconnectFromServer()
 {
     qDebug() << "NetworkController: Request disconnect";
+    Logger::getInstance().log("[NetworkController] disconnectFromServer called");
     emit requestDisconnect();
 }
 
 void NetworkController::sendMessage(const QJsonObject& message)
 {
+    Logger::getInstance().log(QString("[NetworkController] sendMessage called, JSON: %1")
+                             .arg(QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact))));
     emit requestSendMessage(message);
+    Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted");
 }
 
 void NetworkController::sendTextMessage(const QString& text)
 {
+    Logger::getInstance().log(QString("[NetworkController] sendTextMessage called, text: %1").arg(text));
     emit requestSendTextMessage(text);
+    Logger::getInstance().log("[NetworkController] requestSendTextMessage signal emitted");
 }
 
 void NetworkController::startServer(quint16 port)

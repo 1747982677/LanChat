@@ -11,6 +11,7 @@
 #include "ContactList.h"
 #include "MessageList.h"
 #include "ui/setting/settingdialog.h"
+#include "utils/logger.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QStackedWidget>
@@ -156,10 +157,9 @@ void MainWindow::setupPages()
     m_pages = new QStackedWidget(this);
 
     //聊天框
+    Logger::getInstance().log("[MainWindow] Creating ChatWindow...");
     m_chatPage = new ChatWindow(this);
-    auto* chatLayout = new QVBoxLayout(m_chatPage);
-    chatLayout->addWidget(new QLabel("聊天框页"));
-    chatLayout->addStretch();
+    Logger::getInstance().log(QString("[MainWindow] ChatWindow created at: %1").arg((quintptr)m_chatPage, 0, 16));
     
     // 联系人资料
     m_friendInfoPage = new QWidget(this);
