@@ -32,8 +32,12 @@ set(SOURCES
     src/ui/main_window/MessageList.h
     src/ui/main_window/ContactItem.cpp
     src/ui/main_window/ContactItem.h
-
-    
+    src/ui/main_window/NewFriendItem.cpp
+    src/ui/main_window/NewFriendItem.h
+    src/ui/main_window/NewFriendList.cpp
+    src/ui/main_window/NewFriendList.h
+    src/ui/main_window/NewFriendInfo.cpp
+    src/ui/main_window/NewFriendInfo.h
 
      
 )

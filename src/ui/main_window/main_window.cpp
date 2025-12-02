@@ -10,6 +10,7 @@
 #include "ChatWindow.h"
 #include "ContactList.h"
 #include "MessageList.h"
+#include "NewFriendList.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -170,7 +171,7 @@ void MainWindow::setupPages()
     settingLayout->addStretch();*/
    
     //新朋友
-    m_newFriendPage = new QWidget(this);
+    m_newFriendPage = new NewFriendList(this);
     auto* nfLayout = new QVBoxLayout(m_newFriendPage);
     nfLayout->addWidget(new QLabel("新朋友页"));
     nfLayout->addStretch();

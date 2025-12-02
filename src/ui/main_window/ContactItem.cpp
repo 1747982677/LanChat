@@ -7,7 +7,7 @@
 #include "ContactItem.h"
 #include <QHBoxLayout>
 #include <QPixmap>
-//
+
 
 
 ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget* parent)
