@@ -10,7 +10,7 @@
 #include "ChatWindow.h"
 #include "ContactList.h"
 #include "MessageList.h"
-
+#include "ui/setting/settingdialog.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QStackedWidget>
