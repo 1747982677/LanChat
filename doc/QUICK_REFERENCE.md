@@ -1,6 +1,6 @@
 # CMake 快速参考
 
-## ?? 快速命令
+##  快速命令
 
 ### Windows
 ```powershell
@@ -44,18 +44,18 @@ cd ..
 ./bin/LanChat
 ```
 
-## ?? 项目文件说明
+##  项目文件说明
 
 | 文件 | 用途 | 是否提交 Git |
 |------|------|-------------|
-| `CMakeLists.txt` | CMake 配置文件 | ? 是 |
-| `build.ps1` | Windows 构建脚本 | ? 是 |
-| `build.sh` | Linux/macOS 构建脚本 | ? 是 |
-| `build/` | 构建目录 | ? 否 |
-| `bin/` | 可执行文件输出 | ? 否 |
-| `LanChat.vcxproj*` | Visual Studio 项目 | ?? 可选 |
+| `CMakeLists.txt` | CMake 配置文件 | 是 |
+| `build.ps1` | Windows 构建脚本 | 是 |
+| `build.sh` | Linux/macOS 构建脚本 | 是 |
+| `build/` | 构建目录 | 否 |
+| `bin/` | 可执行文件输出 | 否 |
+| `LanChat.vcxproj*` | Visual Studio 项目 | 可选 |
 
-## ?? 常用 CMake 命令
+##  常用 CMake 命令
 
 ```bash
 # 配置项目
@@ -81,7 +81,7 @@ cmake --install build
 cmake --help
 ```
 
-## ?? IDE 使用
+##  IDE 使用
 
 ### Visual Studio 2022
 1. 文件 → 打开 → 文件夹
@@ -100,7 +100,7 @@ cmake --help
 2. 自动加载 CMakeLists.txt
 3. 直接运行/调试
 
-## ?? 故障排除
+##  故障排除
 
 ### 找不到 Qt
 ```bash
@@ -127,19 +127,19 @@ rm -rf build
 cmake -B build
 ```
 
-## ?? 文档索引
+##  文档索引
 
 - **CMAKE_MIGRATION.md** - 迁移说明和快速开始
 - **CMAKE_SUMMARY.md** - 完整总结
 - **doc/CMake构建指南.md** - 详细使用指南
 - **QUICK_REFERENCE.md** - 本文档
 
-## ?? 提示
+##  提示
 
-- ? 构建目录（`build/`）不要提交到 Git
-- ? 首次运行可能需要指定 Qt 路径
-- ? 修改 CMakeLists.txt 后重新运行 cmake
-- ? 跨平台开发时保持配置文件同步
+-  构建目录（`build/`）不要提交到 Git
+-  首次运行可能需要指定 Qt 路径
+-  修改 CMakeLists.txt 后重新运行 cmake
+-  跨平台开发时保持配置文件同步
 
 ---
 
