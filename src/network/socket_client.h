@@ -9,6 +9,9 @@
 #include <QWebSocketServer>
 #include <QTimer>
 #include <QMap>
+#include <QSet>
+#include <QUdpSocket>
+#include <QJsonArray>
 
 // - æ”¯æŒä½œä¸º WebSocket æœåŠ¡å™¨ï¼ˆæ¥æ”¶å¤šä¸ªå®¢æˆ·ç«¯è¿æ¥ã€å¹¿æ’­ä¸å•å‘ï¼‰
 // - æ”¯æŒä½œä¸º WebSocket å®¢æˆ·ç«¯ï¼Œå¯ä»¥åŒæ—¶è¿æ¥åˆ°å¤šä¸ªè¿œç«¯æœåŠ¡å™¨
@@ -57,6 +60,11 @@ public:
     int getConnectedClientCount() const;
     QStringList getServerClientAddresses() const;
 
+    // -------------------- ¹ã²¥»ñÈ¡ÔÚÏßÓÃ»§£¨ĞÂÔö£© --------------------
+    // Í¨¹ıÔÚÒÑ½¨Á¢µÄ websocket Á¬½ÓÉÏ¹ã²¥²éÑ¯£¬ÊÕ¼¯ËùÓĞÔÚÏß½ÚµãÏìÓ¦µÄµØÖ·£¨È¥ÖØ£©
+    // timeoutMs£ºµÈ´ıÏìÓ¦µÄºÁÃëÊı£¬³¬Ê±ºó»á´¥·¢ onlineAddressesReceived
+    void broadcastGetOnlineAddresses(int timeoutMs = 1000);
+
 signals:
     // æ”¶åˆ°æ¶ˆæ¯ï¼ˆæ— è®ºæ¥è‡ªæœåŠ¡ç«¯è¿˜æ˜¯å®¢æˆ·ç«¯è¿æ¥ï¼‰
     // å‚æ•°ï¼šæ¶ˆæ¯å†…å®¹, æ¥æºåœ°å€ï¼ˆæ ¼å¼ ip:portï¼‰
@@ -77,6 +85,9 @@ signals:
     void clientConnected(const QString &clientAddress);
     void clientDisconnected(const QString &clientAddress);
 
+    // ¹ã²¥²éÑ¯µ½µÄÔÚÏßµØÖ·£¨È¥ÖØºó·µ»Ø£©
+    void onlineAddressesReceived(const QStringList &addresses);
+
 private slots:
     // å®¢æˆ·ç«¯æ§½ï¼ˆå¤šä¸ª QWebSocket å¤ç”¨è¿™äº›æ§½ï¼‰
     void onClientConnected();
@@ -89,6 +100,9 @@ private slots:
     void onNewConnection();
     void onServerClientDisconnected();
     void onServerClientTextMessageReceived(const QString &message);
+
+    // UDP discovery
+    void onUdpReadyRead();
 
 private:
     // ä½œä¸ºå®¢æˆ·ç«¯çš„å¤šä¸ªè¿æ¥
@@ -116,6 +130,17 @@ private:
     QString getClientAddress(QWebSocket *client) const;
 	// æ¸…ç†æŸä¸ªå®¢æˆ·ç«¯è¿æ¥èµ„æº
     void cleanupClientResources(QWebSocket* client);
+
+    // -------------------- ¹ã²¥²éÑ¯Ïà¹ØË½ÓĞ³ÉÔ± --------------------
+    QTimer *onlineQueryTimer = nullptr;
+    QSet<QString> onlineQueryResponses;
+
+    // UDP discovery socket
+    QUdpSocket *discoverySocket = nullptr;
+    quint16 discoveryPort = 45454; // default discovery port
+
+    // ÊÕ¼¯±¾»ú¿ÉÓÃµÄ¶ÔÍâ·şÎñ/Á¬½Ó¶Ëµã (ip:port)£¬ÓÃÓÚÔÚ·¢ÏÖ½×¶ÎÁ¢¼´¼ÓÈë½á¹ûÖĞ
+    QStringList collectLocalEndpoints() const;
 };
 
 #endif // SOCKET_CLIENT_H
