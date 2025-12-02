@@ -3,11 +3,40 @@
 
 #include <QHostAddress>
 #include <QUrl>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkInterface>
 
 // -------------------- Construction --------------------
 SocketClient::SocketClient(QObject *parent)
     : QObject(parent), webSocketServer(nullptr), maxReconnectAttempts(10)
 {
+    onlineQueryTimer = new QTimer(this);
+    onlineQueryTimer->setSingleShot(true);
+    connect(onlineQueryTimer, &QTimer::timeout, this, [this]() {
+        // 超时后直接发射收集到的在线地址
+        QStringList list = onlineQueryResponses.values();
+        Logger::getInstance().log(QString("Collected %1 online addresses via UDP broadcast").arg(list.size()));
+        emit onlineAddressesReceived(list);
+        onlineQueryResponses.clear();
+    });
+
+    // UDP discovery socket - 所有实例监听同一个 discoveryPort
+    discoverySocket = new QUdpSocket(this);
+    // 开启地址复用,允许多个进程绑定同一端口
+    // discoverySocket->setSocketOption(QAbstractSocket::ReuseAddressHint, 1);
+    // 开启回环,确保本机广播能被接收
+    discoverySocket->setSocketOption(QAbstractSocket::MulticastLoopbackOption, true);
+    
+    // 绑定到固定的 discoveryPort,使用 ShareAddress + ReuseAddressHint
+    if (!discoverySocket->bind(QHostAddress::AnyIPv4, discoveryPort, 
+                               QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
+        Logger::getInstance().error(QString("UDP discovery bind to port %1 failed: %2")
+            .arg(discoveryPort).arg(discoverySocket->errorString()));
+    } else {
+        connect(discoverySocket, &QUdpSocket::readyRead, this, &SocketClient::onUdpReadyRead);
+        Logger::getInstance().log(QString("UDP discovery socket successfully bound to port %1").arg(discoveryPort));
+    }
 }
 
 SocketClient::~SocketClient()
@@ -23,6 +52,12 @@ SocketClient::~SocketClient()
 
     // 清理服务器
     stopServer();
+
+    if (discoverySocket) {
+        discoverySocket->close();
+        discoverySocket->deleteLater();
+        discoverySocket = nullptr;
+    }
 }
 
 // -------------------- Server API --------------------
@@ -47,8 +82,11 @@ bool SocketClient::startServer(quint16 port)
     }
 
     connect(webSocketServer, &QWebSocketServer::newConnection, this, &SocketClient::onNewConnection);
-    Logger::getInstance().log(QString("WebSocket server started on port %1").arg(webSocketServer->serverPort()));
-    emit serverStarted(webSocketServer->serverPort());
+    // 打印服务 IP 与端口（注意 Any 绑定时为 0.0.0.0，实际本机地址可通过 network interfaces 获取）
+    const QHostAddress addr = webSocketServer->serverAddress();
+    const quint16 sport = webSocketServer->serverPort();
+    Logger::getInstance().log(QString("WebSocket server started on %1:%2").arg(addr.toString()).arg(sport));
+    emit serverStarted(sport);
     return true;
 }
 
@@ -118,21 +156,6 @@ void SocketClient::sendMessageToClientByAddress(const QString& clientAddress, co
     Logger::getInstance().error(QString("Server client %1 not found").arg(clientAddress));
 }
 
-void SocketClient::broadcastMessage(const QString &message)
-{
-    if (!isServerRunning()) {
-        Logger::getInstance().error("Cannot broadcast: server is not running");
-        return;
-    }
-    int sent = 0;
-    for (QWebSocket *c : serverClients) {
-        if (c->state() == QAbstractSocket::ConnectedState) {
-            c->sendTextMessage(message);
-            ++sent;
-        }
-    }
-    Logger::getInstance().log(QString("Broadcasted message to %1 clients").arg(sent));
-}
 
 int SocketClient::getConnectedClientCount() const
 {
@@ -308,6 +331,30 @@ void SocketClient::onServerClientTextMessageReceived(const QString &message)
 {
     QWebSocket *client = qobject_cast<QWebSocket*>(sender());
     if (!client) return;
+
+    // 解析 JSON 控制消息（online_query / online_response）
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8(), &err);
+    if (!doc.isNull() && err.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject obj = doc.object();
+        QString type = obj.value(QStringLiteral("type")).toString();
+        if (type == QStringLiteral("online_query")) {
+            // 收到查询 -> 以在线响应回复（告诉对方本端在服务器视角的 peer 地址）
+            QJsonObject resp;
+            resp.insert(QStringLiteral("type"), QStringLiteral("online_response"));
+            resp.insert(QStringLiteral("address"), QJsonValue(getClientAddress(client)));
+            client->sendTextMessage(QString::fromUtf8(QJsonDocument(resp).toJson(QJsonDocument::Compact)));
+            return; // 控制消息，不触发普通 messageReceived
+        } else if (type == QStringLiteral("online_response")) {
+            QString addr = obj.value(QStringLiteral("address")).toString();
+            if (!addr.isEmpty()) {
+                onlineQueryResponses.insert(addr);
+            }
+            return; // 控制消息，不触发普通 messageReceived
+        }
+    }
+
+    // 非控制消息，保持原有行为
     QString addr = getClientAddress(client);
     Logger::getInstance().log(QString("Message from client %1: %2").arg(addr).arg(message));
     emit messageReceived(message, addr);
@@ -372,6 +419,31 @@ void SocketClient::onClientTextMessageReceived(const QString &message)
 {
     QWebSocket *client = qobject_cast<QWebSocket*>(sender());
     if (!client) return;
+
+    // 解析 JSON 控制消息（online_query / online_response）
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8(), &err);
+    if (!doc.isNull() && err.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject obj = doc.object();
+        QString type = obj.value(QStringLiteral("type")).toString();
+        if (type == QStringLiteral("online_query")) {
+            // 收到查询 -> 作为客户端回复本端局部地址（localAddress:localPort）
+            QJsonObject resp;
+            resp.insert(QStringLiteral("type"), QStringLiteral("online_response"));
+            QString myAddr = QString("%1:%2").arg(client->localAddress().toString()).arg(client->localPort());
+            resp.insert(QStringLiteral("address"), QJsonValue(myAddr));
+            client->sendTextMessage(QString::fromUtf8(QJsonDocument(resp).toJson(QJsonDocument::Compact)));
+            return; // 控制消息，不触发普通 messageReceived
+        } else if (type == QStringLiteral("online_response")) {
+            QString addr = obj.value(QStringLiteral("address")).toString();
+            if (!addr.isEmpty()) {
+                onlineQueryResponses.insert(addr);
+            }
+            return; // 控制消息，不触发普通 messageReceived
+        }
+    }
+
+    // 非控制消息，保持原有行为
     QString addr = getClientAddress(client);
     Logger::getInstance().log(QString("Message from server %1: %2").arg(addr).arg(message));
     // reset missed pongs on any incoming message as well (optional)
@@ -423,5 +495,99 @@ void SocketClient::onClientPong(quint64 elapsedTime)
     QWebSocket *client = qobject_cast<QWebSocket*>(sender());
     if (!client) return;
     missedPongs[client] = 0;
+}
+
+
+void SocketClient::broadcastGetOnlineAddresses(int timeoutMs)
+{
+    onlineQueryResponses.clear();
+
+    // 🔧 UDP 广播:在请求中直接携带本机 WebSocket 服务器的所有地址
+    if (discoverySocket && isServerRunning()) {
+        const quint16 wsPort = webSocketServer->serverPort();
+        QJsonArray myAddresses;
+        
+        // 枚举本机所有 IPv4 地址(包括回环 127.0.0.1)
+        for (const QNetworkInterface &iface : QNetworkInterface::allInterfaces()) {
+            if (!(iface.flags() & QNetworkInterface::IsUp)) continue;
+            for (const QNetworkAddressEntry &entry : iface.addressEntries()) {
+                QHostAddress addr = entry.ip();
+                if (addr.protocol() == QAbstractSocket::IPv4Protocol) {
+                    myAddresses.append(QString("%1:%2").arg(addr.toString()).arg(wsPort));
+                }
+            }
+        }
+        
+        if (!myAddresses.isEmpty()) {
+            QJsonObject packet;
+            packet.insert(QStringLiteral("type"), QStringLiteral("discover"));
+            packet.insert(QStringLiteral("addresses"), myAddresses);
+            
+            QByteArray payload = QJsonDocument(packet).toJson(QJsonDocument::Compact);
+            
+            // 发送到标准广播地址(局域网)
+            discoverySocket->writeDatagram(payload, QHostAddress::Broadcast, discoveryPort);
+            
+            // 发送到本机回环地址(同机多实例)
+            discoverySocket->writeDatagram(payload, QHostAddress::LocalHost, discoveryPort);
+            
+            Logger::getInstance().log(QString("Sent UDP broadcast with %1 addresses (LAN + localhost)")
+                .arg(myAddresses.size()));
+        }
+    }
+
+    // WebSocket 已有连接查询(保持不变)
+    if (isServerRunning() || !clientSockets.isEmpty()) {
+        QJsonObject q;
+        q.insert(QStringLiteral("type"), QStringLiteral("online_query"));
+        QString payload = QString::fromUtf8(QJsonDocument(q).toJson(QJsonDocument::Compact));
+
+        if (isServerRunning()) {
+            for (QWebSocket *c : serverClients) {
+                if (c->state() == QAbstractSocket::ConnectedState)
+                    c->sendTextMessage(payload);
+            }
+        }
+        for (QWebSocket *c : clientSockets) {
+            if (c->state() == QAbstractSocket::ConnectedState)
+                c->sendTextMessage(payload);
+        }
+    }
+
+    if (timeoutMs <= 0) timeoutMs = 1000;
+    onlineQueryTimer->start(timeoutMs);
+}
+
+void SocketClient::onUdpReadyRead()
+{
+    while (discoverySocket && discoverySocket->hasPendingDatagrams()) {
+        QHostAddress sender;
+        quint16 senderPort;
+        QByteArray datagram;
+        datagram.resize(int(discoverySocket->pendingDatagramSize()));
+        discoverySocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(datagram, &err);
+        if (!doc.isNull() && err.error == QJsonParseError::NoError && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            QString type = obj.value(QStringLiteral("type")).toString();
+            
+            // 🔧 简化:只处理 discover 类型,直接提取地址,不响应
+            if (type == QStringLiteral("discover")) {
+                QJsonArray addresses = obj.value(QStringLiteral("addresses")).toArray();
+                if (!addresses.isEmpty()) {
+                    for (const QJsonValue &v : addresses) {
+                        if (v.isString()) {
+                            QString addr = v.toString();
+                            onlineQueryResponses.insert(addr);
+                        }
+                    }
+                    Logger::getInstance().log(QString("Received UDP discover from %1:%2 with %3 addresses")
+                        .arg(sender.toString()).arg(senderPort).arg(addresses.size()));
+                }
+            }
+        }
+    }
 }
 

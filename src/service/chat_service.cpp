@@ -1,137 +1,147 @@
 #include "chat_service.h"
-#include "utils/logger.h"
-#include "utils/db_manager.h"
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QMutexLocker>
-#include <QDebug>
+#include "utils/logger.h" // ��������־����
+#include <QJsonDocument>
+#include <QJsonObject>
 
-ChatService::ChatService()
+ChatService::ChatService() : QObject(nullptr)
 {
-    // 将未读消息从数据库加载到内存缓存
-    QSqlDatabase db = DatabaseManager::getInstance().database();
-    if (db.isValid() && db.isOpen()) {
-        QSqlQuery q(db);
-        if (q.exec("SELECT userId, unreadCount FROM chat_sessions")) {
-            while (q.next()) {
-                QString uid = q.value(0).toString();
-                int cnt = q.value(1).toInt();
-                QMutexLocker locker(&m_mutex);
-                m_unreadMap[uid] = cnt;
-            }
-        } else {
-            Logger::getInstance().log(QString("Failed to load chat_sessions: %1").arg(q.lastError().text()));
-        }
+    m_socketClient = new SocketClient(this);
+
+    // ���ӵײ� socket �ͻ��˵��źŵ�������Ĳ�
+    connect(m_socketClient, &SocketClient::messageReceived, this, &ChatService::onSocketMessageReceived);
+    connect(m_socketClient, &SocketClient::errorOccurred, this, &ChatService::onSocketError);
+    connect(m_socketClient, &SocketClient::onlineAddressesReceived, this, &ChatService::onOnlineAddressesReceived);
+    connect(m_socketClient, &SocketClient::connectedToServer, this, &ChatService::onConnectedToServer);
+
+    // ��ʱ����ˢ�������û�
+    connect(&m_onlineRefreshTimer, &QTimer::timeout, this, &ChatService::onRefreshOnlineUsers);
+}
+
+void ChatService::Init(quint16 serverPort)
+{
+    // 1. ���� WebSocket ������
+    if (!m_socketClient->startServer(serverPort)) {
+        Logger::getInstance().error("ChatService: Failed to start server.");
+        emit errorOccurred("Failed to start server.");
+        return;
+    }
+    Logger::getInstance().log(QString("ChatService: Server started on port %1").arg(m_socketClient->getServerPort()));
+
+    // �״ι㲥
+    m_socketClient->broadcastGetOnlineAddresses();
+
+    // ������ʱˢ��
+    if (m_refreshIntervalMs > 0) {
+        m_onlineRefreshTimer.start(m_refreshIntervalMs);
+    }
+}
+
+void ChatService::setOnlineRefreshInterval(int intervalMs)
+{
+    m_refreshIntervalMs = intervalMs;
+    if (intervalMs <= 0) {
+        m_onlineRefreshTimer.stop();
+        Logger::getInstance().log("Online user auto-refresh disabled.");
     } else {
-        Logger::getInstance().log("DB not open when ChatService initializing unread map");
+        m_onlineRefreshTimer.start(intervalMs);
+        Logger::getInstance().log(QString("Online user auto-refresh interval set to %1 ms").arg(intervalMs));
     }
 }
 
-void ChatService::sendMessage(const LanChat::Message& message)
+void ChatService::sendMessage(const QString& content, const QString& receiverId)
 {
-    Logger::getInstance().log("Sending message from service layer");
-    // TODO: ���ﰴ��ԭ�����߼� -> �� DB -> ���緢��
-    emit messageSent(message);
-}
+    QString receiverAddress = receiverId;
+    if (receiverAddress.isEmpty()) {
+        emit errorOccurred("Receiver address is empty.");
+        return;
+    }
 
-void ChatService::receiveMessage(const LanChat::Message& message)
-{
-    Logger::getInstance().log("Receiving message in service layer");
+    // ����������ӣ���������ȥ��(client)�ͱ�����������(server)
+    QStringList connectedClientAddrs = m_socketClient->getClientAddresses();
+    QStringList connectedServerClientAddrs = m_socketClient->getServerClientAddresses();
 
-    // 1) 保存消息到数据库
-    {
-        QSqlDatabase db = DatabaseManager::getInstance().database();
-        if (!db.isValid() || !db.isOpen()) {
-            emit errorOccurred("Database not open when saving message");
-            Logger::getInstance().log("DB not open when saving message");
+    bool isAlreadyConnectedAsClient = connectedClientAddrs.contains(receiverAddress);
+    bool isAlreadyConnectedAsServer = connectedServerClientAddrs.contains(receiverAddress);
+
+    if (isAlreadyConnectedAsClient || isAlreadyConnectedAsServer) {
+        // �Ѿ����ӣ�ֱ�ӷ����ı�
+        if (isAlreadyConnectedAsClient) {
+            m_socketClient->sendMessageToServerByAddress(receiverAddress, content);
         } else {
-            QSqlQuery q(db);
-            q.prepare("INSERT INTO messages (sender, receiver, content, timestamp, status, extra) VALUES (:sender, :receiver, :content, :timestamp, :status, :extra)");
-            q.bindValue(":sender", message.senderId);
-            q.bindValue(":receiver", message.receiverId);
-            q.bindValue(":content", message.content);
-            q.bindValue(":timestamp", static_cast<qint64>(message.timestamp));
-            q.bindValue(":status", static_cast<int>(message.status));
-            q.bindValue(":extra", "");
-            if (!q.exec()) {
-                Logger::getInstance().log(QString("Failed insert message: %1").arg(q.lastError().text()));
+            m_socketClient->sendMessageToClientByAddress(receiverAddress, content);
+        }
+        Logger::getInstance().log(QString("Sent message directly to %1").arg(receiverAddress));
+        emit messageSent(content, receiverAddress);
+    }
+    else if (m_onlineUsers.contains(receiverAddress)) {
+        // ���ߵ�δ���ӣ��������ٷ���
+        Logger::getInstance().log(QString("User %1 is online but not connected. Queuing message and connecting...").arg(receiverAddress));
+        
+        // ����Ϣ��������Ͷ���
+        m_pendingMessages[receiverAddress].append(content);
+
+        // ������ǵ�һ����������Ϣ����������
+        if (m_pendingMessages[receiverAddress].size() == 1) {
+            QStringList parts = receiverAddress.split(':');
+            if (parts.size() == 2) {
+                QString host = parts[0];
+                quint16 port = parts[1].toUShort();
+                m_socketClient->connectToHost(host, port);
+            }
+            else {
+                Logger::getInstance().error(QString("Invalid receiver address format: %1").arg(receiverAddress));
+                emit errorOccurred(QString("Invalid receiver address format: %1").arg(receiverAddress));
+                m_pendingMessages.remove(receiverAddress);
             }
         }
     }
-
-    // 2) 如果不是当前活跃聊天，增加未读计数
-    bool isActive = false;
-    {
-        QMutexLocker locker(&m_mutex);
-        isActive = (!m_activeChatUserId.isEmpty() && m_activeChatUserId == message.senderId);
-    }
-
-    if (!isActive) {
-        QSqlDatabase db = DatabaseManager::getInstance().database();
-        if (db.isValid() && db.isOpen()) {
-            QSqlQuery q(db);
-            // 更新未读计数，如果不存在则插入
-            q.prepare("UPDATE chat_sessions SET lastMessage=:lastMessage, lastTime=:lastTime, unreadCount = unreadCount + 1 WHERE userId = :userId");
-            q.bindValue(":lastMessage", message.content);
-            q.bindValue(":lastTime", static_cast<qint64>(message.timestamp));
-            q.bindValue(":userId", message.senderId);
-            if (!q.exec() || q.numRowsAffected() == 0) {
-                QSqlQuery q2(db);
-                q2.prepare("INSERT INTO chat_sessions (userId, nickname, avatarPath, lastMessage, lastTime, unreadCount) VALUES (:userId, :nickname, :avatarPath, :lastMessage, :lastTime, 1)");
-                q2.bindValue(":userId", message.senderId);
-                q2.bindValue(":nickname", QString());
-                q2.bindValue(":avatarPath", QString());
-                q2.bindValue(":lastMessage", message.content);
-                q2.bindValue(":lastTime", static_cast<qint64>(message.timestamp));
-                if (!q2.exec()) {
-                    Logger::getInstance().log(QString("Insert session failed: %1").arg(q2.lastError().text()));
-                }
-            }
-        }
-
-        int newCount = 0;
-        {
-            QMutexLocker locker(&m_mutex);
-            newCount = ++m_unreadMap[message.senderId];
-        }
-        Logger::getInstance().log(QString("Unread updated for %1 -> %2").arg(message.senderId).arg(newCount));
-        qDebug() << "Unread updated for" << message.senderId << "->" << newCount;
-        emit unreadCountChanged(message.senderId, newCount);
-    } else {
-        Logger::getInstance().log("Message received for active chat, emitting messageReceived");
-        emit messageReceived(message);
+    else {
+        // �û�������
+        Logger::getInstance().error(QString("Cannot send message: User %1 is not online.").arg(receiverAddress));
+        emit errorOccurred(QString("User %1 is not online.").arg(receiverAddress));
     }
 }
 
-void ChatService::setActiveChatUserId(const QString& userId)
+QStringList ChatService::getOnlineUsers() const
 {
-    QMutexLocker locker(&m_mutex);
-    m_activeChatUserId = userId;
-    Logger::getInstance().log(QString("Active chat set to %1").arg(userId));
+    return m_onlineUsers;
 }
 
-void ChatService::markSessionRead(const QString& userId)
+void ChatService::onSocketMessageReceived(const QString& message, const QString& from)
 {
-    Logger::getInstance().log(QString("markSessionRead called for %1").arg(userId));
-    QSqlDatabase db = DatabaseManager::getInstance().database();
-    if (db.isValid() && db.isOpen()) {
-        QSqlQuery q(db);
-        q.prepare("UPDATE chat_sessions SET unreadCount = 0 WHERE userId = :userId");
-        q.bindValue(":userId", userId);
-        if (!q.exec()) {
-            Logger::getInstance().log(QString("Failed clear unreadCount: %1").arg(q.lastError().text()));
+    // ֱ����Ϊ�ı�ת��
+    emit messageReceived(message, from);
+}
+
+void ChatService::onSocketError(const QString& error)
+{
+    // ֱ��ת���ײ�Ĵ���
+    emit errorOccurred(error);
+}
+
+void ChatService::onOnlineAddressesReceived(const QStringList& addresses)
+{
+    m_onlineUsers = addresses;
+    Logger::getInstance().log(QString("Online users updated: %1 found.").arg(m_onlineUsers.size()));
+    emit onlineUsersUpdated(m_onlineUsers);
+}
+
+void ChatService::onConnectedToServer(const QString& address)
+{
+    // �ɹ����ӵ�һ���������󣬼���Ƿ��д����͸�������Ϣ
+    if (m_pendingMessages.contains(address)) {
+        Logger::getInstance().log(QString("Connection to %1 established. Sending queued messages...").arg(address));
+        QStringList messagesToSend = m_pendingMessages.take(address); // ȡ�����Ƴ�
+        for (const auto& text : messagesToSend) {
+            m_socketClient->sendMessageToServerByAddress(address, text);
+            emit messageSent(text, address);
         }
     }
-
-    {
-        QMutexLocker locker(&m_mutex);
-        m_unreadMap[userId] = 0;
-    }
-    emit unreadCountChanged(userId, 0);
 }
 
-int ChatService::getUnreadCount(const QString& userId)
+void ChatService::onRefreshOnlineUsers()
 {
-    QMutexLocker locker(&m_mutex);
-    return m_unreadMap.value(userId, 0);
+    if (!m_socketClient) return;
+    Logger::getInstance().log("Broadcasting to refresh online users...");
+    m_socketClient->broadcastGetOnlineAddresses();
 }

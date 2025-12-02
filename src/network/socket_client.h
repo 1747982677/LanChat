@@ -9,6 +9,9 @@
 #include <QWebSocketServer>
 #include <QTimer>
 #include <QMap>
+#include <QSet>
+#include <QUdpSocket>
+#include <QJsonArray>
 
 // - 支持作为 WebSocket 服务器（接收多个客户端连接、广播与单发）
 // - 支持作为 WebSocket 客户端，可以同时连接到多个远端服务器
@@ -57,6 +60,11 @@ public:
     int getConnectedClientCount() const;
     QStringList getServerClientAddresses() const;
 
+    // -------------------- 广播获取在线用户（新增） --------------------
+    // 通过在已建立的 websocket 连接上广播查询，收集所有在线节点响应的地址（去重）
+    // timeoutMs：等待响应的毫秒数，超时后会触发 onlineAddressesReceived
+    void broadcastGetOnlineAddresses(int timeoutMs = 1000);
+
 signals:
     // 收到消息（无论来自服务端还是客户端连接）
     // 参数：消息内容, 来源地址（格式 ip:port）
@@ -77,6 +85,9 @@ signals:
     void clientConnected(const QString &clientAddress);
     void clientDisconnected(const QString &clientAddress);
 
+    // 广播查询到的在线地址（去重后返回）
+    void onlineAddressesReceived(const QStringList &addresses);
+
 private slots:
     // 客户端槽（多个 QWebSocket 复用这些槽）
     void onClientConnected();
@@ -89,6 +100,9 @@ private slots:
     void onNewConnection();
     void onServerClientDisconnected();
     void onServerClientTextMessageReceived(const QString &message);
+
+    // UDP discovery
+    void onUdpReadyRead();
 
 private:
     // 作为客户端的多个连接
@@ -116,6 +130,17 @@ private:
     QString getClientAddress(QWebSocket *client) const;
 	// 清理某个客户端连接资源
     void cleanupClientResources(QWebSocket* client);
+
+    // -------------------- 广播查询相关私有成员 --------------------
+    QTimer *onlineQueryTimer = nullptr;
+    QSet<QString> onlineQueryResponses;
+
+    // UDP discovery socket
+    QUdpSocket *discoverySocket = nullptr;
+    quint16 discoveryPort = 45454; // default discovery port
+
+    // 收集本机可用的对外服务/连接端点 (ip:port)，用于在发现阶段立即加入结果中
+    QStringList collectLocalEndpoints() const;
 };
 
 #endif // SOCKET_CLIENT_H
