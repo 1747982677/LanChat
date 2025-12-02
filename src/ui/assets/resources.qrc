@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/lanchat">
         <file>bubu.jpg</file>
+		<file>warning_red.png</file>
     </qresource>
 </RCC>
