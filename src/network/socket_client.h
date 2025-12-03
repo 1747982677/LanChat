@@ -13,9 +13,9 @@
 #include <QUdpSocket>
 #include <QJsonArray>
 
-// - Ö§³Ö×÷Îª WebSocket ·şÎñÆ÷£¨½ÓÊÕ¶à¸ö¿Í»§¶ËÁ¬½Ó¡¢¹ã²¥Óëµ¥·¢£©
-// - Ö§³Ö×÷Îª WebSocket ¿Í»§¶Ë£¬¿ÉÒÔÍ¬Ê±Á¬½Óµ½¶à¸öÔ¶¶Ë·şÎñÆ÷
-// - Í¨¹ıĞÅºÅ½«ÊÕµ½µÄÏûÏ¢/´íÎóÍ¨ÖªÉÏ²ã
+// - æ”¯æŒä½œä¸º WebSocket æœåŠ¡å™¨ï¼ˆæ¥æ”¶å¤šä¸ªå®¢æˆ·ç«¯è¿æ¥ã€å¹¿æ’­ä¸å•å‘ï¼‰
+// - æ”¯æŒä½œä¸º WebSocket å®¢æˆ·ç«¯ï¼Œå¯ä»¥åŒæ—¶è¿æ¥åˆ°å¤šä¸ªè¿œç«¯æœåŠ¡å™¨
+// - é€šè¿‡ä¿¡å·å°†æ”¶åˆ°çš„æ¶ˆæ¯/é”™è¯¯é€šçŸ¥ä¸Šå±‚
 class SocketClient : public QObject
 {
     Q_OBJECT
@@ -24,39 +24,39 @@ public:
     explicit SocketClient(QObject *parent = nullptr);
     ~SocketClient();
 
-    // -------------------- ¿Í»§¶Ë API --------------------
-    // ·¢Æğµ½Ò»Ì¨·şÎñÆ÷µÄÁ¬½Ó£¨»áÎª¸ÃÁ¬½Ó´´½¨Ò»¸ö¶ÀÁ¢ QWebSocket£©
+    // -------------------- å®¢æˆ·ç«¯ API --------------------
+    // å‘èµ·åˆ°ä¸€å°æœåŠ¡å™¨çš„è¿æ¥ï¼ˆä¼šä¸ºè¯¥è¿æ¥åˆ›å»ºä¸€ä¸ªç‹¬ç«‹ QWebSocketï¼‰
     void connectToHost(const QString &host, quint16 port);
-    // ¶Ï¿ª²¢ÊÍ·ÅËùÓĞ×÷Îª¿Í»§¶ËµÄÁ¬½Ó
+    // æ–­å¼€å¹¶é‡Šæ”¾æ‰€æœ‰ä½œä¸ºå®¢æˆ·ç«¯çš„è¿æ¥
     void disconnect();
-    // ÏòÖ¸¶¨Ë÷ÒıµÄ·şÎñÆ÷·¢ËÍÏûÏ¢
+    // å‘æŒ‡å®šç´¢å¼•çš„æœåŠ¡å™¨å‘é€æ¶ˆæ¯
     void sendMessageToServer(int index, const QString &message);
-    // ÏòÖ¸¶¨µØÖ·µÄ·şÎñÆ÷·¢ËÍÏûÏ¢£¨µØÖ·¸ñÊ½ ip:port£©
+    // å‘æŒ‡å®šåœ°å€çš„æœåŠ¡å™¨å‘é€æ¶ˆæ¯ï¼ˆåœ°å€æ ¼å¼ ip:portï¼‰
     void sendMessageToServerByAddress(const QString &address, const QString &message);
-    // ÊÇ·ñÖÁÉÙÓĞÒ»¸öÒÑÁ¬½ÓµÄ¿Í»§¶Ë
+    // æ˜¯å¦è‡³å°‘æœ‰ä¸€ä¸ªå·²è¿æ¥çš„å®¢æˆ·ç«¯
     bool isConnected() const;
-    // »ñÈ¡¿Í»§¶ËÁ¬½ÓÊı
+    // è·å–å®¢æˆ·ç«¯è¿æ¥æ•°
     int getClientCount() const;
-    // »ñÈ¡¿Í»§¶ËµØÖ·ÁĞ±í
+    // è·å–å®¢æˆ·ç«¯åœ°å€åˆ—è¡¨
     QStringList getClientAddresses() const;
 
     // allow configuring max reconnect attempts
     void setMaxReconnectAttempts(int attempts) { maxReconnectAttempts = attempts; }
     int getMaxReconnectAttempts() const { return maxReconnectAttempts; }
 
-    // -------------------- ·şÎñÆ÷ API --------------------
-    // Æô¶¯/Í£Ö¹±¾»ú WebSocket ·şÎñÆ÷
+    // -------------------- æœåŠ¡å™¨ API --------------------
+    // å¯åŠ¨/åœæ­¢æœ¬æœº WebSocket æœåŠ¡å™¨
     bool startServer(quint16 port);
     void stopServer();
     bool isServerRunning() const;
     quint16 getServerPort() const;
-    // ÏòËùÓĞÁ¬½Óµ½±¾·şÎñÆ÷µÄ¿Í»§¶Ë¹ã²¥ÏûÏ¢
+    // å‘æ‰€æœ‰è¿æ¥åˆ°æœ¬æœåŠ¡å™¨çš„å®¢æˆ·ç«¯å¹¿æ’­æ¶ˆæ¯
     void broadcastMessage(const QString &message);
-    // ÏòÖ¸¶¨½ÓÈë¿Í»§¶Ë·¢ËÍÏûÏ¢£¨°´½ÓÈëË÷Òı£©
+    // å‘æŒ‡å®šæ¥å…¥å®¢æˆ·ç«¯å‘é€æ¶ˆæ¯ï¼ˆæŒ‰æ¥å…¥ç´¢å¼•ï¼‰
     void sendMessageToClient(int index, const QString &message);
-    // ÏòÖ¸¶¨½ÓÈë¿Í»§¶Ë·¢ËÍÏûÏ¢£¨°´µØÖ· ip:port£©
+    // å‘æŒ‡å®šæ¥å…¥å®¢æˆ·ç«¯å‘é€æ¶ˆæ¯ï¼ˆæŒ‰åœ°å€ ip:portï¼‰
     void sendMessageToClientByAddress(const QString &clientAddress, const QString &message);
-    // µ¥·¢£º°´½ÓÈëË÷Òı»ò°´µØÖ··¢ËÍ
+    // å•å‘ï¼šæŒ‰æ¥å…¥ç´¢å¼•æˆ–æŒ‰åœ°å€å‘é€
     int getConnectedClientCount() const;
     QStringList getServerClientAddresses() const;
 
@@ -66,19 +66,19 @@ public:
     void broadcastGetOnlineAddresses(int timeoutMs = 1000);
 
 signals:
-    // ÊÕµ½ÏûÏ¢£¨ÎŞÂÛÀ´×Ô·şÎñ¶Ë»¹ÊÇ¿Í»§¶ËÁ¬½Ó£©
-    // ²ÎÊı£ºÏûÏ¢ÄÚÈİ, À´Ô´µØÖ·£¨¸ñÊ½ ip:port£©
+    // æ”¶åˆ°æ¶ˆæ¯ï¼ˆæ— è®ºæ¥è‡ªæœåŠ¡ç«¯è¿˜æ˜¯å®¢æˆ·ç«¯è¿æ¥ï¼‰
+    // å‚æ•°ï¼šæ¶ˆæ¯å†…å®¹, æ¥æºåœ°å€ï¼ˆæ ¼å¼ ip:portï¼‰
     void messageReceived(const QString &message, const QString &from);
-    // ´íÎóÍ¨ÓÃĞÅºÅ
+    // é”™è¯¯é€šç”¨ä¿¡å·
     void errorOccurred(const QString &error);
 
-    // ¿Í»§¶ËÏà¹Ø
+    // å®¢æˆ·ç«¯ç›¸å…³
     void connected();
     void disconnected();
     void connectedToServer(const QString &address);
     void disconnectedFromServer(const QString &address);
 
-    // ·şÎñÆ÷Ïà¹Ø
+    // æœåŠ¡å™¨ç›¸å…³
     void serverStarted(quint16 port);
     void serverStopped();
     void serverError(const QString &error);
@@ -89,14 +89,14 @@ signals:
     void onlineAddressesReceived(const QStringList &addresses);
 
 private slots:
-    // ¿Í»§¶Ë²Û£¨¶à¸ö QWebSocket ¸´ÓÃÕâĞ©²Û£©
+    // å®¢æˆ·ç«¯æ§½ï¼ˆå¤šä¸ª QWebSocket å¤ç”¨è¿™äº›æ§½ï¼‰
     void onClientConnected();
     void onClientDisconnected();
     void onClientTextMessageReceived(const QString &message);
     void onClientPong(quint64 elapsedTime);
     void onClientError(QAbstractSocket::SocketError socketError);
 
-    // ·şÎñÆ÷²Û
+    // æœåŠ¡å™¨æ§½
     void onNewConnection();
     void onServerClientDisconnected();
     void onServerClientTextMessageReceived(const QString &message);
@@ -105,30 +105,30 @@ private slots:
     void onUdpReadyRead();
 
 private:
-    // ×÷Îª¿Í»§¶ËµÄ¶à¸öÁ¬½Ó
+    // ä½œä¸ºå®¢æˆ·ç«¯çš„å¤šä¸ªè¿æ¥
     QList<QWebSocket*> clientSockets;
     // per-client maps
     QMap<QWebSocket*, QString> clientHost;
     QMap<QWebSocket*, quint16> clientPort;
-	//±£´æĞÄÌø¼ÆÊ±Æ÷
+	//ä¿å­˜å¿ƒè·³è®¡æ—¶å™¨
     QMap<QWebSocket*, QTimer*> heartbeatTimers;
-	//¼ÆÊıÆ÷µ½ÆÚºó½øĞĞÖØÁ¬£¬Éæ¼°µ½Ò»¸öÖ¸ÊıÍË±Ü»úÖÆ
+	//è®¡æ•°å™¨åˆ°æœŸåè¿›è¡Œé‡è¿ï¼Œæ¶‰åŠåˆ°ä¸€ä¸ªæŒ‡æ•°é€€é¿æœºåˆ¶
     QMap<QWebSocket*, QTimer*> reconnectTimers;
-    // ¼ÇÂ¼ÖØÁ¬³¢ÊÔ´ÎÊı
+    // è®°å½•é‡è¿å°è¯•æ¬¡æ•°
     QMap<QWebSocket*, int> reconnectAttempts;
-	// ¼ÇÂ¼¶ªÊ§µÄ Pong ÏûÏ¢Êı£¬µ±´óÓÚ3ÊÇ»á
+	// è®°å½•ä¸¢å¤±çš„ Pong æ¶ˆæ¯æ•°ï¼Œå½“å¤§äº3æ˜¯ä¼š
     QMap<QWebSocket*, int> missedPongs;
 
-    // ×î´óÖØÁ¬´ÎÊı£¬Ä¬ÈÏÉèÖÃÎª10
+    // æœ€å¤§é‡è¿æ¬¡æ•°ï¼Œé»˜è®¤è®¾ç½®ä¸º10
     int maxReconnectAttempts;
 
-    // ×÷Îª·şÎñÆ÷Ê±µÄ¼àÌı¶ÔÏó¼°½ÓÈëµÄ¿Í»§¶Ë
+    // ä½œä¸ºæœåŠ¡å™¨æ—¶çš„ç›‘å¬å¯¹è±¡åŠæ¥å…¥çš„å®¢æˆ·ç«¯
     QWebSocketServer *webSocketServer;
     QList<QWebSocket*> serverClients;
 
-	// »ñÈ¡¿Í»§¶ËµØÖ·×Ö·û´®
+	// è·å–å®¢æˆ·ç«¯åœ°å€å­—ç¬¦ä¸²
     QString getClientAddress(QWebSocket *client) const;
-	// ÇåÀíÄ³¸ö¿Í»§¶ËÁ¬½Ó×ÊÔ´
+	// æ¸…ç†æŸä¸ªå®¢æˆ·ç«¯è¿æ¥èµ„æº
     void cleanupClientResources(QWebSocket* client);
 
     // -------------------- ¹ã²¥²éÑ¯Ïà¹ØË½ÓĞ³ÉÔ± --------------------

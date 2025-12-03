@@ -6,13 +6,13 @@
 #include <QJsonObject>
 
 /**
- * @brief ����ͨ�� Worker
+ * @brief 网络通信 Worker
  * 
- * �����ڶ����������߳��У�����
- * 1. ��Ϣ�շ�
- * 2. ���ӹ���
- * 3. ����ά��
- * 4. ����״̬���
+ * 运行在独立的网络线程中，负责：
+ * 1. 消息收发
+ * 2. 连接管理
+ * 3. 心跳维护
+ * 4. 网络状态监控
  */
 class NetworkWorker : public BaseWorker
 {
@@ -22,75 +22,75 @@ public:
     explicit NetworkWorker(QObject* parent = nullptr);
     ~NetworkWorker() override;
 
-    bool initialize() override;
     void cleanup() override;
 
 public slots:
+    bool initialize() override;
     /**
-     * @brief ���ӵ�������
-     * @param host ��������ַ
-     * @param port �������˿�
+     * @brief 连接到服务器
+     * @param host 服务器地址
+     * @param port 服务器端口
      */
     void connectToServer(const QString& host, quint16 port);
 
     /**
-     * @brief �Ͽ�����
+     * @brief 断开连接
      */
     void disconnectFromServer();
 
     /**
-     * @brief ���� JSON ��Ϣ
-     * @param message JSON ����
+     * @brief 发送 JSON 消息
+     * @param message JSON 对象
      */
     void sendMessage(const QJsonObject& message);
 
     /**
-     * @brief �����ı���Ϣ
-     * @param text �ı�����
+     * @brief 发送文本消息
+     * @param text 文本内容
      */
     void sendTextMessage(const QString& text);
 
     /**
-     * @brief ����������ģʽ
-     * @param port �����˿�
+     * @brief 启动服务器模式
+     * @param port 监听端口
      */
     void startServer(quint16 port);
 
     /**
-     * @brief ֹͣ������ģʽ
+     * @brief 停止服务器模式
      */
     void stopServer();
 
 signals:
     /**
-     * @brief ���ӳɹ��ź�
+     * @brief 连接成功信号
      */
     void connected();
 
     /**
-     * @brief �Ͽ������ź�
+     * @brief 断开连接信号
      */
     void disconnected();
 
     /**
-     * @brief �յ���Ϣ�ź�
-     * @param message JSON ��Ϣ����
-     * @param from �����ߵ�ַ
+     * @brief 收到消息信号
+     * @param message JSON 消息对象
+     * @param from 发送者地址
      */
     void messageReceived(const QJsonObject& message, const QString& from);
 
     /**
-     * @brief �յ��ı���Ϣ�ź�
+     * @brief 收到文本消息信号
      */
     void textMessageReceived(const QString& text, const QString& from);
 
     /**
-     * @brief ����״̬�仯�ź�
+     * @brief 连接状态变化信号
      */
     void connectionStateChanged(bool isConnected);
 
 
-    // ��Ϣ���ͽ���ź�
+    // 消息发送结果信号
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
 
