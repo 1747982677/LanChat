@@ -27,17 +27,21 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
 
     // 初始化数据库 (使用相对路径，避免绝对路径在不同机器上失效)
-    QString dbPath = "lanchat.db"; // 默认放在运行目录下
-    if (!DatabaseManager::getInstance().init(dbPath)) {
-        qDebug().noquote() << "Failed to initialize database";
-    } else {
-        qDebug().noquote() << "Database initialized";
-    }
+    //QString dbPath = "lanchat.db"; // 默认放在运行目录下
+    //if (!DatabaseManager::getInstance().init(dbPath)) {
+    //    qDebug().noquote() << "Failed to initialize database";
+    //} else {
+    //    qDebug().noquote() << "Database initialized";
+    //}
+
+    quintptr id = reinterpret_cast<quintptr>(QThread::currentThreadId());
+    Logger::getInstance().log(QString("当前主线程：lanchat_conn_%1").arg(id));
 
     // 初始化应用上下文
     AppContext& context = AppContext::instance();
-
     // 设置数据库路径
+	//需要根据实际路径修改
+    //context.setDatabasePath("C:\\mty\\QtProject\\LanChat\\src\\model\\lanchat.db");
     context.setDatabasePath("src\\model\\lanchat.db");
 
     // 初始化所有模块
@@ -91,6 +95,11 @@ int main(int argc, char* argv[])
         // #endif
 
     } else {
+        
+
+		/*DbQWidget* dbTestWidget = new DbQWidget();
+        dbTestWidget->show();*/
+
         // 如果未登录，显示登录窗口
         LoginWindow* loginWindow = new LoginWindow();
 

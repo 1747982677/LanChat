@@ -58,7 +58,7 @@ void DbLogicController::connectSignals()
         return;
     }
 
-    // Controller -> Worker 信号
+    // Controller -> Worker 淇″彿
     connect(this, &DbLogicController::requestInitializeDatabase,
             worker, &DbLogicWorker::initializeDatabase);
     connect(this, &DbLogicController::requestSaveMessage,
@@ -80,7 +80,7 @@ void DbLogicController::connectSignals()
     connect(this, &DbLogicController::requestProcessFile,
             worker, &DbLogicWorker::processFile);
 
-    // Worker -> Controller 信号（转发）
+    // Worker -> Controller 淇″彿锛堣浆鍙戯級
     connect(worker, &DbLogicWorker::databaseInitialized,
             this, &DbLogicController::databaseInitialized);
     connect(worker, &DbLogicWorker::messageSaved,
@@ -99,7 +99,23 @@ void DbLogicController::connectSignals()
             this, &DbLogicController::fileProcessed);
     connect(worker, &DbLogicWorker::errorOccurred,
             this, &DbLogicController::errorOccurred);
+
+    //*********鍏充簬lanchat/messages鏁版嵁琛ㄧ殑璁捐********
+    connect(this, &DbLogicController::requestQueryMessages,
+        worker, &DbLogicWorker::queryMessages);
+    connect(worker, &DbLogicWorker::queryResultsReady,
+        this, &DbLogicController::queryResultsReady);
 }
+
+void DbLogicController::queryMessages(const QString& localUser, const QString& peer, int limit)
+{
+    qDebug() << "DbLogicController: Request search messages:" << localUser;
+    emit requestQueryMessages(localUser, peer,limit);
+}
+//QVector<Message> DbLogicController::queryResultsReady(const QVector<Message> &conv)
+//{
+//    return conv;
+//}
 
 void DbLogicController::initializeDatabase(const QString& dbPath)
 {
@@ -112,7 +128,7 @@ void DbLogicController::saveMessage(const QJsonObject& message)
     emit requestSaveMessage(message);
 }
 
-// 修复：生成并返回 requestId
+// 淇锛氱敓鎴愬苟杩斿洖 requestId
 QString DbLogicController::loadHistoryMessages(const QString& contactId, int limit, int offset)
 {
     QString requestId = QUuid::createUuid().toString(QUuid::WithoutBraces);

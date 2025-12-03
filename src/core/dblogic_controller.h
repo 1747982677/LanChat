@@ -4,14 +4,14 @@
 #include "core/base_controller.h"
 #include <QJsonObject>
 #include <QJsonArray>
-
+#include "model/message.h"
 /**
- * @brief Êı¾İ¿âÓëÒµÎñÂß¼­¿ØÖÆÆ÷
+ * @brief æ•°æ®åº“ä¸ä¸šåŠ¡é€»è¾‘æ§åˆ¶å™¨
  * 
- * ÔËĞĞÔÚÖ÷Ïß³Ì£¬¸ºÔğ£º
- * 1. ¹ÜÀí DbLogicWorker µÄÉúÃüÖÜÆÚ
- * 2. Ìá¹©Êı¾İ¿â²Ù×÷µÄÍâ²¿½Ó¿Ú
- * 3. ×ª·¢Êı¾İÊÂ¼şµ½ÉÏ²ã
+ * è¿è¡Œåœ¨ä¸»çº¿ç¨‹ï¼Œè´Ÿè´£ï¼š
+ * 1. ç®¡ç† DbLogicWorker çš„ç”Ÿå‘½å‘¨æœŸ
+ * 2. æä¾›æ•°æ®åº“æ“ä½œçš„å¤–éƒ¨æ¥å£
+ * 3. è½¬å‘æ•°æ®äº‹ä»¶åˆ°ä¸Šå±‚
  */
 class DbLogicController : public BaseController
 {
@@ -24,65 +24,71 @@ public:
     bool initialize() override;
 
     /**
-     * @brief »ñÈ¡µ¥Àı
+     * @brief è·å–å•ä¾‹
      */
     static DbLogicController& instance();
 
 public slots:
     /**
-     * @brief ³õÊ¼»¯Êı¾İ¿â
+     * @brief åˆå§‹åŒ–æ•°æ®åº“
      */
     void initializeDatabase(const QString& dbPath);
 
     /**
-     * @brief ±£´æÏûÏ¢
+     * @brief ä¿å­˜æ¶ˆæ¯
      */
     void saveMessage(const QJsonObject& message);
     
-    //  ĞŞ¸´£º·µ»Ø requestId£¬UI ¿ÉÒÔÓÃÀ´ÑéÖ¤
+    //  ä¿®å¤ï¼šè¿”å› requestIdï¼ŒUI å¯ä»¥ç”¨æ¥éªŒè¯
     QString loadHistoryMessages(const QString& contactId, int limit = 50, int offset = 0);
     
     /**
-     * @brief ËÑË÷ÏûÏ¢
+     * @brief æœç´¢æ¶ˆæ¯
      */
     void searchMessages(const QString& keyword);
 
     /**
-     * @brief ¸üĞÂÏûÏ¢×´Ì¬
+     * @brief æ›´æ–°æ¶ˆæ¯çŠ¶æ€
      */
     void updateMessageStatus(const QString& messageId, const QString& status);
 
     /**
-     * @brief É¾³ıÏûÏ¢
+     * @brief åˆ é™¤æ¶ˆæ¯
      */
     void deleteMessage(const QString& messageId);
 
     /**
-     * @brief ¼ÓÔØÁªÏµÈËÁĞ±í
+     * @brief åŠ è½½è”ç³»äººåˆ—è¡¨
      */
     void loadContactList();
 
     /**
-     * @brief Ìí¼ÓÁªÏµÈË
+     * @brief æ·»åŠ è”ç³»äºº
      */
     void addContact(const QJsonObject& contactInfo);
 
     /**
-     * @brief ¸üĞÂÁªÏµÈË
+     * @brief æ›´æ–°è”ç³»äºº
      */
     void updateContact(const QString& contactId, const QJsonObject& contactInfo);
 
     /**
-     * @brief ´¦ÀíÎÄ¼ş
+     * @brief å¤„ç†æ–‡ä»¶
      */
     void processFile(const QString& filePath, const QJsonObject& options);
 
+
+
+    //***ä»¥ä¸‹å…³äºlanchat/messagesæ•°æ®è¡¨çš„è®¾è®¡****
+    void queryMessages(const QString& localUser, const QString& peer, int limit);
+
+
 signals:
-    // ·¢ËÍ¸ø Worker µÄĞÅºÅ
+    // å‘é€ç»™ Worker çš„ä¿¡å·
     void requestInitializeDatabase(const QString& dbPath);
     void requestSaveMessage(const QJsonObject& message);
     
-    //  ĞŞ¸´£ºÇëÇóĞÅºÅ°üº¬ requestId
+    //  ä¿®å¤ï¼šè¯·æ±‚ä¿¡å·åŒ…å« requestId
     void requestLoadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset);
     
     void requestSearchMessages(const QString& keyword);
@@ -93,11 +99,11 @@ signals:
     void requestUpdateContact(const QString& contactId, const QJsonObject& contactInfo);
     void requestProcessFile(const QString& filePath, const QJsonObject& options);
 
-    // ´Ó Worker ½ÓÊÕµÄĞÅºÅ£¨×ª·¢£©
+    // ä» Worker æ¥æ”¶çš„ä¿¡å·ï¼ˆè½¬å‘ï¼‰
     void databaseInitialized(bool success);
     void messageSaved(bool success, const QString& messageId);
     
-    //  ĞŞ¸´£ºÏìÓ¦ĞÅºÅ°üº¬ requestId
+    //  ä¿®å¤ï¼šå“åº”ä¿¡å·åŒ…å« requestId
     void historyMessagesLoaded(const QString& requestId, const QJsonArray& messages, const QString& contactId);
     
     void searchResultsReady(const QJsonArray& results);
@@ -105,6 +111,10 @@ signals:
     void contactListLoaded(const QJsonArray& contacts);
     void contactOperationCompleted(bool success, const QString& operation);
     void fileProcessed(bool success, const QString& filePath, const QString& resultPath);
+
+    //***ä»¥ä¸‹å…³äºlanchat/messagesæ•°æ®è¡¨çš„è®¾è®¡****
+    void requestQueryMessages(const QString& localUser, const QString& peer, int limit);
+    void queryResultsReady(const QVector<Message>& results);
 
 protected:
     QObject* createWorker() override;

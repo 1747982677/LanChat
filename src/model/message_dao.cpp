@@ -5,6 +5,7 @@
 #include <QSqlError>
 #include <QVariant>
 #include <QDateTime>
+#include <QThread>
 
 qint64 MessageDao::insertMessage(const Message& msg)
 {
@@ -34,6 +35,9 @@ qint64 MessageDao::insertMessage(const Message& msg)
 
 QVector<Message> MessageDao::getConversation(const QString& localUser, const QString& peer, int limit)
 {
+    quintptr id = reinterpret_cast<quintptr>(QThread::currentThreadId());
+    Logger::getInstance().log(QString("当前数据库线程：lanchat_conn_%1").arg(id));
+
     QVector<Message> out;
     auto& dbm = DatabaseManager::getInstance();
     QSqlDatabase db = dbm.database();

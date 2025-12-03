@@ -126,6 +126,19 @@ void DbLogicWorker::searchMessages(const QString& keyword)
     emit searchResultsReady(results);
 }
 
+void DbLogicWorker::queryMessages(const QString& localUser, const QString& peer, int limit)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit searchResultsReady(QJsonArray());
+        return;
+    }
+    QVector<Message> conv = MessageDao::getConversation("alice", "bob", 100);
+    /*return conv;*/
+    qDebug() << "Searching messages with keyword:" << localUser;
+    emit queryResultsReady(conv);
+}
+
 void DbLogicWorker::updateMessageStatus(const QString& messageId, const QString& status)
 {
     if (!m_dbInitialized) {

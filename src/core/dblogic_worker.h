@@ -4,7 +4,7 @@
 #include "core/base_worker.h"
 #include <QString>
 #include <QJsonObject>
-
+#include "model/message.h"
 /**
  * @brief ���ݿ���ҵ���߼� Worker
  * 
@@ -51,6 +51,8 @@ public slots:
      * @param keyword �����ؼ���
      */
     void searchMessages(const QString& keyword);
+    void queryMessages(const QString& localUser, const QString& peer, int limit);
+    
 
     /**
      * @brief 通过账号搜索用户（精确匹配，不支持模糊查询）
@@ -120,6 +122,7 @@ signals:
      * @param results ���������JSON ���飩
      */
     void searchResultsReady(const QJsonArray& results);
+    void queryResultsReady(const QVector<Message>& results);
 
     /**
      * @brief ��Ϣ״̬�������
