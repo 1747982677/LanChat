@@ -12,6 +12,7 @@
 #include "MessageList.h"
 #include "NewFriendList.h"
 
+#include "ui/setting/settingdialog.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QStackedWidget>
@@ -19,7 +20,6 @@
 #include <QLineEdit>
 #include <QLabel>
 #include<QPixmap>
-
 
 MainWindow* MainWindow::m_instance = nullptr;
 
