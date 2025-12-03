@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
     // 初始化数据库（在 Worker 线程中执行）
     context.dbLogicController()->initializeDatabase(context.databasePath());
 
+
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
     if (authService.isLoggedIn()) {
@@ -78,16 +79,16 @@ int main(int argc, char* argv[])
         MainWindow::instance()->show();
 
         // Debug: simulate incoming message to test unread count
-        #ifdef QT_DEBUG
-        QTimer::singleShot(1500, [](){
-            LanChat::Message msg;
-            msg.senderId = QString("user_张三");
-            msg.receiverId = QString("local_user");
-            msg.content = QStringLiteral("测试未读消息");
-            msg.timestamp = QDateTime::currentMSecsSinceEpoch();
-            ChatService::getInstance().receiveMessage(msg);
-        });
-        #endif
+        // #ifdef QT_DEBUG
+        // QTimer::singleShot(1500, [](){
+        //     LanChat::Message msg;
+        //     msg.senderId = QString("user_张三");
+        //     msg.receiverId = QString("local_user");
+        //     msg.content = QStringLiteral("测试未读消息");
+        //     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+        //     ChatService::getInstance().receiveMessage(msg);
+        // });
+        // #endif
 
     } else {
         // 如果未登录，显示登录窗口
@@ -104,34 +105,35 @@ int main(int argc, char* argv[])
                             qDebug() << "main.cpp: 主窗口已显示";
 
                             // Debug: simulate incoming message after login to test unread count
-                            #ifdef QT_DEBUG
-                            QTimer::singleShot(1500, [](){
-                                LanChat::Message msg;
-                                msg.senderId = QString("user_张三");
-                                msg.receiverId = QString("local_user");
-                                msg.content = QStringLiteral("测试未读消息");
-                                msg.timestamp = QDateTime::currentMSecsSinceEpoch();
-                                ChatService::getInstance().receiveMessage(msg);
-                            });
+                           // #ifdef QT_DEBUG
+                           // QTimer::singleShot(1500, [](){
+                           //     LanChat::Message msg;
+                           //     msg.senderId = QString("user_张三");
+                           //     msg.receiverId = QString("local_user");
+                           //     msg.content = QStringLiteral("测试未读消息");
+                           //     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+                           //     ChatService::getInstance().receiveMessage(msg);
+                           // });
 
-                            // 网络层测试：发送一条消息到网络层，验证消息发送和接收
-                            QTimer::singleShot(3000, [](){
-                                Logger::getInstance().log("[TEST] Sending test message through network layer...");
-                                LanChat::Message msg;
-                                msg.messageId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-                                msg.senderId = "user_张三"; // 模拟张三发来的消息
-                                msg.receiverId = "local_user";
-                                msg.content = "【网络测试】这是通过 WebSocket 发送的消息！";
-                                msg.type = LanChat::MessageType::Text;
-                                msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+                           // // 网络层测试：发送一条消息到网络层，验证消息发送和接收
+                           // QTimer::singleShot(3000, [](){
+                           //     Logger::getInstance().log("[TEST] Sending test message through network layer...");
+                           //     LanChat::Message msg;
+                           //     msg.messageId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+                           //     msg.senderId = "user_张三"; // 模拟张三发来的消息
+                           //     msg.receiverId = "local_user";
+                           //     msg.content = "【网络测试】这是通过 WebSocket 发送的消息！";
+                           //     msg.type = LanChat::MessageType::Text;
+                           //     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
                                 
-                                NetworkController::instance().sendMessage(msg.toJson());
-                            });
-                            #endif
+                           //     NetworkController::instance().sendMessage(msg.toJson());
+                           // });
+                           // #endif
                         });
 
         loginWindow->show();
     }
+
 
     int result = app.exec();
 
@@ -139,4 +141,9 @@ int main(int argc, char* argv[])
     context.stopAll();
 
     return result;
+
+    
+    //// 关闭当前线程的 DB 连接 (保留 feature/mty/db 的代码)
+    //DatabaseManager::getInstance().closeConnectionForCurrentThread();
+
 }

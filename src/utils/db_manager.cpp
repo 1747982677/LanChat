@@ -166,5 +166,64 @@ bool DatabaseManager::ensureSchema()
         return false;
     }
 
+    // create users table for user information
+    const QString createUsers = R"(
+        CREATE TABLE IF NOT EXISTS users (
+            userId TEXT PRIMARY KEY,
+            account TEXT UNIQUE NOT NULL,
+            nickname TEXT,
+            avatarPath TEXT,
+            email TEXT,
+            phone TEXT,
+            signature TEXT,
+            status INTEGER DEFAULT 0,
+            lastOnlineTime INTEGER DEFAULT 0
+        );
+    )";
+    if (!exec(createUsers)) {
+        Logger::getInstance().error("Failed to create users table");
+        return false;
+    }
+    exec("CREATE INDEX IF NOT EXISTS idx_users_account ON users(account);");
+
+    // create friends table for friend relationships
+    const QString createFriends = R"(
+        CREATE TABLE IF NOT EXISTS friends (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            friendId TEXT NOT NULL,
+            remark TEXT,
+            addedTime INTEGER NOT NULL,
+            UNIQUE(userId, friendId)
+        );
+    )";
+    if (!exec(createFriends)) {
+        Logger::getInstance().error("Failed to create friends table");
+        return false;
+    }
+    exec("CREATE INDEX IF NOT EXISTS idx_friends_userId ON friends(userId);");
+    exec("CREATE INDEX IF NOT EXISTS idx_friends_friendId ON friends(friendId);");
+
+    // create friend_requests table for friend requests
+    const QString createFriendRequests = R"(
+        CREATE TABLE IF NOT EXISTS friend_requests (
+            requestId TEXT PRIMARY KEY,
+            senderId TEXT NOT NULL,
+            receiverId TEXT NOT NULL,
+            senderAccount TEXT,
+            senderNickname TEXT,
+            avatarPath TEXT,
+            verifymsg TEXT,
+            status INTEGER DEFAULT 0,
+            timestamp INTEGER NOT NULL
+        );
+    )";
+    if (!exec(createFriendRequests)) {
+        Logger::getInstance().error("Failed to create friend_requests table");
+        return false;
+    }
+    exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_receiverId ON friend_requests(receiverId);");
+    exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);");
+
     return true;
 }

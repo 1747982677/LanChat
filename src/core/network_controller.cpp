@@ -35,6 +35,11 @@ bool NetworkController::initialize()
         return false;
     }
 
+    
+   
+
+    qDebug() << "NetworkController initialized";
+    emit initialized();
     // 设置 Worker 线程
     setupWorkerThread(worker);
 
@@ -42,7 +47,8 @@ bool NetworkController::initialize()
     connectSignals();
 
     // 注意：Worker 的 initialize() 将在 start() 后调用（线程启动后）
-    Logger::getInstance().log("[NetworkController] Controller initialized (Worker will be initialized after thread starts)");
+    //Logger::getInstance().log("[NetworkController] Controller initialized (Worker will be initialized after thread starts)");
+    QMetaObject::invokeMethod(worker, "initialize", Qt::QueuedConnection);
     return true;
 }
 

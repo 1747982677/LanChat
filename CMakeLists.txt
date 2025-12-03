@@ -12,6 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 
 
+
 # 查找 Qt（改进的逻辑）
 find_package(Qt6 COMPONENTS Core Widgets Sql WebSockets Network QUIET)
 if (Qt6_FOUND)

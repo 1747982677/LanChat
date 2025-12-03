@@ -53,6 +53,12 @@ public slots:
     void searchMessages(const QString& keyword);
 
     /**
+     * @brief 通过账号搜索用户（精确匹配，不支持模糊查询）
+     * @param account 账号
+     */
+    void searchUserByAccount(const QString& account);
+
+    /**
      * @brief ������Ϣ״̬
      * @param messageId ��Ϣ ID
      * @param status ״̬���磺pending, sent, delivered, read��
@@ -134,6 +140,11 @@ signals:
      * @brief �ļ��������
      */
     void fileProcessed(bool success, const QString& filePath, const QString& resultPath);
+
+    /**
+     * @brief 用户搜索结果
+     */
+    void userSearchResult(const QJsonObject& userInfo, bool found);
 
 private:
     QString m_dbPath;
