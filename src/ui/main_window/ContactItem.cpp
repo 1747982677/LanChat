@@ -1,10 +1,11 @@
-// ContactItem.cpp
+ï»¿// ContactItem.cpp
 /*
- * Ò³ÃæÃû³Æ£ºÁªÏµÈËÁĞ±í×é¼ş
- * ¹¦ÄÜ£ºÏÔÊ¾Ã¿¸öµ¥¶ÀµÄÁªÏµÈË
- * ÓÃ·¨£ºÔÚContactList¼¯³É
+ * é¡µé¢åç§°ï¼šè”ç³»äººåˆ—è¡¨ç»„ä»¶
+ * åŠŸèƒ½ï¼šæ˜¾ç¤ºæ¯ä¸ªå•ç‹¬çš„è”ç³»äºº
+ * ç”¨æ³•ï¼šåœ¨ContactListé›†æˆ
  */
 #include "ContactItem.h"
+#include "ContactPop.h"
 #include <QHBoxLayout>
 #include <QPixmap>
 
@@ -13,6 +14,7 @@
 ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget* parent)
     : QWidget(parent)
 {
+    m_name = name;
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(5, 5, 5, 5);
     layout->setSpacing(8);
@@ -35,7 +37,7 @@ ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget
     layout->addWidget(m_nameLabel);
     setLayout(layout);
 
-    // ÉèÖÃÄ¬ÈÏºÍĞüÍ£ÑùÊ½
+    // è®¾ç½®é»˜è®¤å’Œæ‚¬åœæ ·å¼
     m_defaultStyle = "background-color: transparent; border-radius: 4px;";
     m_hoverStyle = "background-color: #e0e0e0; border-radius: 4px;";
 
@@ -44,14 +46,33 @@ ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget
 
 void ContactItem::enterEvent(QEnterEvent* event)
 {
-    setStyleSheet(m_hoverStyle);  // Êó±êĞüÍ£±³¾°É«
+    setStyleSheet(m_hoverStyle);  // é¼ æ ‡æ‚¬åœèƒŒæ™¯è‰²
+    emit hoverEntered(this);
+    QWidget::enterEvent(event);
+
+    if (!m_tooltip) {
+        m_tooltip = new ContactPop(m_name, ":/lanchat/bubu.jpg", this);
+    }
+
+    // æµ®çª—æ˜¾ç¤ºåœ¨å³ä¾§
+    QPoint pos = mapToGlobal(QPoint(width(), 0));
+    m_tooltip->move(pos);
+    m_tooltip->show();
+
     emit hoverEntered(this);
     QWidget::enterEvent(event);
 }
 
 void ContactItem::leaveEvent(QEvent* event)
 {
-    setStyleSheet(m_defaultStyle);  // »Ö¸´Ä¬ÈÏ±³¾°
+    setStyleSheet(m_defaultStyle);  // æ¢å¤é»˜è®¤èƒŒæ™¯
+    emit hoverLeft(this);
+    QWidget::leaveEvent(event);
+
+    if (m_tooltip) {
+        m_tooltip->hide();
+    }
+
     emit hoverLeft(this);
     QWidget::leaveEvent(event);
 }

@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QString>
 
+class ContactPop;
 class ContactItem : public QWidget
 {
     Q_OBJECT
@@ -20,7 +21,10 @@ protected:
 private:
     QLabel* m_avatarLabel;//头像
     QLabel* m_nameLabel;//昵称
+    QString m_name;//昵称
 
     QString m_defaultStyle;  // 默认背景样式
     QString m_hoverStyle;    // 悬停背景样式
+
+    ContactPop* m_tooltip = nullptr;
 };

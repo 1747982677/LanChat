@@ -25,4 +25,6 @@ private:
 
     QString m_defaultStyle;  // 默认背景样式
     QString m_hoverStyle;    // 悬停背景样式
+
+    
 };
