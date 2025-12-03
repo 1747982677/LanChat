@@ -56,16 +56,16 @@ int main(int argc, char* argv[])
         MainWindow::instance()->show();
 
         // Debug: simulate incoming message to test unread count
-        #ifdef QT_DEBUG
-        QTimer::singleShot(1500, [](){
-            LanChat::Message msg;
-            msg.senderId = QString("user_张三");
-            msg.receiverId = QString("local_user");
-            msg.content = QStringLiteral("测试未读消息");
-            msg.timestamp = QDateTime::currentMSecsSinceEpoch();
-            ChatService::getInstance().receiveMessage(msg);
-        });
-        #endif
+        // #ifdef QT_DEBUG
+        // QTimer::singleShot(1500, [](){
+        //     LanChat::Message msg;
+        //     msg.senderId = QString("user_张三");
+        //     msg.receiverId = QString("local_user");
+        //     msg.content = QStringLiteral("测试未读消息");
+        //     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+        //     ChatService::getInstance().receiveMessage(msg);
+        // });
+        // #endif
 
     } else {
         // 如果未登录，显示登录窗口
@@ -82,16 +82,16 @@ int main(int argc, char* argv[])
                             qDebug() << "main.cpp: 主窗口已显示";
 
                             // Debug: simulate incoming message after login to test unread count
-                            #ifdef QT_DEBUG
-                            QTimer::singleShot(1500, [](){
-                                LanChat::Message msg;
-                                msg.senderId = QString("user_张三");
-                                msg.receiverId = QString("local_user");
-                                msg.content = QStringLiteral("测试未读消息");
-                                msg.timestamp = QDateTime::currentMSecsSinceEpoch();
-                                ChatService::getInstance().receiveMessage(msg);
-                            });
-                            #endif
+                            // #ifdef QT_DEBUG
+                            // QTimer::singleShot(1500, [](){
+                            //     LanChat::Message msg;
+                            //     msg.senderId = QString("user_张三");
+                            //     msg.receiverId = QString("local_user");
+                            //     msg.content = QStringLiteral("测试未读消息");
+                            //     msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+                            //     ChatService::getInstance().receiveMessage(msg);
+                            // });
+                            // #endif
                         });
 
         loginWindow->show();

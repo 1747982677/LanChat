@@ -70,8 +70,9 @@ ContactList::ContactList(QWidget* parent)
             // 打开对应聊天页（MainWindow 的页面切换实现）并标记为 active
             MainWindow::instance()->setRightPages(MainWindow::ChatPage);
             // 告诉 ChatService 当前正在查看该会话，并清空未读
-            ChatService::getInstance().setActiveChatUserId(userId);
-            ChatService::getInstance().markSessionRead(userId);
+            // TODO: 这些方法在 ChatService 中不存在，需要通过 DbLogicController 实现
+            // ChatService::getInstance().setActiveChatUserId(userId);
+            // ChatService::getInstance().markSessionRead(userId);
         });
     }
 
@@ -80,15 +81,16 @@ ContactList::ContactList(QWidget* parent)
     mainLayout->addWidget(scroll);
 
     // 连接 ChatService 的未读更新信号
-    connect(&ChatService::getInstance(), &ChatService::unreadCountChanged,
-            this, [this](const QString& userId, int count){
-        if (m_itemsById.contains(userId)) {
-            ContactItem* it = m_itemsById.value(userId);
-            it->setUnreadCount(count);
-        } else {
-            // 若未在当前列表中，可选择新增会话项或忽略
-        }
-    });
+    // TODO: unreadCountChanged 信号在 ChatService 中不存在，需要通过 DbLogicController 实现
+    // connect(&ChatService::getInstance(), &ChatService::unreadCountChanged,
+    //         this, [this](const QString& userId, int count){
+    //     if (m_itemsById.contains(userId)) {
+    //         ContactItem* it = m_itemsById.value(userId);
+    //         it->setUnreadCount(count);
+    //     } else {
+    //         // 若未在当前列表中，可选择新增会话项或忽略
+    //     }
+    // });
 }
 
 ContactList::~ContactList()

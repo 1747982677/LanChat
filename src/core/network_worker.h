@@ -6,13 +6,13 @@
 #include <QJsonObject>
 
 /**
- * @brief ÍøÂçÍ¨ÐÅ Worker
+ * @brief ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ Worker
  * 
- * ÔËÐÐÔÚ¶ÀÁ¢µÄÍøÂçÏß³ÌÖÐ£¬¸ºÔð£º
- * 1. ÏûÏ¢ÊÕ·¢
- * 2. Á¬½Ó¹ÜÀí
- * 3. ÐÄÌøÎ¬»¤
- * 4. ÍøÂç×´Ì¬¼à¿Ø
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½
+ * 1. ï¿½ï¿½Ï¢ï¿½Õ·ï¿½
+ * 2. ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½
+ * 3. ï¿½ï¿½ï¿½ï¿½Î¬ï¿½ï¿½
+ * 4. ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½
  */
 class NetworkWorker : public BaseWorker
 {
@@ -27,70 +27,70 @@ public:
 
 public slots:
     /**
-     * @brief Á¬½Óµ½·þÎñÆ÷
-     * @param host ·þÎñÆ÷µØÖ·
-     * @param port ·þÎñÆ÷¶Ë¿Ú
+     * @brief ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     * @param host ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+     * @param port ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½
      */
     void connectToServer(const QString& host, quint16 port);
 
     /**
-     * @brief ¶Ï¿ªÁ¬½Ó
+     * @brief ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void disconnectFromServer();
 
     /**
-     * @brief ·¢ËÍ JSON ÏûÏ¢
-     * @param message JSON ¶ÔÏó
+     * @brief ï¿½ï¿½ï¿½ï¿½ JSON ï¿½ï¿½Ï¢
+     * @param message JSON ï¿½ï¿½ï¿½ï¿½
      */
     void sendMessage(const QJsonObject& message);
 
     /**
-     * @brief ·¢ËÍÎÄ±¾ÏûÏ¢
-     * @param text ÎÄ±¾ÄÚÈÝ
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ï¢
+     * @param text ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     void sendTextMessage(const QString& text);
 
     /**
-     * @brief Æô¶¯·þÎñÆ÷Ä£Ê½
-     * @param port ¼àÌý¶Ë¿Ú
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+     * @param port ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½
      */
     void startServer(quint16 port);
 
     /**
-     * @brief Í£Ö¹·þÎñÆ÷Ä£Ê½
+     * @brief Í£Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
      */
     void stopServer();
 
 signals:
     /**
-     * @brief Á¬½Ó³É¹¦ÐÅºÅ
+     * @brief ï¿½ï¿½ï¿½Ó³É¹ï¿½ï¿½Åºï¿½
      */
     void connected();
 
     /**
-     * @brief ¶Ï¿ªÁ¬½ÓÐÅºÅ
+     * @brief ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
      */
     void disconnected();
 
     /**
-     * @brief ÊÕµ½ÏûÏ¢ÐÅºÅ
-     * @param message JSON ÏûÏ¢¶ÔÏó
-     * @param from ·¢ËÍÕßµØÖ·
+     * @brief ï¿½Õµï¿½ï¿½ï¿½Ï¢ï¿½Åºï¿½
+     * @param message JSON ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
+     * @param from ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½Ö·
      */
     void messageReceived(const QJsonObject& message, const QString& from);
 
     /**
-     * @brief ÊÕµ½ÎÄ±¾ÏûÏ¢ÐÅºÅ
+     * @brief ï¿½Õµï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ï¢ï¿½Åºï¿½
      */
     void textMessageReceived(const QString& text, const QString& from);
 
     /**
-     * @brief Á¬½Ó×´Ì¬±ä»¯ÐÅºÅ
+     * @brief ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ä»¯ï¿½Åºï¿½
      */
     void connectionStateChanged(bool isConnected);
 
 
-    // ÏûÏ¢·¢ËÍ½á¹ûÐÅºÅ
+    // ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Í½ï¿½ï¿½ï¿½Åºï¿½
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
 

@@ -1,8 +1,15 @@
 #include "dblogic_worker.h"
 #include "utils/db_manager.h"
+#include "model/message_dao.h"
+#include "model/message.h"
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QDebug>
 #include <QThread>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDateTime>
+#include <QMap>
 
 DbLogicWorker::DbLogicWorker(QObject* parent)
     : BaseWorker(parent)
@@ -74,13 +81,13 @@ void DbLogicWorker::saveMessage(const QJsonObject& message)
     
     QString messageId = message.value("messageId").toString();
     
-    // TODO: Êµ¼ÊµÄÊý¾Ý¿â±£´æÂß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½ï¿½ï¿½Ý¿â±£ï¿½ï¿½ï¿½ß¼ï¿½
     bool success = true;
     
     emit messageSaved(success, messageId);
 }
 
-//  ÐÞ¸´£ºÌí¼Ó requestId ²ÎÊý
+//  ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ requestId ï¿½ï¿½ï¿½ï¿½
 void DbLogicWorker::loadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset)
 {
     if (!m_dbInitialized) {
@@ -93,13 +100,13 @@ void DbLogicWorker::loadHistoryMessages(const QString& requestId, const QString&
              << "requestId:" << requestId
              << "limit:" << limit << "offset:" << offset;
     
-    // Ä£ÄâºÄÊ±²éÑ¯
-    QThread::msleep(200);  // Ä£Äâ 200ms µÄ²éÑ¯Ê±¼ä
+    // Ä£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ñ¯
+    QThread::msleep(200);  // Ä£ï¿½ï¿½ 200ms ï¿½Ä²ï¿½Ñ¯Ê±ï¿½ï¿½
     
-    // TODO: Êµ¼ÊµÄÊý¾Ý¿â²éÑ¯Âß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½Ñ¯ï¿½ß¼ï¿½
     QJsonArray messages;
     
-    //  ÐÞ¸´£º·µ»ØÊ±Ð¯´ø requestId
+    //  ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ð¯ï¿½ï¿½ requestId
     emit historyMessagesLoaded(requestId, messages, contactId);
 }
 
@@ -113,7 +120,7 @@ void DbLogicWorker::searchMessages(const QString& keyword)
 
     qDebug() << "Searching messages with keyword:" << keyword;
     
-    // TODO: Êµ¼ÊµÄËÑË÷Âß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     QJsonArray results;
     
     emit searchResultsReady(results);
@@ -129,7 +136,7 @@ void DbLogicWorker::updateMessageStatus(const QString& messageId, const QString&
 
     qDebug() << "Updating message status:" << messageId << "to" << status;
     
-    // TODO: Êµ¼ÊµÄ×´Ì¬¸üÐÂÂß¼­
+    // TODO: Êµï¿½Êµï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     bool success = true;
     
     emit messageStatusUpdated(success, messageId);
@@ -144,7 +151,7 @@ void DbLogicWorker::deleteMessage(const QString& messageId)
 
     qDebug() << "Deleting message:" << messageId;
     
-    // TODO: Êµ¼ÊµÄÉ¾³ýÂß¼­
+    // TODO: Êµï¿½Êµï¿½É¾ï¿½ï¿½ï¿½ß¼ï¿½
 }
 
 void DbLogicWorker::loadContactList()
@@ -157,7 +164,7 @@ void DbLogicWorker::loadContactList()
 
     qDebug() << "Loading contact list";
     
-    // TODO: Êµ¼ÊµÄÁªÏµÈËÁÐ±í¼ÓÔØÂß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     QJsonArray contacts;
     
     emit contactListLoaded(contacts);
@@ -173,7 +180,7 @@ void DbLogicWorker::addContact(const QJsonObject& contactInfo)
 
     qDebug() << "Adding contact:" << contactInfo;
     
-    // TODO: Êµ¼ÊµÄÌí¼ÓÁªÏµÈËÂß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ß¼ï¿½
     bool success = true;
     
     emit contactOperationCompleted(success, "add");
@@ -189,17 +196,72 @@ void DbLogicWorker::updateContact(const QString& contactId, const QJsonObject& c
 
     qDebug() << "Updating contact:" << contactId << contactInfo;
     
-    // TODO: Êµ¼ÊµÄ¸üÐÂÁªÏµÈËÂß¼­
+    // TODO: Êµï¿½ÊµÄ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ß¼ï¿½
     bool success = true;
     
     emit contactOperationCompleted(success, "update");
+}
+
+void DbLogicWorker::searchUserByAccount(const QString& account)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit userSearchResult(QJsonObject(), false);
+        return;
+    }
+    
+    qDebug() << "Searching user by account:" << account;
+    
+    if (account.isEmpty()) {
+        emit userSearchResult(QJsonObject(), false);
+        return;
+    }
+    
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit userSearchResult(QJsonObject(), false);
+        return;
+    }
+    
+    // ç²¾ç¡®åŒ¹é…è´¦å·ï¼ˆä¸æ”¯æŒæ¨¡ç³ŠæŸ¥è¯¢ï¼‰
+    QSqlQuery q(db);
+    q.prepare("SELECT userId, account, nickname, avatarPath, email, phone, signature, status FROM users WHERE account = :account");
+    q.bindValue(":account", account);
+    
+    if (!q.exec()) {
+        qDebug() << "Search user failed:" << q.lastError().text();
+        emit errorOccurred("Search user failed: " + q.lastError().text());
+        emit userSearchResult(QJsonObject(), false);
+        return;
+    }
+    
+    if (q.next()) {
+        // æ‰¾åˆ°ç”¨æˆ·ï¼Œæž„é€  UserInfo JSON
+        QJsonObject userInfo;
+        userInfo["userId"] = q.value("userId").toString();
+        userInfo["account"] = q.value("account").toString();
+        userInfo["nickname"] = q.value("nickname").toString();
+        userInfo["avatarPath"] = q.value("avatarPath").toString();
+        userInfo["email"] = q.value("email").toString();
+        userInfo["phone"] = q.value("phone").toString();
+        userInfo["signature"] = q.value("signature").toString();
+        userInfo["status"] = q.value("status").toInt();
+        
+        qDebug() << "User found:" << userInfo["account"].toString();
+        emit userSearchResult(userInfo, true);
+    } else {
+        qDebug() << "User not found with account:" << account;
+        emit userSearchResult(QJsonObject(), false);
+    }
 }
 
 void DbLogicWorker::processFile(const QString& filePath, const QJsonObject& options)
 {
     qDebug() << "Processing file:" << filePath << "with options:" << options;
     
-    // TODO: Êµ¼ÊµÄÎÄ¼þ´¦ÀíÂß¼­
+    // TODO: Êµï¿½Êµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     QString resultPath = filePath;
     bool success = true;
     
