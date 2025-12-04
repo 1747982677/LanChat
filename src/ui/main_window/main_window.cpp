@@ -11,6 +11,10 @@
 #include "ContactList.h"
 #include "MessageList.h"
 #include "ui/setting/settingdialog.h"
+#include "ui/personinfo/ProfileEditDialog.h"
+#include "ui/personinfo/UserProfile.h"
+#include "ui/personinfo/UserEntity.h"
+#include "ui/personinfo/ProfileViewDialog.h"
 #include "utils/logger.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -19,6 +23,8 @@
 #include <QLineEdit>
 #include <QLabel>
 #include<QPixmap>
+#include <QMessageBox>
+#include "core/app_context.h"
 
 MainWindow* MainWindow::m_instance = nullptr;
 
@@ -34,8 +40,49 @@ MainWindow::MainWindow(QWidget* parent)
     : QWidget(parent)
 {
     setupUi();
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+    connect(dbCtrl, &DbLogicController::updateUserReady,
+        this, &MainWindow::updateUserReady);
+    bool connected = connect(dbCtrl, &DbLogicController::queryUserReady,
+        this, &MainWindow::queryUserReady);
+    Logger::getInstance().log(QString("[MainWindow] Signal connection result: %1").arg(connected ? "SUCCESS" : "FAILED"));
+
+    if (connected) {
+        Logger::getInstance().log("[MainWindow] Signal connected to DbLogicController");
+    }
+    else {
+        Logger::getInstance().error("[MainWindow] FAILED to connect signal!");
+    }
+
+    
+
+}
+void MainWindow::updateUserReady(const bool& glag)
+{
+    if (glag)
+    {
+        QMessageBox::warning(this, "警告", "更新用户信息成功！！");
+        Logger::getInstance().log("[MainWindow] 更新用户信息成功！");
+        /*requestQueryUser();*/
+    }
+    else
+    {
+        Logger::getInstance().log("[MainWindow] 更新用户信息失败！");
+	}
 }
 
+void MainWindow::requestQueryUser()
+{
+    UserEntity user(userid, "", "", "");
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+    dbCtrl->requestQueryUser(user);
+}
+
+void MainWindow::queryUserReady(const UserEntity& localUser)
+{
+    m_currentUser = localUser;
+    Logger::getInstance().log("[MainWindow] 加载当前用户信息成功！");
+}
 //左侧栏
 void MainWindow::setupLeftNav()
 {
@@ -63,6 +110,8 @@ void MainWindow::setupLeftNav()
             "}"
         );
     }
+    // 2. 安装事件过滤器
+    m_avatarLabel->installEventFilter(this);
     tabLayout->addWidget(m_avatarLabel, 0, Qt::AlignCenter);
 
     // ===================== 侧边栏按钮区域 =====================
@@ -118,6 +167,78 @@ void MainWindow::setupLeftNav()
 
 }
 
+// 实现 eventFilter
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+{
+    if (obj == m_avatarLabel) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                qDebug() << "头像被点击了！";
+				showProfileViewDialog(); // 显示个人信息查看对话框
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void MainWindow::showProfileViewDialog()
+{
+    if (!m_currentUser.isValid()) {
+        Logger::getInstance().log("[MainWindow] 用户信息不完整，无法显示个人资料");
+        return;
+    }
+    /*userid*/
+    m_userProfile = UserProfile();
+	m_userProfile.userid = m_currentUser.userId;
+    m_userProfile.nickname = m_currentUser.nickname;
+    m_userProfile.email = m_currentUser.email;
+    m_userProfile.phone = m_currentUser.phone;
+    m_userProfile.signure = m_currentUser.signature;
+	m_userProfile.password = m_currentUser.password;
+    m_userProfile.rootpath = "C:/mty/QtProject/LanChat/src";//请换成你的绝对路径
+	m_userProfile.avatarpath = m_userProfile.rootpath +m_currentUser.avatarPath;
+    QPixmap pixmap(m_userProfile.avatarpath);
+    m_userProfile.avatar = pixmap;
+    // 创建并显示个人信息查看对话框
+    ProfileViewDialog* viewDialog = new ProfileViewDialog(m_userProfile, this);
+    viewDialog->setModal(true);
+
+    // 连接编辑请求信号
+    connect(viewDialog, &ProfileViewDialog::editRequested, this, [this, viewDialog]() {
+        qDebug() << "用户请求编辑资料";
+        viewDialog->close();  // 关闭查看对话框
+
+        // 显示编辑对话框
+        ProfileEditDialog* editDialog = new ProfileEditDialog( m_userProfile, this);
+
+        if (editDialog->exec() == QDialog::Accepted) {
+            // 更新用户资料
+            m_userProfile = editDialog->getUpdatedProfile();
+
+            // 更新主窗口头像
+            m_avatarLabel->setPixmap(m_userProfile.avatar);
+            m_currentUser.avatarPath = m_userProfile.avatarpath;
+			m_currentUser.nickname = m_userProfile.nickname;
+			m_currentUser.email = m_userProfile.email;
+            m_currentUser.phone = m_userProfile.phone;
+            
+            /*UserEntity user(userid, "", "", "");*/
+            DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+            dbCtrl->requesUpdateUser(m_currentUser);
+
+            qDebug() << "资料已更新";
+
+            // 重新显示查看对话框
+            showProfileViewDialog();
+        }
+
+        delete editDialog;
+        });
+
+    viewDialog->exec();
+    delete viewDialog;
+}
 //中间
 void MainWindow::setupMiddleColumn()
 {
