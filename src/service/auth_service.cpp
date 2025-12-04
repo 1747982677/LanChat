@@ -4,6 +4,7 @@
 #include "utils/logger.h"
 #include "utils/config.h"
 #include "network/socket_client.h"
+#include "core/dblogic_controller.h"
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDebug>
@@ -42,51 +43,13 @@ void AuthService::login(const QString& account, const QString& password)
     
     Logger::getInstance().log("Attempting to login with account: " + account);
     
-    // TODO: 实现登录逻辑
-    // 1. 构造登录请求 JSON
-    // 2. 通过 SocketClient 发送登录请求
-    // 3. 等待服务器响应
-    // 4. 处理响应（成功/失败）
+    // 连接 DbLogicController 的信号
+    DbLogicController& dbController = DbLogicController::instance();
+    connect(&dbController, &DbLogicController::passwordVerified,
+            this, &AuthService::onPasswordVerified, Qt::UniqueConnection);
     
-    // 构造登录请求 JSON
-    QJsonObject loginRequest;
-    loginRequest["type"] = "login";
-    loginRequest["account"] = account;
-    loginRequest["password"] = password;  // 注意：实际应该加密传输
-    
-    // TODO: 通过 SocketClient 发送请求
-    // 需要与 S4（谢天翔）的 SocketClient 集成
-    // SocketClient::getInstance().sendMessageToServer(0, QJsonDocument(loginRequest).toJson());
-    
-    // ========== 临时模拟登录（仅用于测试界面，实际应该等待服务器响应）==========
-    // 模拟登录逻辑：任何非空的账号密码都可以登录成功
-    // 实际实现中，应该在收到服务器响应后调用 handleLoginResponse
-    
-    // 确保 this 对象有正确的 parent（用于定时器）
-    if (!parent() && qApp) {
-        setParent(qApp);
-    }
-    
-    // 模拟网络延迟（使用 QTimer 对象，更可靠）
-    QTimer* timer = new QTimer(this);
-    timer->setSingleShot(true);
-    timer->setInterval(500);
-    QObject::connect(timer, &QTimer::timeout, this, [this, account, timer]() {
-        // 模拟登录成功响应
-        QJsonObject response;
-        response["type"] = "login_success";
-        response["userId"] = account;  // 临时使用账号作为用户ID
-        response["token"] = "mock_token_" + account;  // 临时生成模拟Token
-        
-        qDebug() << "模拟登录响应，调用 handleLoginResponse";
-        handleLoginResponse(response);
-        
-        // 清理定时器
-        timer->deleteLater();
-    });
-    timer->start();
-    qDebug() << "已启动模拟登录定时器，account:" << account;
-    // ========== 临时模拟登录结束 ==========
+    // 调用 DbLogicController 进行密码验证
+    dbController.verifyUserPassword(account, password);
 }
 
 void AuthService::logout()
@@ -222,50 +185,13 @@ void AuthService::registerAccount(const QString& account, const QString& passwor
     m_pendingAccount = account;
     m_pendingPassword = password;
     
-    // TODO: 实现注册逻辑
-    // 1. 构造注册请求 JSON
-    // 2. 通过 SocketClient 发送注册请求
-    // 3. 等待服务器响应
-    // 4. 处理响应（成功/失败）
+    // 连接 DbLogicController 的信号
+    DbLogicController& dbController = DbLogicController::instance();
+    connect(&dbController, &DbLogicController::userRegistered,
+            this, &AuthService::onUserRegistered, Qt::UniqueConnection);
     
-    // 构造注册请求 JSON
-    QJsonObject registerRequest;
-    registerRequest["type"] = "register";
-    registerRequest["account"] = account;
-    registerRequest["password"] = password;  // 注意：实际应该加密传输
-    
-    // TODO: 通过 SocketClient 发送请求
-    // 需要与 S4（谢天翔）的 SocketClient 集成
-    // SocketClient::getInstance().sendMessageToServer(0, QJsonDocument(registerRequest).toJson());
-    
-    // ========== 临时模拟注册（仅用于测试界面，实际应该等待服务器响应）==========
-    // 模拟注册逻辑：任何符合格式的账号密码都可以注册成功
-    // 实际实现中，应该在收到服务器响应后调用 handleRegisterResponse
-    
-    // 确保 this 对象有正确的 parent（用于定时器）
-    if (!parent() && qApp) {
-        setParent(qApp);
-    }
-    
-    // 模拟网络延迟（使用 QTimer 对象，更可靠）
-    QTimer* timer = new QTimer(this);
-    timer->setSingleShot(true);
-    timer->setInterval(500);
-    QObject::connect(timer, &QTimer::timeout, this, [this, account, timer]() {
-        // 模拟注册成功响应
-        QJsonObject response;
-        response["type"] = "register_success";
-        response["account"] = account;
-        
-        qDebug() << "模拟注册响应，调用 handleRegisterResponse";
-        handleRegisterResponse(response);
-        
-        // 清理定时器
-        timer->deleteLater();
-    });
-    timer->start();
-    qDebug() << "已启动模拟注册定时器，account:" << account;
-    // ========== 临时模拟注册结束 ==========
+    // 调用 DbLogicController 进行用户注册（密码哈希在 Controller 层完成）
+    dbController.registerUser(account, password);
 }
 
 void AuthService::handleRegisterResponse(const QJsonObject& response)
@@ -295,6 +221,8 @@ void AuthService::handleRegisterResponse(const QJsonObject& response)
             emit registerFailed("该账号已被注册，请尝试其他账号", "account_exists");
         } else if (errorType == "password_invalid") {
             emit registerFailed("密码格式错误，请使用 6-16 位字母或数字", "password_invalid");
+        } else if (errorType == "database_error") {
+            emit registerFailed(errorMsg.isEmpty() ? "数据库未初始化，请稍后重试" : errorMsg, "database_error");
         } else if (errorType == "network_error") {
             emit registerFailed("无法连接服务器，请稍后重试", "network_error");
         } else {
@@ -362,5 +290,54 @@ void AuthService::getSavedCredentials(QString& account, QString& password) const
     // 获取保存的账号和密码（用于自动填充，仅在注册后使用）
     // 注意：此方法仅用于注册后自动填充，其他场景应使用 getSavedAccount()
     const_cast<AuthService*>(this)->loadCredentialsFromLocal(account, password);
+}
+
+void AuthService::onUserRegistered(bool success, const QString& userId, const QString& errorMessage)
+{
+    if (success) {
+        // 构造注册成功响应
+        QJsonObject response;
+        response["type"] = "register_success";
+        response["account"] = m_pendingAccount;
+        handleRegisterResponse(response);
+    } else {
+        // 构造注册失败响应
+        QJsonObject response;
+        response["type"] = "register_failed";
+        response["message"] = errorMessage;
+        
+        // 根据错误消息内容设置正确的错误类型
+        if (errorMessage.contains("已被注册") || errorMessage.contains("已存在")) {
+            response["error_type"] = "account_exists";
+        } else if (errorMessage.contains("数据库未初始化") || errorMessage.contains("Database not initialized")) {
+            response["error_type"] = "database_error";
+            response["message"] = "数据库未初始化，请稍后重试";
+        } else if (errorMessage.contains("密码") || errorMessage.contains("password")) {
+            response["error_type"] = "password_invalid";
+        } else {
+            response["error_type"] = "network_error";
+        }
+        handleRegisterResponse(response);
+    }
+}
+
+void AuthService::onPasswordVerified(bool success, const QString& userId, const QString& errorMessage)
+{
+    if (success) {
+        // 构造登录成功响应
+        QJsonObject response;
+        response["type"] = "login_success";
+        response["userId"] = userId;
+        // TODO: 生成实际的 Token（可能需要与服务器交互）
+        response["token"] = "token_" + userId;  // 临时 Token
+        handleLoginResponse(response);
+    } else {
+        // 构造登录失败响应
+        QJsonObject response;
+        response["type"] = "login_failed";
+        response["message"] = errorMessage;
+        response["error_type"] = "auth_failed";
+        handleLoginResponse(response);
+    }
 }
 

@@ -59,6 +59,20 @@ public slots:
     void searchUserByAccount(const QString& account);
 
     /**
+     * @brief 注册新用户
+     * @param email 邮箱（账号）
+     * @param passwordHash 密码哈希值
+     */
+    void registerUser(const QString& email, const QString& passwordHash);
+
+    /**
+     * @brief 验证用户密码
+     * @param email 邮箱（账号）
+     * @param password 明文密码
+     */
+    void verifyUserPassword(const QString& email, const QString& password);
+
+    /**
      * @brief ������Ϣ״̬
      * @param messageId ��Ϣ ID
      * @param status ״̬���磺pending, sent, delivered, read��
@@ -145,6 +159,22 @@ signals:
      * @brief 用户搜索结果
      */
     void userSearchResult(const QJsonObject& userInfo, bool found);
+
+    /**
+     * @brief 用户注册结果
+     * @param success 是否成功
+     * @param userId 用户ID（成功时）
+     * @param errorMessage 错误信息（失败时）
+     */
+    void userRegistered(bool success, const QString& userId, const QString& errorMessage);
+
+    /**
+     * @brief 密码验证结果
+     * @param success 是否验证成功
+     * @param userId 用户ID（成功时）
+     * @param errorMessage 错误信息（失败时）
+     */
+    void passwordVerified(bool success, const QString& userId, const QString& errorMessage);
 
 private:
     QString m_dbPath;

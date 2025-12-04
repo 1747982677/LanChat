@@ -1,5 +1,6 @@
 #include "dblogic_worker.h"
 #include "utils/db_manager.h"
+#include "utils/password_util.h"
 #include "model/message_dao.h"
 #include "model/message.h"
 #include <QJsonArray>
@@ -10,6 +11,7 @@
 #include <QSqlError>
 #include <QDateTime>
 #include <QMap>
+#include <QUuid>
 
 DbLogicWorker::DbLogicWorker(QObject* parent)
     : BaseWorker(parent)
@@ -225,10 +227,10 @@ void DbLogicWorker::searchUserByAccount(const QString& account)
         return;
     }
     
-    // 精确匹配账号（不支持模糊查询）
+    // 精确匹配邮箱（账号就是邮箱，不支持模糊查询）
     QSqlQuery q(db);
-    q.prepare("SELECT userId, account, nickname, avatarPath, email, phone, signature, status FROM users WHERE account = :account");
-    q.bindValue(":account", account);
+    q.prepare("SELECT userId, email, nickname, avatarPath, phone, signature, status FROM users WHERE email = :email");
+    q.bindValue(":email", account);  // account 参数实际是邮箱地址
     
     if (!q.exec()) {
         qDebug() << "Search user failed:" << q.lastError().text();
@@ -239,17 +241,18 @@ void DbLogicWorker::searchUserByAccount(const QString& account)
     
     if (q.next()) {
         // 找到用户，构造 UserInfo JSON
+        QString email = q.value("email").toString();
         QJsonObject userInfo;
         userInfo["userId"] = q.value("userId").toString();
-        userInfo["account"] = q.value("account").toString();
+        userInfo["account"] = email;  // 账号就是邮箱
         userInfo["nickname"] = q.value("nickname").toString();
         userInfo["avatarPath"] = q.value("avatarPath").toString();
-        userInfo["email"] = q.value("email").toString();
+        userInfo["email"] = email;  // 邮箱字段
         userInfo["phone"] = q.value("phone").toString();
         userInfo["signature"] = q.value("signature").toString();
         userInfo["status"] = q.value("status").toInt();
         
-        qDebug() << "User found:" << userInfo["account"].toString();
+        qDebug() << "User found:" << email;
         emit userSearchResult(userInfo, true);
     } else {
         qDebug() << "User not found with account:" << account;
@@ -266,4 +269,126 @@ void DbLogicWorker::processFile(const QString& filePath, const QJsonObject& opti
     bool success = true;
     
     emit fileProcessed(success, filePath, resultPath);
+}
+
+void DbLogicWorker::registerUser(const QString& email, const QString& passwordHash)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit userRegistered(false, QString(), "数据库未初始化");
+        return;
+    }
+
+    qDebug() << "Registering user:" << email;
+
+    if (email.isEmpty() || passwordHash.isEmpty()) {
+        emit userRegistered(false, QString(), "邮箱或密码不能为空");
+        return;
+    }
+
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit userRegistered(false, QString(), "数据库未打开");
+        return;
+    }
+
+    // 检查邮箱是否已存在
+    QSqlQuery checkQuery(db);
+    checkQuery.prepare("SELECT userId FROM users WHERE email = :email");
+    checkQuery.bindValue(":email", email);
+    
+    if (!checkQuery.exec()) {
+        qDebug() << "Check user existence failed:" << checkQuery.lastError().text();
+        emit errorOccurred("Check user existence failed: " + checkQuery.lastError().text());
+        emit userRegistered(false, QString(), "检查用户是否存在时出错");
+        return;
+    }
+
+    if (checkQuery.next()) {
+        qDebug() << "User already exists:" << email;
+        emit userRegistered(false, QString(), "该邮箱已被注册");
+        return;
+    }
+
+    // 生成用户ID
+    QString userId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+
+    // 插入新用户（昵称字段留空，用户可以在后续设置）
+    QSqlQuery insertQuery(db);
+    insertQuery.prepare("INSERT INTO users (userId, email, passwordHash, nickname, status, lastOnlineTime) "
+                        "VALUES (:userId, :email, :passwordHash, :nickname, :status, :lastOnlineTime)");
+    insertQuery.bindValue(":userId", userId);
+    insertQuery.bindValue(":email", email);
+    insertQuery.bindValue(":passwordHash", passwordHash);
+    insertQuery.bindValue(":nickname", QString());  // 昵称留空，不自动生成
+    insertQuery.bindValue(":status", 0);  // 默认离线状态
+    insertQuery.bindValue(":lastOnlineTime", QDateTime::currentSecsSinceEpoch());
+
+    if (!insertQuery.exec()) {
+        qDebug() << "Register user failed:" << insertQuery.lastError().text();
+        emit errorOccurred("Register user failed: " + insertQuery.lastError().text());
+        emit userRegistered(false, QString(), "注册失败: " + insertQuery.lastError().text());
+        return;
+    }
+
+    qDebug() << "User registered successfully:" << email << "userId:" << userId;
+    emit userRegistered(true, userId, QString());
+}
+
+void DbLogicWorker::verifyUserPassword(const QString& email, const QString& password)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit passwordVerified(false, QString(), "数据库未初始化");
+        return;
+    }
+
+    qDebug() << "Verifying password for user:" << email;
+
+    if (email.isEmpty() || password.isEmpty()) {
+        emit passwordVerified(false, QString(), "邮箱或密码不能为空");
+        return;
+    }
+
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit passwordVerified(false, QString(), "数据库未打开");
+        return;
+    }
+
+    // 查询用户信息（包括密码哈希）
+    QSqlQuery q(db);
+    q.prepare("SELECT userId, passwordHash FROM users WHERE email = :email");
+    q.bindValue(":email", email);
+
+    if (!q.exec()) {
+        qDebug() << "Query user failed:" << q.lastError().text();
+        emit errorOccurred("Query user failed: " + q.lastError().text());
+        emit passwordVerified(false, QString(), "查询用户失败");
+        return;
+    }
+
+    if (!q.next()) {
+        qDebug() << "User not found:" << email;
+        emit passwordVerified(false, QString(), "用户不存在");
+        return;
+    }
+
+    QString userId = q.value("userId").toString();
+    QString storedPasswordHash = q.value("passwordHash").toString();
+
+    // 验证密码
+    bool isValid = PasswordUtil::verifyPassword(password, storedPasswordHash);
+    
+    if (isValid) {
+        qDebug() << "Password verified successfully for user:" << email;
+        emit passwordVerified(true, userId, QString());
+    } else {
+        qDebug() << "Password verification failed for user:" << email;
+        emit passwordVerified(false, QString(), "密码错误");
+    }
 }

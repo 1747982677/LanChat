@@ -6,12 +6,12 @@
 #include <QJsonArray>
 
 /**
- * @brief Êı¾İ¿âÓëÒµÎñÂß¼­¿ØÖÆÆ÷
+ * @brief ï¿½ï¿½ï¿½İ¿ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  * 
- * ÔËĞĞÔÚÖ÷Ïß³Ì£¬¸ºÔğ£º
- * 1. ¹ÜÀí DbLogicWorker µÄÉúÃüÖÜÆÚ
- * 2. Ìá¹©Êı¾İ¿â²Ù×÷µÄÍâ²¿½Ó¿Ú
- * 3. ×ª·¢Êı¾İÊÂ¼şµ½ÉÏ²ã
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì£ï¿½ï¿½ï¿½ï¿½ï¿½
+ * 1. ï¿½ï¿½ï¿½ï¿½ DbLogicWorker ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * 2. ï¿½á¹©ï¿½ï¿½ï¿½İ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ó¿ï¿½
+ * 3. ×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Ï²ï¿½
  */
 class DbLogicController : public BaseController
 {
@@ -24,65 +24,91 @@ public:
     bool initialize() override;
 
     /**
-     * @brief »ñÈ¡µ¥Àı
+     * @brief ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
      */
     static DbLogicController& instance();
 
+    /**
+     * @brief æ£€æŸ¥æ•°æ®åº“æ˜¯å¦å·²åˆå§‹åŒ–
+     * @return æ˜¯å¦å·²åˆå§‹åŒ–
+     */
+    bool isDatabaseInitialized() const;
+
 public slots:
     /**
-     * @brief ³õÊ¼»¯Êı¾İ¿â
+     * @brief ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½
      */
     void initializeDatabase(const QString& dbPath);
 
     /**
-     * @brief ±£´æÏûÏ¢
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
      */
     void saveMessage(const QJsonObject& message);
     
-    //  ĞŞ¸´£º·µ»Ø requestId£¬UI ¿ÉÒÔÓÃÀ´ÑéÖ¤
+    //  ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ requestIdï¿½ï¿½UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
     QString loadHistoryMessages(const QString& contactId, int limit = 50, int offset = 0);
     
     /**
-     * @brief ËÑË÷ÏûÏ¢
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
      */
     void searchMessages(const QString& keyword);
 
     /**
-     * @brief ¸üĞÂÏûÏ¢×´Ì¬
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢×´Ì¬
      */
     void updateMessageStatus(const QString& messageId, const QString& status);
 
     /**
-     * @brief É¾³ıÏûÏ¢
+     * @brief É¾ï¿½ï¿½ï¿½ï¿½Ï¢
      */
     void deleteMessage(const QString& messageId);
 
     /**
-     * @brief ¼ÓÔØÁªÏµÈËÁĞ±í
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½Ğ±ï¿½
      */
     void loadContactList();
 
     /**
-     * @brief Ìí¼ÓÁªÏµÈË
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
      */
     void addContact(const QJsonObject& contactInfo);
 
     /**
-     * @brief ¸üĞÂÁªÏµÈË
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
      */
     void updateContact(const QString& contactId, const QJsonObject& contactInfo);
 
     /**
-     * @brief ´¦ÀíÎÄ¼ş
+     * @brief ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
      */
     void processFile(const QString& filePath, const QJsonObject& options);
 
+    /**
+     * @brief é€šè¿‡è´¦å·æœç´¢ç”¨æˆ·ï¼ˆç²¾ç¡®åŒ¹é…ï¼Œä¸æ”¯æŒæ¨¡ç³ŠæŸ¥è¯¢ï¼‰
+     * @param account è´¦å·ï¼ˆé‚®ç®±ï¼‰
+     */
+    void searchUserByAccount(const QString& account);
+
+    /**
+     * @brief æ³¨å†Œæ–°ç”¨æˆ·
+     * @param email é‚®ç®±ï¼ˆè´¦å·ï¼‰
+     * @param password æ˜æ–‡å¯†ç ï¼ˆå°†åœ¨å†…éƒ¨è¿›è¡Œå“ˆå¸Œï¼‰
+     */
+    void registerUser(const QString& email, const QString& password);
+
+    /**
+     * @brief éªŒè¯ç”¨æˆ·å¯†ç 
+     * @param email é‚®ç®±ï¼ˆè´¦å·ï¼‰
+     * @param password æ˜æ–‡å¯†ç 
+     */
+    void verifyUserPassword(const QString& email, const QString& password);
+
 signals:
-    // ·¢ËÍ¸ø Worker µÄĞÅºÅ
+    // ï¿½ï¿½ï¿½Í¸ï¿½ Worker ï¿½ï¿½ï¿½Åºï¿½
     void requestInitializeDatabase(const QString& dbPath);
     void requestSaveMessage(const QJsonObject& message);
     
-    //  ĞŞ¸´£ºÇëÇóĞÅºÅ°üº¬ requestId
+    //  ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅ°ï¿½ï¿½ï¿½ requestId
     void requestLoadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset);
     
     void requestSearchMessages(const QString& keyword);
@@ -92,12 +118,15 @@ signals:
     void requestAddContact(const QJsonObject& contactInfo);
     void requestUpdateContact(const QString& contactId, const QJsonObject& contactInfo);
     void requestProcessFile(const QString& filePath, const QJsonObject& options);
+    void requestSearchUserByAccount(const QString& account);
+    void requestRegisterUser(const QString& email, const QString& passwordHash);
+    void requestVerifyUserPassword(const QString& email, const QString& password);
 
-    // ´Ó Worker ½ÓÊÕµÄĞÅºÅ£¨×ª·¢£©
+    // ï¿½ï¿½ Worker ï¿½ï¿½ï¿½Õµï¿½ï¿½ÅºÅ£ï¿½×ªï¿½ï¿½ï¿½ï¿½
     void databaseInitialized(bool success);
     void messageSaved(bool success, const QString& messageId);
     
-    //  ĞŞ¸´£ºÏìÓ¦ĞÅºÅ°üº¬ requestId
+    //  ï¿½Ş¸ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ÅºÅ°ï¿½ï¿½ï¿½ requestId
     void historyMessagesLoaded(const QString& requestId, const QJsonArray& messages, const QString& contactId);
     
     void searchResultsReady(const QJsonArray& results);
@@ -105,6 +134,9 @@ signals:
     void contactListLoaded(const QJsonArray& contacts);
     void contactOperationCompleted(bool success, const QString& operation);
     void fileProcessed(bool success, const QString& filePath, const QString& resultPath);
+    void userSearchResult(const QJsonObject& userInfo, bool found);
+    void userRegistered(bool success, const QString& userId, const QString& errorMessage);
+    void passwordVerified(bool success, const QString& userId, const QString& errorMessage);
 
 protected:
     QObject* createWorker() override;
@@ -112,6 +144,10 @@ protected:
 private:
     void connectSignals();
     static DbLogicController* s_instance;
+    
+    // æ•°æ®åº“åˆå§‹åŒ–çŠ¶æ€
+    bool m_dbInitialized;
+    QString m_dbPath;  // ä¿å­˜æ•°æ®åº“è·¯å¾„ï¼Œä»¥ä¾¿åœ¨éœ€è¦æ—¶è§¦å‘åˆå§‹åŒ–
 };
 
 #endif // DBLOGIC_CONTROLLER_H

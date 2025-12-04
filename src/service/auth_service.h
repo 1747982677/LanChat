@@ -101,6 +101,10 @@ private:
     
     // 从本地加载账号密码
     void loadCredentialsFromLocal(QString& account, QString& password) const;
+
+    // 处理数据库操作的回调
+    void onUserRegistered(bool success, const QString& userId, const QString& errorMessage);
+    void onPasswordVerified(bool success, const QString& userId, const QString& errorMessage);
     
     // 成员变量
     QString m_currentUserId;      // 当前用户 ID

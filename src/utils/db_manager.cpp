@@ -170,10 +170,10 @@ bool DatabaseManager::ensureSchema()
     const QString createUsers = R"(
         CREATE TABLE IF NOT EXISTS users (
             userId TEXT PRIMARY KEY,
-            account TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            passwordHash TEXT NOT NULL,
             nickname TEXT,
             avatarPath TEXT,
-            email TEXT,
             phone TEXT,
             signature TEXT,
             status INTEGER DEFAULT 0,
@@ -184,7 +184,7 @@ bool DatabaseManager::ensureSchema()
         Logger::getInstance().error("Failed to create users table");
         return false;
     }
-    exec("CREATE INDEX IF NOT EXISTS idx_users_account ON users(account);");
+    exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);");
 
     // create friends table for friend relationships
     const QString createFriends = R"(
