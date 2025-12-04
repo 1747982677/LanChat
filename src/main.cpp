@@ -41,8 +41,8 @@ int main(int argc, char* argv[])
     AppContext& context = AppContext::instance();
     // 设置数据库路径
 	//需要根据实际路径修改
-    //context.setDatabasePath("C:\\mty\\QtProject\\LanChat\\src\\model\\lanchat.db");
-    context.setDatabasePath("src\\model\\lanchat.db");
+    context.setDatabasePath("C:\\mty\\QtProject\\LanChat\\src\\model\\lanchat.db");
+    /*context.setDatabasePath("src\\model\\lanchat.db");*/
 
     // 初始化所有模块
     if (!context.initialize()) {
@@ -78,9 +78,12 @@ int main(int argc, char* argv[])
 
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
-    if (authService.isLoggedIn()) {
+    if (authService.isLoggedIn()) {//authService.isLoggedIn()
         // 如果已登录，直接显示主窗口
-        MainWindow::instance()->show();
+        MainWindow* mainWindow = MainWindow::instance();
+        mainWindow->userid = "UID158055";
+        mainWindow->requestQueryUser();
+        mainWindow->show();
 
         // Debug: simulate incoming message to test unread count
         // #ifdef QT_DEBUG
@@ -110,7 +113,11 @@ int main(int argc, char* argv[])
                             // 登录成功后，隐藏登录窗口，显示主窗口
                             loginWindow->hide();
                             qDebug() << "main.cpp: 隐藏登录窗口，准备显示主窗口";
-                            MainWindow::instance()->show();
+                            MainWindow* mainWindow = MainWindow::instance();
+                            mainWindow->userid = "UID158055";
+                            mainWindow->requestQueryUser();
+                            mainWindow->show();
+                            //MainWindow::instance()->show();
                             qDebug() << "main.cpp: 主窗口已显示";
 
                             // Debug: simulate incoming message after login to test unread count

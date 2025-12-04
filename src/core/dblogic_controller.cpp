@@ -2,6 +2,7 @@
 #include "dblogic_worker.h"
 #include <QDebug>
 #include <QUuid>
+#include "ui/personinfo/UserEntity.h"
 
 DbLogicController* DbLogicController::s_instance = nullptr;
 
@@ -105,6 +106,23 @@ void DbLogicController::connectSignals()
         worker, &DbLogicWorker::queryMessages);
     connect(worker, &DbLogicWorker::queryResultsReady,
         this, &DbLogicController::queryResultsReady);
+
+    //*********关于public/user数据表的设计********
+    
+    connect(this, &DbLogicController::requestQueryUser,
+        worker, &DbLogicWorker::queryUser);
+    connect(worker, &DbLogicWorker::queryUserReady,
+        this, &DbLogicController::queryUserReady);
+
+    connect(this, &DbLogicController::requesUpdateUser,
+        worker, &DbLogicWorker::updateUser);
+    connect(worker, &DbLogicWorker::updateUserReady,
+        this, &DbLogicController::updateUserReady);
+
+    connect(this, &DbLogicController::requesAddUser,
+        worker, &DbLogicWorker::addUser);
+    connect(worker, &DbLogicWorker::addUserReady,
+        this, &DbLogicController::addUserReady);
 }
 
 void DbLogicController::queryMessages(const QString& localUser, const QString& peer, int limit)
