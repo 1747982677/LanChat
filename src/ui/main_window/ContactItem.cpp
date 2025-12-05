@@ -1,8 +1,8 @@
 // ContactItem.cpp
 /*
- * Ò³ÃæÃû³Æ£ºÁªÏµÈËÁĞ±í×é¼ş
- * ¹¦ÄÜ£ºÏÔÊ¾Ã¿¸öµ¥¶ÀµÄÁªÏµÈË
- * ÓÃ·¨£ºÔÚContactList¼¯³É
+ * é¡µé¢åç§°ï¼šè”ç³»äººåˆ—è¡¨é¡¹
+ * åŠŸèƒ½ï¼šæ˜¾ç¤ºæ¯ä¸ªè”ç³»äººçš„ä¿¡æ¯
+ * ç”¨æ³•ï¼šç”±ContactListè°ƒç”¨
  */
 #include "ContactItem.h"
 #include <QPixmap>
@@ -31,8 +31,19 @@ ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget
     m_nameLabel = new QLabel(name, this);
     m_nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     layout->addWidget(m_nameLabel);
+    
+    // çŠ¶æ€æŒ‡ç¤ºå™¨ï¼ˆå°åœ†ç‚¹ï¼‰
+    m_statusIndicator = new QLabel(this);
+    m_statusIndicator->setFixedSize(8, 8);
+    m_statusIndicator->setStyleSheet(
+        "QLabel {"
+        "   background-color: #999999;"
+        "   border-radius: 4px;"
+        "}"
+    );
+    layout->addWidget(m_statusIndicator);
 
-    // Î´¶Á½Ç±ê£¬³õÊ¼Òş²Ø
+    // æœªè¯»æ¶ˆæ¯å¾½ç« ï¼Œåˆå§‹éšè—
     m_badgeLabel = new QLabel(this);
     m_badgeLabel->setVisible(false);
     m_badgeLabel->setStyleSheet(
@@ -49,6 +60,31 @@ void ContactItem::setUnreadCount(int count)
     } else {
         m_badgeLabel->setText(count > 99 ? "99+" : QString::number(count));
         m_badgeLabel->setVisible(true);
+    }
+}
+
+void ContactItem::setUserStatus(bool isOnline)
+{
+    if (!m_statusIndicator) {
+        return;
+    }
+    
+    if (isOnline) {
+        // åœ¨çº¿ï¼šç»¿è‰²å®å¿ƒåœ†ç‚¹
+        m_statusIndicator->setStyleSheet(
+            "QLabel {"
+            "   background-color: #07c160;"
+            "   border-radius: 4px;"
+            "}"
+        );
+    } else {
+        // ç¦»çº¿ï¼šç°è‰²å®å¿ƒåœ†ç‚¹
+        m_statusIndicator->setStyleSheet(
+            "QLabel {"
+            "   background-color: #999999;"
+            "   border-radius: 4px;"
+            "}"
+        );
     }
 }
 

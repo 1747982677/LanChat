@@ -22,7 +22,7 @@ public:
         , phone("")
         , signature("")
         , status(0)
-        , password("")
+        , passwordHash("")
         , lastOnlineTime(0)
     {
         // 初始化默认值
@@ -30,7 +30,7 @@ public:
 
     // 带参数构造函数
     UserEntity(const QString& uid, const QString& nick, const QString& mail,
-        const QString& pwd, const QString& phoneNum = "", int userStatus = 0)
+        const QString& pwdHash, const QString& phoneNum = "", int userStatus = 0)
         : userId(uid)
         , nickname(nick)
         , avatarPath("")
@@ -38,7 +38,7 @@ public:
         , phone(phoneNum)
         , signature("")
         , status(userStatus)
-        , password(pwd)
+        , passwordHash(pwdHash)
         , lastOnlineTime(0)
     {
         // 简单验证
@@ -53,7 +53,7 @@ public:
         return !userId.trimmed().isEmpty() &&
             !nickname.trimmed().isEmpty() &&
             !email.trimmed().isEmpty() &&
-            !password.trimmed().isEmpty();
+            !passwordHash.trimmed().isEmpty();
     }
 
     // 检查是否为有效用户（已注册）
@@ -152,43 +152,43 @@ public:
         return false;
     }
 
-    // 转换为SQL插入语句
+    // 转换为SQL插入语句（统一字段顺序：userId, email, passwordHash, nickname, avatarPath, phone, signature, status, lastOnlineTime）
     QString toInsertSQL() const
     {
-        return QString("INSERT INTO users (userId, nickname, avatarPath, email, phone, "
-            "signature, status, password, lastOnlineTime) "
-            "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', %9)")
+        return QString("INSERT INTO users (userId, email, passwordHash, nickname, avatarPath, phone, "
+            "signature, status, lastOnlineTime) "
+            "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', %8, %9)")
             .arg(userId)
+            .arg(email)
+            .arg(passwordHash)
             .arg(nickname)
             .arg(avatarPath)
-            .arg(email)
             .arg(phone)
             .arg(signature)
             .arg(status)
-            .arg(password)
             .arg(lastOnlineTime);
     }
 
-    // 转换为SQL更新语句
+    // 转换为SQL更新语句（统一字段顺序）
     QString toUpdateSQL() const
     {
         return QString("UPDATE users SET "
-            "nickname = '%1', "
-            "avatarPath = '%2', "
-            "email = '%3', "
-            "phone = '%4', "
-            "signature = '%5', "
-            "status = %6, "
-            "password = '%7', "
+            "email = '%1', "
+            "passwordHash = '%2', "
+            "nickname = '%3', "
+            "avatarPath = '%4', "
+            "phone = '%5', "
+            "signature = '%6', "
+            "status = %7, "
             "lastOnlineTime = %8 "
             "WHERE userId = '%9'")
+            .arg(email)
+            .arg(passwordHash)
             .arg(nickname)
             .arg(avatarPath)
-            .arg(email)
             .arg(phone)
             .arg(signature)
             .arg(status)
-            .arg(password)
             .arg(lastOnlineTime)
             .arg(userId);
     }
@@ -202,13 +202,13 @@ public:
     {
         UserEntity user;
         user.userId = row.value("userId").toString();
+        user.email = row.value("email").toString();
+        user.passwordHash = row.value("passwordHash").toString();
         user.nickname = row.value("nickname").toString();
         user.avatarPath = row.value("avatarPath").toString();
-        user.email = row.value("email").toString();
         user.phone = row.value("phone").toString();
         user.signature = row.value("signature").toString();
         user.status = row.value("status").toInt();
-        user.password = row.value("password").toString();
         user.lastOnlineTime = row.value("lastOnlineTime").toLongLong();
         return user;
     }
@@ -225,22 +225,22 @@ public:
         return QString("user_%1").arg(QDateTime::currentMSecsSinceEpoch());
     }
 
-    // 清空敏感信息（如密码）
+    // 清空敏感信息（如密码哈希）
     void clearSensitiveData()
     {
-        password.clear();
+        passwordHash.clear();
     }
 
 public:
     // 成员变量（与数据库字段对应）
     QString userId;          // 用户ID（主键）
+    QString email;           // 邮箱（唯一，非空）
+    QString passwordHash;    // 密码哈希（非空）
     QString nickname;        // 昵称
     QString avatarPath;      // 头像路径
-    QString email;           // 邮箱（唯一，非空）
     QString phone;           // 电话
     QString signature;       // 个性签名
     int status;              // 状态（0:离线, 1:在线, 其他自定义状态）
-    QString password;        // 密码（非空）
     qint64 lastOnlineTime;   // 最后在线时间（时间戳）
 
 private:

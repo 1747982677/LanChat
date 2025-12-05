@@ -7,7 +7,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QButtonGroup>
-#include <QMap>  
+#include <QMap>
+#include <QVBoxLayout>
 #include "ui/personinfo/UserProfile.h"  // 确保包含 UserProfile 头文件
 #include "ui/personinfo/UserEntity.h"   // 确保包含 UserEntity 头文件
 class MainWindow : public QWidget {
@@ -29,6 +30,12 @@ public:
 	QString userid;//用户ID供外部访问
     void setRightPages(PageType type);//从外部设置页签
 	UserEntity m_currentUser; // 当前用户实体
+    
+    // 加载好友申请列表
+    void loadFriendRequests();
+    
+    // 更新用户状态显示（在线/离线）
+    void updateUserStatus(bool isOnline);
 private:
     void updateUserReady(const bool& glag);
     UserProfile m_userProfile;
@@ -44,6 +51,7 @@ private:
     // 左侧导航
     QWidget* m_tabBar;
     QLabel* m_avatarLabel;
+    QLabel* m_statusLabel;  // 状态标签（在线/离线）
     QButtonGroup* m_sideButtonGroup;
     void setupLeftNav();
 
@@ -63,8 +71,14 @@ private:
     QWidget* m_friendInfoPage;
     QWidget* m_settingsPage;
     QWidget* m_newFriendPage;
+    QVBoxLayout* m_friendRequestLayout;  // 好友申请列表布局
 
     void setupPages();
+    
+    // 好友申请相关
+    void onFriendRequestsLoaded(const QJsonArray& requests);
+    void onFriendRequestAccepted(bool success, const QString& errorMessage);
+    void onAcceptButtonClicked(const QString& requestId, const QString& senderId);
 
     //页面映射
     void addRightPage(PageType type, QWidget* page);

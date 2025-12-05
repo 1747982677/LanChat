@@ -74,6 +74,33 @@ public slots:
      * @param password 明文密码
      */
     void verifyUserPassword(const QString& email, const QString& password);
+    
+    /**
+     * @brief 发送好友请求
+     * @param senderId 发送者用户ID
+     * @param receiverId 接收者用户ID
+     * @param senderAccount 发送者账号（邮箱）
+     * @param senderNickname 发送者昵称
+     * @param avatarPath 发送者头像路径
+     * @param verifymsg 验证消息（可选）
+     */
+    void sendFriendRequest(const QString& senderId, const QString& receiverId,
+                          const QString& senderAccount, const QString& senderNickname,
+                          const QString& avatarPath, const QString& verifymsg = QString());
+    
+    /**
+     * @brief 查询收到的好友请求（状态为 Pending）
+     * @param receiverId 接收者用户ID
+     */
+    void queryFriendRequests(const QString& receiverId);
+    
+    /**
+     * @brief 接受好友请求
+     * @param requestId 请求ID
+     * @param senderId 发送者用户ID
+     * @param receiverId 接收者用户ID
+     */
+    void acceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId);
 
     /**
      * @brief 更新消息状态
@@ -90,8 +117,9 @@ public slots:
 
     /**
      * @brief 加载联系人列表
+     * @param userId 当前用户ID
      */
-    void loadContactList();
+    void loadContactList(const QString& userId);
 
     /**
      * @brief 添加联系人
@@ -224,6 +252,27 @@ signals:
      * @brief 添加用户结果（用于public/user数据表）
      */
     void addUserReady(const bool& glag);
+
+    /**
+     * @brief 好友请求发送结果
+     * @param success 是否成功
+     * @param requestId 请求ID（可选，若有）
+     * @param errorMessage 错误信息（失败时）
+     */
+    void friendRequestSent(bool success, const QString& requestId, const QString& errorMessage);
+    
+    /**
+     * @brief 好友请求查询结果
+     * @param requests 好友请求列表（JSON数组）
+     */
+    void friendRequestsLoaded(const QJsonArray& requests);
+    
+    /**
+     * @brief 好友请求接受结果
+     * @param success 是否成功
+     * @param errorMessage 错误信息（失败时）
+     */
+    void friendRequestAccepted(bool success, const QString& errorMessage);
 
 private:
     QString m_dbPath;

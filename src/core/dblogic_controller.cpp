@@ -95,6 +95,12 @@ void DbLogicController::connectSignals()
             worker, &DbLogicWorker::registerUser);
     connect(this, &DbLogicController::requestVerifyUserPassword,
             worker, &DbLogicWorker::verifyUserPassword);
+    connect(this, &DbLogicController::requestSendFriendRequest,
+            worker, &DbLogicWorker::sendFriendRequest);
+    connect(this, &DbLogicController::requestQueryFriendRequests,
+            worker, &DbLogicWorker::queryFriendRequests);
+    connect(this, &DbLogicController::requestAcceptFriendRequest,
+            worker, &DbLogicWorker::acceptFriendRequest);
 
     // Worker -> Controller 信号（转发）
     connect(worker, &DbLogicWorker::databaseInitialized,
@@ -125,6 +131,12 @@ void DbLogicController::connectSignals()
             this, &DbLogicController::userRegistered);
     connect(worker, &DbLogicWorker::passwordVerified,
             this, &DbLogicController::passwordVerified);
+    connect(worker, &DbLogicWorker::friendRequestSent,
+            this, &DbLogicController::friendRequestSent);
+    connect(worker, &DbLogicWorker::friendRequestsLoaded,
+            this, &DbLogicController::friendRequestsLoaded);
+    connect(worker, &DbLogicWorker::friendRequestAccepted,
+            this, &DbLogicController::friendRequestAccepted);
 
     //*********关于lanchat/messages数据表的设计********
     connect(this, &DbLogicController::requestQueryMessages,
@@ -192,10 +204,10 @@ void DbLogicController::deleteMessage(const QString& messageId)
     emit requestDeleteMessage(messageId);
 }
 
-void DbLogicController::loadContactList()
+void DbLogicController::loadContactList(const QString& userId)
 {
-    qDebug() << "DbLogicController: Request load contact list";
-    emit requestLoadContactList();
+    qDebug() << "DbLogicController: Request load contact list for user:" << userId;
+    emit requestLoadContactList(userId);
 }
 
 void DbLogicController::addContact(const QJsonObject& contactInfo)
@@ -302,4 +314,24 @@ void DbLogicController::addUser(const UserEntity& localUser)
 {
     qDebug() << "DbLogicController: Request add user:" << localUser.userId;
     emit requesAddUser(localUser);
+}
+
+void DbLogicController::sendFriendRequest(const QString& senderId, const QString& receiverId,
+                                         const QString& senderAccount, const QString& senderNickname,
+                                         const QString& avatarPath, const QString& verifymsg)
+{
+    qDebug() << "DbLogicController: Request send friend request from" << senderId << "to" << receiverId;
+    emit requestSendFriendRequest(senderId, receiverId, senderAccount, senderNickname, avatarPath, verifymsg);
+}
+
+void DbLogicController::queryFriendRequests(const QString& receiverId)
+{
+    qDebug() << "DbLogicController: Request query friend requests for:" << receiverId;
+    emit requestQueryFriendRequests(receiverId);
+}
+
+void DbLogicController::acceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId)
+{
+    qDebug() << "DbLogicController: Request accept friend request:" << requestId;
+    emit requestAcceptFriendRequest(requestId, senderId, receiverId);
 }

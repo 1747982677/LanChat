@@ -167,16 +167,18 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
 {
     if (connectionName=="public") {
         // create users table for user information
+        // public.db 作为中央服务器，存储所有用户的账号信息（注册、登录都使用此表）
+        // 统一使用与 lanchat.db 相同的表结构
         const QString createUsers = R"(
         CREATE TABLE IF NOT EXISTS users (
             userId TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            passwordHash TEXT NOT NULL,
             nickname TEXT,
             avatarPath TEXT,
-            email TEXT UNIQUE NOT NULL,
             phone TEXT,
             signature TEXT,
             status INTEGER DEFAULT 0,
-            password TEXT NOT NULL,
             lastOnlineTime INTEGER DEFAULT 0
             );
         )";
@@ -221,25 +223,28 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             return false;
         }
 
-        // create users table for user authentication (in lanchat database)
-        const QString createUsers = R"(
-            CREATE TABLE IF NOT EXISTS users (
-                userId TEXT PRIMARY KEY,
-                email TEXT UNIQUE NOT NULL,
-                passwordHash TEXT NOT NULL,
-                nickname TEXT,
-                avatarPath TEXT,
-                phone TEXT,
-                signature TEXT,
-                status INTEGER DEFAULT 0,
-                lastOnlineTime INTEGER DEFAULT 0
-            );
-        )";
-        if (!exec(createUsers, connectionName)) {
-            Logger::getInstance().error("Failed to create users table");
-            return false;
-        }
-        exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);", connectionName);
+        // create users table in lanchat database
+        // 注意：用户账号信息现在存储在 public.db 中（作为中央服务器）
+        // lanchat.db 的 users 表不再用于注册/登录
+        // 如果需要，可以删除此表的创建代码
+        //const QString createUsers = R"(
+        //    CREATE TABLE IF NOT EXISTS users (
+        //        userId TEXT PRIMARY KEY,
+        //        email TEXT UNIQUE NOT NULL,
+        //        passwordHash TEXT NOT NULL,
+        //        nickname TEXT,
+        //        avatarPath TEXT,
+        //        phone TEXT,
+        //        signature TEXT,
+        //        status INTEGER DEFAULT 0,
+        //        lastOnlineTime INTEGER DEFAULT 0
+        //     );
+        // )";
+        //if (!exec(createUsers, connectionName)) {
+        //    Logger::getInstance().error("Failed to create users table");
+        //    return false;
+        //}
+        //exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);", connectionName);
 
         const QString createFriends = R"(
         CREATE TABLE IF NOT EXISTS friends (
