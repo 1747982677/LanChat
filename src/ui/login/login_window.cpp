@@ -282,10 +282,8 @@ void LoginWindow::onRegisterLinkClicked()
         // 连接注册成功信号
         connect(m_registerWindow, &RegisterWindow::registerSucceeded,
                 this, [this](const QString& account, const QString& password) {
-                    // AuthService 已经在内部自动保存了凭证，这里只需要填充账号
-                    // 注意：为了安全，我们只填充账号，不填充密码
-                    // 但根据需求，注册后应该自动填充密码，所以这里仍然填充
-                    // 实际生产环境中，建议只填充账号，让用户重新输入密码
+                    // 注册成功后，从 AuthService 获取临时暂存的账号密码并填充
+                    // 注意：这是临时暂存，登录成功后会清除
                     setAccountAndPassword(account, password);
                     // 隐藏注册窗口，显示登录窗口
                     m_registerWindow->hide();
@@ -342,17 +340,13 @@ void LoginWindow::hideGlobalHint()
 
 void LoginWindow::loadSavedCredentials()
 {
-    // 从 AuthService 加载保存的账号和密码
-    // 根据需求，注册后应该自动填充账号和密码
+    // 从 AuthService 加载保存的账号（只加载账号，不加载密码）
     QString account, password;
     AuthService::getInstance().getSavedCredentials(account, password);
     if (!account.isEmpty()) {
         m_accountEdit->setText(account);
-        // 根据需求，注册后自动填充密码
-        // 注意：实际生产环境中，建议只填充账号，让用户重新输入密码以提高安全性
-        if (!password.isEmpty()) {
-            m_passwordEdit->setText(password);
-        }
+        // 不填充密码，用户需要重新输入密码（安全考虑）
+        m_passwordEdit->clear();
     }
 }
 

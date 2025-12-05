@@ -57,6 +57,10 @@ void AuthService::login(const QString& account, const QString& password)
     
     Logger::getInstance().log("Attempting to login with account: " + account);
     
+    // 临时保存登录时的账号密码（用于登录成功后保存到本地）
+    m_pendingAccount = account;
+    m_pendingPassword = password;
+    
     // 连接 DbLogicController 的信号
     DbLogicController& dbController = DbLogicController::instance();
     connect(&dbController, &DbLogicController::passwordVerified,
@@ -134,7 +138,7 @@ bool AuthService::validateToken(const QString& token) const
     }
     
     // 验证 hash（可选：验证 hash 是否正确）
-    // 这里可以添加更复杂的验证逻辑，比如验证 hash 是否匹配
+    // 可添加更复杂的验证逻辑，比如验证 hash 是否匹配
     
     return true;
 }
@@ -167,6 +171,17 @@ void AuthService::handleLoginResponse(const QJsonObject& response)
         
         // 保存 Token 到本地
         saveTokenToLocal(m_token);
+        
+        // 登录成功后，保存账号到本地（用于下次启动时自动填充，只保存账号，不保存密码）
+        if (!m_pendingAccount.isEmpty()) {
+            saveLoginCredentials(m_pendingAccount);
+            Logger::getInstance().log("Saved login account for next startup: " + m_pendingAccount);
+        }
+        
+        // 清除临时暂存数据（包括注册和登录时的临时数据）
+        m_pendingAccount.clear();
+        m_pendingPassword.clear();
+        Logger::getInstance().log("Cleared temporary credentials");
         
         Logger::getInstance().log("Login succeeded for user: " + m_currentUserId);
         qDebug() << "准备发出 loginSucceeded 信号，userId:" << m_currentUserId;
@@ -237,12 +252,12 @@ void AuthService::handleRegisterResponse(const QJsonObject& response)
         QString account = response["account"].toString();
         Logger::getInstance().log("Register succeeded for account: " + account);
         
-        // 注册成功后，自动保存账号密码到本地（在 Service 层内部处理）
+        // 注册成功后，临时保存账号密码到内存（用于立即在登录窗口显示）
+        // 注意：这是临时暂存，不保存到本地，登录成功后会清除
         if (!m_pendingAccount.isEmpty() && !m_pendingPassword.isEmpty()) {
-            saveCredentialsToLocal(m_pendingAccount, m_pendingPassword);
-            Logger::getInstance().log("Saved credentials for registered account: " + m_pendingAccount);
-            // 清除临时保存的密码（安全考虑）
-            m_pendingPassword.clear();
+            Logger::getInstance().log("Temporarily saved credentials for registered account: " + m_pendingAccount);
+            // 保持 m_pendingAccount 和 m_pendingPassword 在内存中，供登录窗口使用
+            // 登录成功后会清除这些临时数据
         }
         
         emit registerSucceeded(account);
@@ -289,31 +304,40 @@ QString AuthService::loadTokenFromLocal() const
 
 void AuthService::saveCredentialsToLocal(const QString& account, const QString& password)
 {
-    // 保存账号和密码到本地（用于注册后自动填充）
-    // TODO: 使用 Config 保存
-    // Config::getInstance().setString("auth/last_account", account);
-    // Config::getInstance().setString("auth/last_password", password);
+    // 这个方法已废弃，不再使用
+    // 注册后的临时暂存不需要保存到本地，只保存在内存中
+    Q_UNUSED(account);
+    Q_UNUSED(password);
+}
+
+void AuthService::saveLoginCredentials(const QString& account)
+{
+    // 保存登录账号到本地（用于下次启动时自动填充，只保存账号，不保存密码）
+    Config& config = Config::getInstance();
+    config.setString("auth/last_account", account);
+    // 不保存密码，提高安全性
+    config.remove("auth/last_password"); // 清除可能存在的旧密码
+    config.save();
     
-    // 注意：密码应该加密存储，这里只是示例
-    Logger::getInstance().log("Saved credentials for account: " + account);
+    Logger::getInstance().log("Saved login account for next startup: " + account);
 }
 
 void AuthService::loadCredentialsFromLocal(QString& account, QString& password) const
 {
-    // 从本地加载账号和密码
-    // TODO: 使用 Config 加载
-    // account = Config::getInstance().getString("auth/last_account", QString());
-    // password = Config::getInstance().getString("auth/last_password", QString());
+    // 从本地加载账号（不加载密码，安全考虑）
+    Config& config = Config::getInstance();
+    account = config.getString("auth/last_account", QString());
+    password = QString(); // 不加载密码，始终为空
     
-    account.clear();
-    password.clear();
+    if (!account.isEmpty()) {
+        Logger::getInstance().log("Loaded saved account: " + account);
+    }
 }
 
 bool AuthService::hasSavedCredentials() const
 {
-    // 检查是否有保存的凭证
-    QString account, password;
-    const_cast<AuthService*>(this)->loadCredentialsFromLocal(account, password);
+    // 检查是否有保存的账号（不检查密码）
+    QString account = getSavedAccount();
     return !account.isEmpty();
 }
 
@@ -327,9 +351,15 @@ QString AuthService::getSavedAccount() const
 
 void AuthService::getSavedCredentials(QString& account, QString& password) const
 {
-    // 获取保存的账号和密码（用于自动填充，仅在注册后使用）
-    // 注意：此方法仅用于注册后自动填充，其他场景应使用 getSavedAccount()
+    // 从本地配置文件加载保存的账号和密码（用于下次启动时自动填充）
     const_cast<AuthService*>(this)->loadCredentialsFromLocal(account, password);
+}
+
+void AuthService::getPendingCredentials(QString& account, QString& password) const
+{
+    // 获取注册后的临时暂存账号密码（用于注册成功后立即在登录窗口显示）
+    account = m_pendingAccount;
+    password = m_pendingPassword;
 }
 
 void AuthService::onUserRegistered(bool success, const QString& userId, const QString& errorMessage)
