@@ -83,6 +83,10 @@ set(SOURCES
     src/ui/main_window/MessageList.h
     src/ui/main_window/ContactItem.cpp
     src/ui/main_window/ContactItem.h
+    src/ui/main_window/add_friend_dialog.cpp
+    src/ui/main_window/add_friend_dialog.h
+    src/ui/main_window/friend_request_item.cpp
+    src/ui/main_window/friend_request_item.h
     src/ui/network_error/network_error_dialog.cpp
     # network (来自 feature/mty/db)
     src/common/types.h

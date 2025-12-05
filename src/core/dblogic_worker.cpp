@@ -302,7 +302,7 @@ void DbLogicWorker::deleteMessage(const QString& messageId)
     // TODO: ʵ�ʵ�ɾ���߼�
 }
 
-void DbLogicWorker::loadContactList()
+void DbLogicWorker::loadContactList(const QString& userId)
 {
     if (!m_dbInitialized) {
         emit errorOccurred("Database not initialized");
@@ -310,11 +310,98 @@ void DbLogicWorker::loadContactList()
         return;
     }
 
-    qDebug() << "Loading contact list";
+    qDebug() << "Loading contact list for user:" << userId;
     
-    // TODO: ʵ�ʵ���ϵ���б������߼�
+    if (userId.isEmpty()) {
+        qDebug() << "UserId is empty, returning empty contact list";
+        emit contactListLoaded(QJsonArray());
+        return;
+    }
+    
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase lanchatDb = dbm.database();
+    QSqlDatabase publicDb = dbm.database("public");
+    
+    if (!lanchatDb.isOpen() || !publicDb.isOpen()) {
+        qDebug() << "Database not open";
+        emit errorOccurred("Database not open");
+        emit contactListLoaded(QJsonArray());
+        return;
+    }
+    
+    // 先查询数据库中所有的好友关系（用于调试）
+    QSqlQuery debugQuery(lanchatDb);
+    debugQuery.prepare("SELECT userId, friendId FROM friends");
+    if (debugQuery.exec()) {
+        qDebug() << "=== All friend relationships in database ===";
+        while (debugQuery.next()) {
+            qDebug() << "  userId:" << debugQuery.value("userId").toString() 
+                     << "-> friendId:" << debugQuery.value("friendId").toString();
+        }
+    }
+    
+    qDebug() << "=== Querying contacts for userId:" << userId << "===";
+    
+    QSqlQuery friendQuery(lanchatDb);
+    friendQuery.prepare("SELECT friendId, remark, addedTime FROM friends WHERE userId = :userId ORDER BY addedTime DESC");
+    friendQuery.bindValue(":userId", userId);
+    
+    if (!friendQuery.exec()) {
+        qDebug() << "Query friends failed:" << friendQuery.lastError().text();
+        emit errorOccurred("Query friends failed: " + friendQuery.lastError().text());
+        emit contactListLoaded(QJsonArray());
+        return;
+    }
+    
     QJsonArray contacts;
+    int count = 0;
+    while (friendQuery.next()) {
+        count++;
+        QString friendId = friendQuery.value("friendId").toString();
+        QString remark = friendQuery.value("remark").toString();
+        
+        QSqlQuery userQuery(publicDb);
+        userQuery.prepare("SELECT userId, email, nickname, avatarPath, status FROM users WHERE userId = :friendId");
+        userQuery.bindValue(":friendId", friendId);
+        
+        QJsonObject contact;
+        contact["friendId"] = friendId;
+        contact["remark"] = remark;
+        
+        if (userQuery.exec() && userQuery.next()) {
+            QString nickname = userQuery.value("nickname").toString();
+            QString email = userQuery.value("email").toString();
+            QString avatarPath = userQuery.value("avatarPath").toString();
+            int status = userQuery.value("status").toInt();
+            
+            QString displayName = remark.isEmpty() ? nickname : remark;
+            if (displayName.isEmpty()) {
+                displayName = email;
+            }
+            if (displayName.isEmpty()) {
+                displayName = friendId;
+            }
+            
+            contact["nickname"] = nickname;
+            contact["email"] = email;
+            contact["avatarPath"] = avatarPath;
+            contact["displayName"] = displayName;
+            contact["status"] = status;
+        } else {
+            QString displayName = remark.isEmpty() ? friendId : remark;
+            contact["displayName"] = displayName;
+            contact["nickname"] = QString();
+            contact["email"] = QString();
+            contact["avatarPath"] = QString();
+            contact["status"] = 0;
+        }
+        
+        contacts.append(contact);
+        qDebug() << "  Added contact #" << count << ":" << contact["displayName"].toString() 
+                 << "(friendId:" << friendId << ", email:" << contact["email"].toString() << ")";
+    }
     
+    qDebug() << "=== Loaded" << contacts.size() << "contacts for userId:" << userId << "===";
     emit contactListLoaded(contacts);
 }
 
@@ -366,7 +453,7 @@ void DbLogicWorker::searchUserByAccount(const QString& account)
     }
     
     auto& dbm = DatabaseManager::getInstance();
-    QSqlDatabase db = dbm.database();
+    QSqlDatabase db = dbm.database("public");  // 使用 public 数据库连接
     if (!db.isOpen()) {
         emit errorOccurred("Database not open");
         emit userSearchResult(QJsonObject(), false);
@@ -433,7 +520,8 @@ void DbLogicWorker::registerUser(const QString& email, const QString& passwordHa
     }
 
     auto& dbm = DatabaseManager::getInstance();
-    QSqlDatabase db = dbm.database();
+    // 使用 public.db 存储用户账号信息（作为中央服务器）
+    QSqlDatabase db = dbm.database("public");
     if (!db.isOpen()) {
         emit errorOccurred("Database not open");
         emit userRegistered(false, QString(), "数据库未打开");
@@ -499,7 +587,8 @@ void DbLogicWorker::verifyUserPassword(const QString& email, const QString& pass
     }
 
     auto& dbm = DatabaseManager::getInstance();
-    QSqlDatabase db = dbm.database();
+    // 从 public.db 查询用户账号信息（作为中央服务器）
+    QSqlDatabase db = dbm.database("public");
     if (!db.isOpen()) {
         emit errorOccurred("Database not open");
         emit passwordVerified(false, QString(), "数据库未打开");
@@ -537,4 +626,232 @@ void DbLogicWorker::verifyUserPassword(const QString& email, const QString& pass
         qDebug() << "Password verification failed for user:" << email;
         emit passwordVerified(false, QString(), "密码错误");
     }
+}
+
+void DbLogicWorker::sendFriendRequest(const QString& senderId, const QString& receiverId,
+                                     const QString& senderAccount, const QString& senderNickname,
+                                     const QString& avatarPath, const QString& verifymsg)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit friendRequestSent(false, QString(), "数据库未初始化");
+        return;
+    }
+    
+    qDebug() << "Sending friend request from" << senderId << "to" << receiverId;
+    
+    if (senderId.isEmpty() || receiverId.isEmpty()) {
+        emit friendRequestSent(false, QString(), "发送者或接收者ID不能为空");
+        return;
+    }
+    
+    // 不能给自己发送好友请求
+    if (senderId == receiverId) {
+        emit friendRequestSent(false, QString(), "不能给自己发送好友请求");
+        return;
+    }
+    
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();  // 使用 lanchat.db（本地存储）
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit friendRequestSent(false, QString(), "数据库未打开");
+        return;
+    }
+    
+    // 检查是否已经是好友
+    QSqlQuery checkFriendQuery(db);
+    checkFriendQuery.prepare("SELECT id FROM friends WHERE (userId = :userId1 AND friendId = :userId2) OR (userId = :userId2 AND friendId = :userId1)");
+    checkFriendQuery.bindValue(":userId1", senderId);
+    checkFriendQuery.bindValue(":userId2", receiverId);
+    
+    if (checkFriendQuery.exec() && checkFriendQuery.next()) {
+        qDebug() << "Users are already friends";
+        emit friendRequestSent(false, QString(), "你们已经是好友了");
+        return;
+    }
+    
+    // 检查是否已经发送过请求（且状态为 Pending）
+    QSqlQuery checkRequestQuery(db);
+    checkRequestQuery.prepare("SELECT requestId FROM friend_requests WHERE senderId = :senderId AND receiverId = :receiverId AND status = 0");
+    checkRequestQuery.bindValue(":senderId", senderId);
+    checkRequestQuery.bindValue(":receiverId", receiverId);
+    
+    if (checkRequestQuery.exec() && checkRequestQuery.next()) {
+        qDebug() << "Friend request already sent";
+        emit friendRequestSent(false, QString(), "已经发送过好友请求，请等待对方回应");
+        return;
+    }
+    
+    // 生成请求ID
+    QString requestId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    
+    // 插入好友请求
+    QSqlQuery insertQuery(db);
+    insertQuery.prepare("INSERT INTO friend_requests (requestId, senderId, receiverId, senderAccount, senderNickname, avatarPath, verifymsg, status, timestamp) "
+                        "VALUES (:requestId, :senderId, :receiverId, :senderAccount, :senderNickname, :avatarPath, :verifymsg, :status, :timestamp)");
+    insertQuery.bindValue(":requestId", requestId);
+    insertQuery.bindValue(":senderId", senderId);
+    insertQuery.bindValue(":receiverId", receiverId);
+    insertQuery.bindValue(":senderAccount", senderAccount);
+    insertQuery.bindValue(":senderNickname", senderNickname);
+    insertQuery.bindValue(":avatarPath", avatarPath);
+    insertQuery.bindValue(":verifymsg", verifymsg);
+    insertQuery.bindValue(":status", 0);  // 0 = Pending
+    insertQuery.bindValue(":timestamp", QDateTime::currentSecsSinceEpoch());
+    
+    if (!insertQuery.exec()) {
+        qDebug() << "Send friend request failed:" << insertQuery.lastError().text();
+        emit errorOccurred("Send friend request failed: " + insertQuery.lastError().text());
+        emit friendRequestSent(false, QString(), "发送好友请求失败: " + insertQuery.lastError().text());
+        return;
+    }
+    
+    qDebug() << "Friend request sent successfully, requestId:" << requestId;
+    emit friendRequestSent(true, requestId, QString());
+}
+
+void DbLogicWorker::queryFriendRequests(const QString& receiverId)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit friendRequestsLoaded(QJsonArray());
+        return;
+    }
+    
+    qDebug() << "Querying friend requests for receiver:" << receiverId;
+    
+    if (receiverId.isEmpty()) {
+        emit friendRequestsLoaded(QJsonArray());
+        return;
+    }
+    
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();  // 使用 lanchat.db（本地存储）
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit friendRequestsLoaded(QJsonArray());
+        return;
+    }
+    
+    // 查询状态为 Pending (0) 的好友请求
+    QSqlQuery q(db);
+    q.prepare("SELECT requestId, senderId, receiverId, senderAccount, senderNickname, "
+              "avatarPath, verifymsg, status, timestamp "
+              "FROM friend_requests "
+              "WHERE receiverId = :receiverId AND status = 0 "
+              "ORDER BY timestamp DESC");
+    q.bindValue(":receiverId", receiverId);
+    
+    if (!q.exec()) {
+        qDebug() << "Query friend requests failed:" << q.lastError().text();
+        emit errorOccurred("Query friend requests failed: " + q.lastError().text());
+        emit friendRequestsLoaded(QJsonArray());
+        return;
+    }
+    
+    QJsonArray requests;
+    while (q.next()) {
+        QJsonObject request;
+        request["requestId"] = q.value("requestId").toString();
+        request["senderId"] = q.value("senderId").toString();
+        request["receiverId"] = q.value("receiverId").toString();
+        request["senderAccount"] = q.value("senderAccount").toString();
+        request["senderNickname"] = q.value("senderNickname").toString();
+        request["avatarPath"] = q.value("avatarPath").toString();
+        request["verifymsg"] = q.value("verifymsg").toString();
+        request["status"] = q.value("status").toInt();
+        request["timestamp"] = q.value("timestamp").toLongLong();
+        requests.append(request);
+    }
+    
+    qDebug() << "Found" << requests.size() << "friend requests";
+    emit friendRequestsLoaded(requests);
+}
+
+void DbLogicWorker::acceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit friendRequestAccepted(false, "数据库未初始化");
+        return;
+    }
+    
+    qDebug() << "Accepting friend request:" << requestId;
+    
+    if (requestId.isEmpty() || senderId.isEmpty() || receiverId.isEmpty()) {
+        emit friendRequestAccepted(false, "请求ID或用户ID不能为空");
+        return;
+    }
+    
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database();  // 使用 lanchat.db（本地存储）
+    if (!db.isOpen()) {
+        emit errorOccurred("Database not open");
+        emit friendRequestAccepted(false, "数据库未打开");
+        return;
+    }
+    
+    // 开始事务
+    if (!db.transaction()) {
+        emit friendRequestAccepted(false, "开始事务失败");
+        return;
+    }
+    
+    // 1. 更新好友请求状态为 Accepted (1)
+    QSqlQuery updateQuery(db);
+    updateQuery.prepare("UPDATE friend_requests SET status = 1 WHERE requestId = :requestId");
+    updateQuery.bindValue(":requestId", requestId);
+    
+    if (!updateQuery.exec()) {
+        db.rollback();
+        qDebug() << "Update friend request status failed:" << updateQuery.lastError().text();
+        emit friendRequestAccepted(false, "更新请求状态失败: " + updateQuery.lastError().text());
+        return;
+    }
+    
+    // 2. 添加双向好友关系（双方都能看到对方）
+    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+    
+    // 添加 receiver -> sender 的好友关系
+    QSqlQuery insertFriend1(db);
+    insertFriend1.prepare("INSERT OR IGNORE INTO friends (userId, friendId, remark, addedTime) "
+                         "VALUES (:userId, :friendId, :remark, :addedTime)");
+    insertFriend1.bindValue(":userId", receiverId);
+    insertFriend1.bindValue(":friendId", senderId);
+    insertFriend1.bindValue(":remark", QString());
+    insertFriend1.bindValue(":addedTime", currentTime);
+    
+    if (!insertFriend1.exec()) {
+        db.rollback();
+        qDebug() << "Insert friend relationship 1 failed:" << insertFriend1.lastError().text();
+        emit friendRequestAccepted(false, "添加好友关系失败: " + insertFriend1.lastError().text());
+        return;
+    }
+    
+    // 添加 sender -> receiver 的好友关系（可选，如果需要双向显示）
+    QSqlQuery insertFriend2(db);
+    insertFriend2.prepare("INSERT OR IGNORE INTO friends (userId, friendId, remark, addedTime) "
+                         "VALUES (:userId, :friendId, :remark, :addedTime)");
+    insertFriend2.bindValue(":userId", senderId);
+    insertFriend2.bindValue(":friendId", receiverId);
+    insertFriend2.bindValue(":remark", QString());
+    insertFriend2.bindValue(":addedTime", currentTime);
+    
+    if (!insertFriend2.exec()) {
+        db.rollback();
+        qDebug() << "Insert friend relationship 2 failed:" << insertFriend2.lastError().text();
+        emit friendRequestAccepted(false, "添加好友关系失败: " + insertFriend2.lastError().text());
+        return;
+    }
+    
+    // 提交事务
+    if (!db.commit()) {
+        db.rollback();
+        emit friendRequestAccepted(false, "提交事务失败");
+        return;
+    }
+    
+    qDebug() << "Friend request accepted successfully";
+    emit friendRequestAccepted(true, QString());
 }

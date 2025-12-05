@@ -36,6 +36,7 @@ AuthService::AuthService(QObject* parent)
                 m_currentUserId = parts[0];
                 m_isLoggedIn = true;
                 Logger::getInstance().log("Loaded token from local storage, userId: " + m_currentUserId);
+                qDebug() << "=== AuthService: Loaded userId from token:" << m_currentUserId << "===";
             } else {
                 // Token 格式不正确，清除
                 m_token.clear();

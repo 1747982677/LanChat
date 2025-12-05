@@ -11,13 +11,30 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QPushButton>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QLabel>
 #include "main_window.h"
+#include "core/app_context.h"
+#include "core/dblogic_controller.h"
+#include "service/auth_service.h"
 #include "service/chat_service.h"
-
-//联系人占位
 
 ContactList::ContactList(QWidget* parent)
     : QWidget(parent)
+    , m_container(nullptr)
+    , m_containerLayout(nullptr)
+    , m_scrollArea(nullptr)
+{
+    setupUi();
+    
+    // 连接数据库控制器信号
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+    connect(dbCtrl, &DbLogicController::contactListLoaded,
+            this, &ContactList::onContactListLoaded);
+}
+
+void ContactList::setupUi()
 {
     auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -33,64 +50,153 @@ ContactList::ContactList(QWidget* parent)
     btnLayout->addWidget(btn);
     connect(btn, &QPushButton::clicked, this, [=]() {
         MainWindow::instance()->setRightPages(MainWindow::NewFriendPage);
-
-        });
+    });
 
     mainLayout->addWidget(btnWidget);
 
     // ================= 滚动区域 =================
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
+    m_scrollArea = new QScrollArea(this);
+    m_scrollArea->setWidgetResizable(true);
+    m_scrollArea->setFrameShape(QFrame::NoFrame);
 
-    QWidget* container = new QWidget;
-    QVBoxLayout* containerLayout = new QVBoxLayout(container);
-    containerLayout->setContentsMargins(0, 0, 0, 0);
-    containerLayout->setSpacing(0);
+    m_container = new QWidget;
+    m_containerLayout = new QVBoxLayout(m_container);
+    m_containerLayout->setContentsMargins(0, 0, 0, 0);
+    m_containerLayout->setSpacing(0);
+    m_containerLayout->addStretch();
 
-    // 添加联系人信息
-    QStringList names = { "张三", "李四", "王五","小六" };
-    for (const QString& name : names) {
-        ContactItem* item = new ContactItem(name, ":/lanchat/bubu.jpg");
-        containerLayout->addWidget(item);
+    m_scrollArea->setWidget(m_container);
+    mainLayout->addWidget(m_scrollArea);
+}
 
-        // use name as temporary userId (replace with real userId from DB/service)
-        QString userId = QString("user_%1").arg(name);
-        item->setUserId(userId);
-        m_itemsById.insert(userId, item);
-
-        connect(item, &ContactItem::hoverEntered, this, [=](ContactItem* w) {
-            //qDebug() << "鼠标悬停在：" << name;
-            });
-
-        connect(item, &ContactItem::hoverLeft, this, [=](ContactItem* w) {
-            //qDebug() << "鼠标离开：" << name;
-            });
-
-        connect(item, &ContactItem::clicked, this, [this, userId](ContactItem* w) {
-            // 打开对应聊天页（MainWindow 的页面切换实现）并标记为 active
-            MainWindow::instance()->setRightPages(MainWindow::ChatPage);
-            // 告诉 ChatService 当前正在查看该会话，并清空未读
-            // TODO: 这些方法在 ChatService 中不存在，需要通过 DbLogicController 实现
-            // ChatService::getInstance().setActiveChatUserId(userId);
-            // ChatService::getInstance().markSessionRead(userId);
-        });
+void ContactList::loadContacts()
+{
+    // 获取当前登录用户ID
+    AuthService& authService = AuthService::getInstance();
+    QString currentUserId = authService.getCurrentUserId();
+    
+    qDebug() << "=== ContactList::loadContacts() ===";
+    qDebug() << "Current logged in userId:" << currentUserId;
+    
+    if (currentUserId.isEmpty()) {
+        qDebug() << "ContactList: User not logged in, cannot load contacts";
+        return;
     }
+    
+    // 调用数据库控制器加载联系人列表
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+    qDebug() << "Calling dbCtrl->loadContactList with userId:" << currentUserId;
+    dbCtrl->loadContactList(currentUserId);
+}
 
-    containerLayout->addStretch();
-    scroll->setWidget(container);
-    mainLayout->addWidget(scroll);
+void ContactList::onContactListLoaded(const QJsonArray& contacts)
+{
+    // 保存所有联系人数据（用于搜索）
+    m_allContacts = contacts;
+    
+    // 显示联系人列表
+    displayContacts(contacts);
+}
 
-    // 连接 ChatService 的未读更新信号
-    // TODO: unreadCountChanged 信号在 ChatService 中不存在，需要通过 DbLogicController 实现
-    // connect(&ChatService::getInstance(), &ChatService::unreadCountChanged,
-    //         this, [this](const QString& userId, int count){
-    //     if (m_itemsById.contains(userId)) {
-    //         ContactItem* it = m_itemsById.value(userId);
-    //         it->setUnreadCount(count);
-    //     } else {
-    //         // 若未在当前列表中，可选择新增会话项或忽略
-    //     }
-    // });
+void ContactList::displayContacts(const QJsonArray& contacts)
+{
+    // 清空现有联系人
+    clearContacts();
+    
+    if (contacts.isEmpty()) {
+        // 显示空状态提示
+        QLabel* emptyLabel = new QLabel("暂无联系人", m_container);
+        emptyLabel->setAlignment(Qt::AlignCenter);
+        emptyLabel->setStyleSheet("color: #999; font-size: 14px; padding: 50px;");
+        m_containerLayout->insertWidget(0, emptyLabel);
+        return;
+    }
+    
+    // 添加联系人项
+    for (int i = 0; i < contacts.size(); ++i) {
+        QJsonObject contactObj = contacts[i].toObject();
+        QString friendId = contactObj["friendId"].toString();
+        QString displayName = contactObj["displayName"].toString();
+        QString nickname = contactObj["nickname"].toString();
+        QString avatarPath = contactObj["avatarPath"].toString();
+        
+        // 如果头像路径为空，使用默认头像
+        if (avatarPath.isEmpty()) {
+            avatarPath = ":/lanchat/bubu.jpg";
+        }
+        
+        ContactItem* item = new ContactItem(displayName, avatarPath, m_container);
+        item->setUserId(friendId);
+        
+        // 设置用户状态（从数据中读取status字段，1表示在线，0表示离线）
+        int status = contactObj["status"].toInt();
+        bool isOnline = (status == 1);  // UserStatus::Online = 1
+        item->setUserStatus(isOnline);
+        
+        m_itemsById.insert(friendId, item);
+        
+        connect(item, &ContactItem::hoverEntered, this, [=](ContactItem* w) {
+            // 可以在这里添加悬停效果
+        });
+        
+        connect(item, &ContactItem::hoverLeft, this, [=](ContactItem* w) {
+            // 可以在这里移除悬停效果
+        });
+        
+        connect(item, &ContactItem::clicked, this, [this, friendId, displayName](ContactItem* w) {
+            // 打开对应聊天页
+            MainWindow::instance()->setRightPages(MainWindow::ChatPage);
+            // TODO: 设置当前聊天对象
+            // ChatService::getInstance().setActiveChatUserId(friendId);
+        });
+        
+        m_containerLayout->insertWidget(i, item);
+    }
+}
+
+void ContactList::searchContacts(const QString& keyword)
+{
+    if (keyword.isEmpty()) {
+        // 如果搜索关键词为空，显示所有联系人
+        displayContacts(m_allContacts);
+        return;
+    }
+    
+    // 模糊搜索：匹配昵称和备注
+    QJsonArray filteredContacts;
+    QString lowerKeyword = keyword.toLower();  // 转换为小写进行不区分大小写搜索
+    
+    for (int i = 0; i < m_allContacts.size(); ++i) {
+        QJsonObject contactObj = m_allContacts[i].toObject();
+        QString displayName = contactObj["displayName"].toString().toLower();
+        QString nickname = contactObj["nickname"].toString().toLower();
+        QString remark = contactObj["remark"].toString().toLower();
+        
+        // 检查是否匹配昵称、备注或显示名称
+        if (displayName.contains(lowerKeyword) || 
+            nickname.contains(lowerKeyword) || 
+            remark.contains(lowerKeyword)) {
+            filteredContacts.append(contactObj);
+        }
+    }
+    
+    // 显示搜索结果
+    displayContacts(filteredContacts);
+}
+
+void ContactList::clearContacts()
+{
+    // 清空所有联系人项
+    QLayoutItem* item;
+    while ((item = m_containerLayout->takeAt(0)) != nullptr) {
+        if (item->widget()) {
+            item->widget()->deleteLater();
+        }
+        delete item;
+    }
+    
+    m_itemsById.clear();
+    m_containerLayout->addStretch();
 }
 
 ContactList::~ContactList()

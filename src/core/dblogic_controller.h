@@ -67,8 +67,9 @@ public slots:
 
     /**
      * @brief 加载联系人列表
+     * @param userId 当前用户ID
      */
-    void loadContactList();
+    void loadContactList(const QString& userId);
 
     /**
      * @brief 添加联系人
@@ -104,6 +105,33 @@ public slots:
      * @param password 明文密码
      */
     void verifyUserPassword(const QString& email, const QString& password);
+    
+    /**
+     * @brief 发送好友请求
+     * @param senderId 发送者用户ID
+     * @param receiverId 接收者用户ID
+     * @param senderAccount 发送者账号（邮箱）
+     * @param senderNickname 发送者昵称
+     * @param avatarPath 发送者头像路径
+     * @param verifymsg 验证消息（可选）
+     */
+    void sendFriendRequest(const QString& senderId, const QString& receiverId,
+                          const QString& senderAccount, const QString& senderNickname,
+                          const QString& avatarPath, const QString& verifymsg = QString());
+    
+    /**
+     * @brief 查询收到的好友请求（状态为 Pending）
+     * @param receiverId 接收者用户ID
+     */
+    void queryFriendRequests(const QString& receiverId);
+    
+    /**
+     * @brief 接受好友请求
+     * @param requestId 请求ID
+     * @param senderId 发送者用户ID
+     * @param receiverId 接收者用户ID
+     */
+    void acceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId);
 
     //***以下关于lanchat/messages数据表的设计****
     void queryMessages(const QString& localUser, const QString& peer, int limit);
@@ -124,13 +152,18 @@ signals:
     void requestSearchMessages(const QString& keyword);
     void requestUpdateMessageStatus(const QString& messageId, const QString& status);
     void requestDeleteMessage(const QString& messageId);
-    void requestLoadContactList();
+    void requestLoadContactList(const QString& userId);
     void requestAddContact(const QJsonObject& contactInfo);
     void requestUpdateContact(const QString& contactId, const QJsonObject& contactInfo);
     void requestProcessFile(const QString& filePath, const QJsonObject& options);
     void requestSearchUserByAccount(const QString& account);
     void requestRegisterUser(const QString& email, const QString& passwordHash);
     void requestVerifyUserPassword(const QString& email, const QString& password);
+    void requestSendFriendRequest(const QString& senderId, const QString& receiverId,
+                                 const QString& senderAccount, const QString& senderNickname,
+                                 const QString& avatarPath, const QString& verifymsg);
+    void requestQueryFriendRequests(const QString& receiverId);
+    void requestAcceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId);
 
     // 从 Worker 接收的信号（转发）
     void databaseInitialized(bool success);
@@ -147,6 +180,9 @@ signals:
     void userSearchResult(const QJsonObject& userInfo, bool found);
     void userRegistered(bool success, const QString& userId, const QString& errorMessage);
     void passwordVerified(bool success, const QString& userId, const QString& errorMessage);
+    void friendRequestSent(bool success, const QString& requestId, const QString& errorMessage);
+    void friendRequestsLoaded(const QJsonArray& requests);
+    void friendRequestAccepted(bool success, const QString& errorMessage);
 
     //***以下关于lanchat/messages数据表的设计****
     void requestQueryMessages(const QString& localUser, const QString& peer, int limit);

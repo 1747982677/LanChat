@@ -13,6 +13,9 @@ public:
     QString userId() const { return m_userId; }
 
     void setUnreadCount(int count);
+    
+    // è®¾ç½®ç”¨æˆ·çŠ¶æ€ï¼ˆåœ¨çº¿/ç¦»çº¿ï¼‰
+    void setUserStatus(bool isOnline);
 
 signals:
     void hoverEntered(ContactItem* item);
@@ -25,11 +28,12 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
 
 private:
-    QLabel* m_avatarLabel;//Í·Ïñ
-    QLabel* m_nameLabel;//êÇ³Æ
-    QLabel* m_badgeLabel; // Î´¶Á½Ç±ê
+    QLabel* m_avatarLabel;//Í·ï¿½ï¿½
+    QLabel* m_nameLabel;//ï¿½Ç³ï¿½
+    QLabel* m_statusIndicator;  // çŠ¶æ€æŒ‡ç¤ºå™¨ï¼ˆå°åœ†ç‚¹ï¼‰
+    QLabel* m_badgeLabel; // Î´ï¿½ï¿½ï¿½Ç±ï¿½
 
-    QString m_defaultStyle;  // Ä¬ÈÏ±³¾°ÑùÊ½
-    QString m_hoverStyle;    // ĞüÍ£±³¾°ÑùÊ½
+    QString m_defaultStyle;  // Ä¬ï¿½Ï±ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
+    QString m_hoverStyle;    // ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
     QString m_userId;
 };

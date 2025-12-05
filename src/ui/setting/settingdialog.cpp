@@ -4,6 +4,7 @@
 #include "ui/db_qwidget/DbQWidget.h"
 #include "ui/login/login_window.h"
 #include "service/auth_service.h"
+#include "utils/logger.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDir>
@@ -89,8 +90,12 @@ void logoutAndShowLogin()
     AuthService& authService = AuthService::getInstance();
     authService.logout();    // 需要你在 AuthService 里实现这个函数，清 token / 标记未登录
 
-    // 2. 隐藏主窗口
-    MainWindow::instance()->hide();
+    // 2. 设置用户状态为离线
+    MainWindow* mainWindow = MainWindow::instance();
+    mainWindow->updateUserStatus(false);
+    
+    // 3. 隐藏主窗口
+    mainWindow->hide();
 
     // 3. 创建登录窗口，按原来的方式连接 loginSucceeded
     LoginWindow* loginWindow = new LoginWindow();
@@ -98,9 +103,29 @@ void logoutAndShowLogin()
     QObject::connect(loginWindow, &LoginWindow::loginSucceeded,
         [loginWindow]() {
             qDebug() << "logout flow: 收到 loginSucceeded 信号";
-            // 登录成功后，隐藏登录窗口，显示主窗口
+            // 登录成功后，隐藏登录窗口
             loginWindow->hide();
-            MainWindow::instance()->show();
+            
+            // 从 AuthService 获取当前登录的用户ID
+            AuthService& authService = AuthService::getInstance();
+            QString userId = authService.getCurrentUserId();
+            
+            if (userId.isEmpty()) {
+                Logger::getInstance().error("logout flow: 错误：登录成功但 userId 为空");
+                qDebug() << "logout flow: 错误：登录成功但 userId 为空";
+                loginWindow->deleteLater();
+                return;
+            }
+            
+            // 设置新的用户ID并重新查询用户信息和加载联系人列表
+            MainWindow* mainWindow = MainWindow::instance();
+            mainWindow->userid = userId;
+            Logger::getInstance().log("logout flow: 登录成功，重新加载用户数据，userId: " + userId);
+            
+            // 重新查询用户信息（这会触发联系人列表的重新加载）
+            // queryUserReady 信号会调用 loadContacts()，而 loadContacts() 在加载新数据前会先清空旧数据
+            mainWindow->requestQueryUser();
+            mainWindow->show();
             loginWindow->deleteLater();
         });
 
