@@ -28,18 +28,18 @@ QString DatabaseManager::defaultDbPath() const
     return QDir(dir).filePath("lanchat.db");
 }
 
-QString DatabaseManager::connectionNameForCurrentThread() const
-{
-    quintptr id = reinterpret_cast<quintptr>(QThread::currentThreadId());
-    return QString("lanchat_conn_%1").arg(id);
-}
+//QString DatabaseManager::connectionNameForCurrentThread() const
+//{
+//    quintptr id = reinterpret_cast<quintptr>(QThread::currentThreadId());
+//    return QString("lanchat_conn_%1").arg(id);
+//}
 
 bool DatabaseManager::init(const QString& dbFilePath)
 {
     if (!dbFilePath.isEmpty()) m_dbPath = dbFilePath;
     if (m_dbPath.isEmpty()) m_dbPath = defaultDbPath();
 
-    QString conn = connectionNameForCurrentThread();
+    QString conn = connectionNameForCurrentThread("lanchat");
 	Logger::getInstance().warning("Initializing database at: " + m_dbPath + " for connection: " + conn);
     if (!QSqlDatabase::contains(conn)) {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn);
@@ -62,13 +62,14 @@ bool DatabaseManager::init(const QString& dbFilePath)
         Logger::getInstance().warning("Failed to set WAL mode");
     }
     exec("PRAGMA synchronous = NORMAL;");
+    m_connectionPaths["lanchat"] = dbFilePath;
 
-    return ensureSchema();
+    return ensureSchema("lanchat");
 }
 
 QSqlDatabase DatabaseManager::database()
 {
-    QString conn = connectionNameForCurrentThread();
+    QString conn = connectionNameForCurrentThread("lanchat");
     if (!QSqlDatabase::contains(conn)) {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", conn);
         db.setDatabaseName(m_dbPath.isEmpty() ? defaultDbPath() : m_dbPath);
@@ -123,7 +124,7 @@ bool DatabaseManager::rollback()
 
 void DatabaseManager::closeConnectionForCurrentThread()
 {
-    QString conn = connectionNameForCurrentThread();
+    QString conn = connectionNameForCurrentThread("lanchat");
     if (QSqlDatabase::contains(conn)) {
         QSqlDatabase db = QSqlDatabase::database(conn);
         if (db.isOpen()) db.close();
@@ -133,7 +134,61 @@ void DatabaseManager::closeConnectionForCurrentThread()
 
 bool DatabaseManager::ensureSchema()
 {
-    const QString createMessages = R"(
+    return false;
+}
+
+bool DatabaseManager::initConnection(const QString& connectionName, const QString& dbFilePath)
+{
+    QMutexLocker locker(&m_mutex);
+
+    // 验证连接名
+    if (connectionName.isEmpty() || connectionName == m_defaultConnectionName) {
+        qWarning() << "Invalid connection name";
+        return false;
+    }
+
+    // 存储连接信息（在需要时创建连接）
+    // 实际连接将在第一次访问时创建
+    // 这里主要验证数据库文件是否可访问
+    if (!dbFilePath.isEmpty() && dbFilePath != ":memory:") {
+        QFileInfo fileInfo(dbFilePath);
+        if (!fileInfo.dir().exists()) {
+            return false;
+        }
+    }
+    // 为默认连接注册路径
+    m_connectionPaths[connectionName] = dbFilePath;
+    ensureSchema(connectionName);
+    Logger::getInstance().warning("Initializing database at: " + dbFilePath + " for connection: " + connectionName);
+    return true;
+}
+
+bool DatabaseManager::ensureSchema(const QString& connectionName)
+{
+    if (connectionName=="public") {
+        // create users table for user information
+        const QString createUsers = R"(
+        CREATE TABLE IF NOT EXISTS users (
+            userId TEXT PRIMARY KEY,
+            nickname TEXT,
+            avatarPath TEXT,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            signature TEXT,
+            status INTEGER DEFAULT 0,
+            password TEXT NOT NULL,
+            lastOnlineTime INTEGER DEFAULT 0
+            );
+        )";
+        if (!exec(createUsers, connectionName)) {
+            Logger::getInstance().error("Failed to create users table");
+            return false;
+        }
+        exec("CREATE INDEX IF NOT EXISTS idx_users_account ON users(account);", connectionName);
+        return true;
+    }
+    else if (connectionName == "lanchat") {
+        const QString createMessages = R"(
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender TEXT NOT NULL,
@@ -144,14 +199,14 @@ bool DatabaseManager::ensureSchema()
             extra TEXT
         );
     )";
-    if (!exec(createMessages)) {
-        Logger::getInstance().error("Failed to create messages table");
-        return false;
-    }
-    exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender, receiver);");
+        if (!exec(createMessages)) {
+            Logger::getInstance().error("Failed to create messages table");
+            return false;
+        }
+        exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender, receiver);");
 
-    // create chat_sessions table for unread counts
-    const QString createSessions = R"(
+        // create chat_sessions table for unread counts
+        const QString createSessions = R"(
         CREATE TABLE IF NOT EXISTS chat_sessions (
             userId TEXT PRIMARY KEY,
             nickname TEXT,
@@ -161,33 +216,12 @@ bool DatabaseManager::ensureSchema()
             unreadCount INTEGER DEFAULT 0
         );
     )";
-    if (!exec(createSessions)) {
-        Logger::getInstance().error("Failed to create chat_sessions table");
-        return false;
-    }
+        if (!exec(createSessions)) {
+            Logger::getInstance().error("Failed to create chat_sessions table");
+            return false;
+        }
 
-    // create users table for user information
-    const QString createUsers = R"(
-        CREATE TABLE IF NOT EXISTS users (
-            userId TEXT PRIMARY KEY,
-            account TEXT UNIQUE NOT NULL,
-            nickname TEXT,
-            avatarPath TEXT,
-            email TEXT,
-            phone TEXT,
-            signature TEXT,
-            status INTEGER DEFAULT 0,
-            lastOnlineTime INTEGER DEFAULT 0
-        );
-    )";
-    if (!exec(createUsers)) {
-        Logger::getInstance().error("Failed to create users table");
-        return false;
-    }
-    exec("CREATE INDEX IF NOT EXISTS idx_users_account ON users(account);");
-
-    // create friends table for friend relationships
-    const QString createFriends = R"(
+        const QString createFriends = R"(
         CREATE TABLE IF NOT EXISTS friends (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userId TEXT NOT NULL,
@@ -197,15 +231,15 @@ bool DatabaseManager::ensureSchema()
             UNIQUE(userId, friendId)
         );
     )";
-    if (!exec(createFriends)) {
-        Logger::getInstance().error("Failed to create friends table");
-        return false;
-    }
-    exec("CREATE INDEX IF NOT EXISTS idx_friends_userId ON friends(userId);");
-    exec("CREATE INDEX IF NOT EXISTS idx_friends_friendId ON friends(friendId);");
+        if (!exec(createFriends)) {
+            Logger::getInstance().error("Failed to create friends table");
+            return false;
+        }
+        exec("CREATE INDEX IF NOT EXISTS idx_friends_userId ON friends(userId);");
+        exec("CREATE INDEX IF NOT EXISTS idx_friends_friendId ON friends(friendId);");
 
-    // create friend_requests table for friend requests
-    const QString createFriendRequests = R"(
+        // create friend_requests table for friend requests
+        const QString createFriendRequests = R"(
         CREATE TABLE IF NOT EXISTS friend_requests (
             requestId TEXT PRIMARY KEY,
             senderId TEXT NOT NULL,
@@ -218,12 +252,68 @@ bool DatabaseManager::ensureSchema()
             timestamp INTEGER NOT NULL
         );
     )";
-    if (!exec(createFriendRequests)) {
-        Logger::getInstance().error("Failed to create friend_requests table");
+        if (!exec(createFriendRequests)) {
+            Logger::getInstance().error("Failed to create friend_requests table");
+            return false;
+        }
+        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_receiverId ON friend_requests(receiverId);");
+        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);");
+
+        return true;
+    }
+    else
+        return false;
+    
+}
+
+QSqlDatabase DatabaseManager::database(const QString& connectionName)
+{
+    QString name = connectionName.isEmpty() ? m_defaultConnectionName : connectionName;
+    QString dbPath = (name == m_defaultConnectionName) ? m_dbPath : m_connectionPaths[connectionName];
+
+    // 注意：这里需要你维护一个连接名到文件路径的映射
+    // 简单实现：假设默认数据库是第一个 init() 调用的，其他通过 initConnection() 设置
+    // 为了最小改动，你可能需要添加一个 QMap<QString, QString> m_connectionPaths 成员
+
+    return getOrCreateConnection(name, dbPath);
+}
+
+// 内部方法：获取或创建连接
+QSqlDatabase DatabaseManager::getOrCreateConnection(const QString& baseConnectionName, const QString& dbFilePath)
+{
+    QString threadConnectionName = connectionNameForCurrentThread(baseConnectionName);
+
+    if (!QSqlDatabase::contains(threadConnectionName)) {
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", threadConnectionName);
+        db.setDatabaseName(dbFilePath.isEmpty() ? defaultDbPath() : dbFilePath);
+
+        if (!db.open()) {
+            qWarning() << "Failed to open database:" << db.lastError();
+            return QSqlDatabase();
+        }
+
+        // 设置数据库参数
+        db.exec("PRAGMA foreign_keys = ON");
+        db.exec("PRAGMA journal_mode = WAL");
+    }
+
+    return QSqlDatabase::database(threadConnectionName);
+}
+
+QString DatabaseManager::connectionNameForCurrentThread(const QString& baseConnectionName) const
+{
+    QString name = baseConnectionName.isEmpty() ? m_defaultConnectionName : baseConnectionName;
+    return QString("%1_%2").arg(name).arg((quintptr)QThread::currentThreadId());
+}
+
+// 执行指定连接名的 SQL
+bool DatabaseManager::exec(const QString& sql, const QString& connectionName)
+{
+    QSqlDatabase db = database(connectionName);
+    if (!db.isValid() || !db.isOpen()) {
         return false;
     }
-    exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_receiverId ON friend_requests(receiverId);");
-    exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);");
 
-    return true;
+    QSqlQuery query(db);
+    return query.exec(sql);
 }

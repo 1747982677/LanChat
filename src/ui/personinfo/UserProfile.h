@@ -30,12 +30,19 @@ public:
     bool saveToFile(const QString& filename) { return false; }
     bool loadFromFile(const QString& filename) { return false; }
 
+ 
+
     // 用户信息
+    QString userid;      // 昵称
     QString nickname;      // 昵称
     QString email;         // 邮箱
     QString phone;         // 电话
     QString password;      // 密码
+    //QString gender;      // 性别
+    QString signure;      // 签名
     QPixmap avatar;        // 头像
+    QString avatarpath;      // 昵称
+    QString rootpath;
 };
 
 #endif // USERPROFILE_H

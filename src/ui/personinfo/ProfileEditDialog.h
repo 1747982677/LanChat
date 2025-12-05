@@ -1,13 +1,12 @@
-// ProfileEditDialog.h
 #ifndef PROFILEEDITDIALOG_H
 #define PROFILEEDITDIALOG_H
 
 #include <QDialog>
 #include "UserProfile.h"
 
+class QLabel;
 class QLineEdit;
 class QPushButton;
-class QLabel;
 
 class ProfileEditDialog : public QDialog
 {
@@ -15,37 +14,40 @@ class ProfileEditDialog : public QDialog
 
 public:
     explicit ProfileEditDialog(const UserProfile& profile, QWidget* parent = nullptr);
-    UserProfile getUpdatedProfile() const { return m_updatedProfile; }
+
+    UserProfile getUpdatedProfile() const;
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 private slots:
     void onAvatarClicked();
     void onSaveClicked();
-    void onModifyClicked(const QString& field);
+    void onModifyClicked(QLineEdit* editField, QPushButton* modifyBtn);
+    void onEditFieldChanged(QLineEdit* editField, QPushButton* modifyBtn);
+
+private:
+    void setupUI();
+    QPixmap getRoundedPixmap(const QPixmap& source, int diameter);
+    void updateAvatar(const QString& imagePath);
 
 private:
     UserProfile m_originalProfile;
     UserProfile m_updatedProfile;
 
+    // UI元素
     QLabel* avatarLabel;
-    QPushButton* uploadButton;
-
     QLineEdit* nicknameEdit;
-    QPushButton* nicknameModifyBtn;
-
     QLineEdit* emailEdit;
-    QPushButton* emailModifyBtn;
-
     QLineEdit* phoneEdit;
-    QPushButton* phoneModifyBtn;
-
     QLineEdit* passwordEdit;
+    QPushButton* uploadButton;
+    QPushButton* nicknameModifyBtn;
+    QPushButton* emailModifyBtn;
+    QPushButton* phoneModifyBtn;
     QPushButton* passwordModifyBtn;
-
     QPushButton* saveButton;
-
-    void setupUI();
-    void updateAvatar(const QString& imagePath);
-    //bool eventFilter(QObject* obj, QEvent* event) override;  // 关键：声明 eventFilter
+    QPushButton* cancelButton;
 };
 
 #endif // PROFILEEDITDIALOG_H

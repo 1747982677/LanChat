@@ -4,6 +4,7 @@
 
 #include <QDialog>
 #include "UserProfile.h"
+#include "UserEntity.h"
 
 class QLabel;
 class QPushButton;
@@ -28,9 +29,12 @@ private:
     QLabel* phoneLabel;
     QLabel* passwordLabel;  // 显示为星号
     QPushButton* editButton;
+    QLabel* idLabel;        // 新增
+    QLabel* genderLabel;    // 新增
+    QLabel* pwdLabel;       // 新增
 
     void setupUI();
     void updateDisplay();
 };
 
-#endif // PROFILEVIEWDIALOG_H
+#endif // PROFILEVIEWDIALOG_
