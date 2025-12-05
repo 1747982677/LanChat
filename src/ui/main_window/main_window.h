@@ -8,48 +8,57 @@
 #include <QPushButton>
 #include <QButtonGroup>
 #include <QMap>  
+#include "ui/personinfo/UserProfile.h"  // ç¡®ä¿åŒ…å« UserProfile å¤´æ–‡ä»¶
+#include "ui/personinfo/UserEntity.h"   // ç¡®ä¿åŒ…å« UserEntity å¤´æ–‡ä»¶
 class MainWindow : public QWidget {
     Q_OBJECT
 public:
     enum PageType {
-        ChatPage=0,//ÁÄÌìÒ³
-        FriendInfo,//ÁªÏµÈË×ÊÁÏÒ³
-        SettingsPage,//ÉèÖÃÒ³
-        NewFriendPage,//ĞÂÅóÓÑÒ³
+        ChatPage=0,//èŠå¤©é¡µ
+        FriendInfo,//è”ç³»äººèµ„æ–™é¡µ
+        SettingsPage,//è®¾ç½®é¡µ
+        NewFriendPage,//æ–°æœ‹å‹é¡µ
 
 
 
         GroupPage
     };
 
-    static MainWindow* instance();   // µ¥Àı
-    void setRightPages(PageType type);//´ÓÍâ²¿ÉèÖÃÒ³Ç©
-
+    static MainWindow* instance();   // å•ä¾‹
+    void requestQueryUser();
+	QString userid;//ç”¨æˆ·IDä¾›å¤–éƒ¨è®¿é—®
+    void setRightPages(PageType type);//ä»å¤–éƒ¨è®¾ç½®é¡µç­¾
+	UserEntity m_currentUser; // å½“å‰ç”¨æˆ·å®ä½“
 private:
-    explicit MainWindow(QWidget* parent = nullptr); // ¹¹Ôìº¯ÊıË½ÓĞ»¯
+    void updateUserReady(const bool& glag);
+    UserProfile m_userProfile;
+	void queryUserReady(const UserEntity& localUser);
+    void showProfileViewDialog();
+    bool eventFilter(QObject* watched, QEvent* event) override;  // ä½¿ç”¨ override å…³é”®å­—
+    explicit MainWindow(QWidget* parent = nullptr); // æ„é€ å‡½æ•°ç§æœ‰åŒ–
     ~MainWindow();
 
     static MainWindow* m_instance; 
     void setupUi();
 
-    // ×ó²àµ¼º½
+    // å·¦ä¾§å¯¼èˆª
     QWidget* m_tabBar;
     QLabel* m_avatarLabel;
     QButtonGroup* m_sideButtonGroup;
     void setupLeftNav();
 
-    // ÖĞ¼äÒ³Ãæ
+    // ä¸­é—´é¡µé¢
     QStackedWidget* m_contactPages;
     QLineEdit* m_searchEdit;
     QWidget* m_middleWidget;
     void setupMiddleColumn();
 
 
-    // ÓÒ²àÒ³Ãæ
+    // å³ä¾§é¡µé¢
     QStackedWidget* m_pages;
-    QMap<PageType, QWidget*> m_pageMap;//Ã¶¾ÙÀàĞÍÓ³Éä
+    QMap<PageType, QWidget*> m_pageMap;//æšä¸¾ç±»å‹æ˜ å°„
 
-    //Ò³ÃæList
+    //é¡µé¢List
     QWidget* m_chatPage;
     QWidget* m_friendInfoPage;
     QWidget* m_settingsPage;
@@ -57,8 +66,8 @@ private:
 
     void setupPages();
 
-    //Ò³ÃæÓ³Éä
+    //é¡µé¢æ˜ å°„
     void addRightPage(PageType type, QWidget* page);
-    // µ¯³öÉèÖÃµ¯´°
+    // å¼¹å‡ºè®¾ç½®å¼¹çª—
     void openSettingsDialog();
 };

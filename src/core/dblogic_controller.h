@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include "model/message.h"
+#include "ui/personinfo/UserEntity.h"
 /**
  * @brief 数据库与业务逻辑控制器
  * 
@@ -115,6 +116,20 @@ signals:
     //***以下关于lanchat/messages数据表的设计****
     void requestQueryMessages(const QString& localUser, const QString& peer, int limit);
     void queryResultsReady(const QVector<Message>& results);
+
+    //*********关于public/user数据表的设计********
+    void requestQueryUser(const UserEntity& localUser);
+    void queryUserReady(const UserEntity& results);
+
+
+    void requesUpdateUser(const UserEntity& localUser);
+    void updateUserReady(const bool& glag);
+
+    void requesAddUser(const UserEntity& localUser);
+    void addUserReady(const bool& glag);
+
+
+    
 
 protected:
     QObject* createWorker() override;

@@ -91,6 +91,9 @@ set(SOURCES
     src/network/socket_server.h
   
     
+ 
+    src/ui/personinfo/ProfileEditDialog.cpp
+    src/ui/personinfo/ProfileViewDialog.cpp
     # UI 文件变量 (来自 feature/mty/db)
     ${UI_FILES} # 将 .ui 文件加入到目标源中，启用 AUTOUIC 生成 ui_main_window.h
 )

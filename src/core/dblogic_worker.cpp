@@ -10,7 +10,8 @@
 #include <QSqlError>
 #include <QDateTime>
 #include <QMap>
-
+#include "ui/personinfo/UserEntity.h"
+#include <QSqlRecord>
 DbLogicWorker::DbLogicWorker(QObject* parent)
     : BaseWorker(parent)
     , m_dbInitialized(false)
@@ -57,7 +58,7 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
     
     m_dbPath = dbPath;
     bool success = DatabaseManager::getInstance().init(dbPath);
-    m_dbInitialized = success;
+    
     
     if (success) {
         qDebug() << "Database initialized successfully";
@@ -65,6 +66,11 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
         qDebug() << "Failed to initialize database";
         emit errorOccurred("Failed to initialize database");
     }
+
+	//请替换成你根目录下的public.db绝对路径
+    bool success2 = DatabaseManager::getInstance().initConnection("public","C:\\mty\\QtProject\\public.db");
+   
+    m_dbInitialized = success2;
     
     emit databaseInitialized(success);
 }
@@ -138,6 +144,86 @@ void DbLogicWorker::queryMessages(const QString& localUser, const QString& peer,
     qDebug() << "Searching messages with keyword:" << localUser;
     emit queryResultsReady(conv);
 }
+
+void DbLogicWorker::updateUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit searchResultsReady(QJsonArray());
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.toUpdateSQL();
+    query.prepare(sql);
+   
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        emit updateUserReady(false);
+        return;
+    }
+    else {
+        emit updateUserReady(true);
+    }
+    
+}
+
+void DbLogicWorker::addUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit searchResultsReady(QJsonArray());
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.toInsertSQL();
+    query.prepare(sql);
+
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        emit addUserReady(false);
+        return;
+    }
+    else {
+        emit addUserReady(true);
+    }
+}
+
+
+void DbLogicWorker::queryUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit searchResultsReady(QJsonArray());
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.selectByUserIdSQL(localUser.userId);
+    query.prepare(sql);
+
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        return;
+    }
+    if (query.next()) {
+        // 将查询结果转换为 QMap
+        QMap<QString, QVariant> row;
+        QSqlRecord record = query.record();
+        for (int i = 0; i < record.count(); ++i) {
+            row[record.fieldName(i)] = record.value(i);
+        }
+        emit queryUserReady(UserEntity::fromDatabase(row));
+    }
+    else {
+        emit queryUserReady(UserEntity());
+    }
+}
+
 
 void DbLogicWorker::updateMessageStatus(const QString& messageId, const QString& status)
 {

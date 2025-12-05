@@ -5,6 +5,8 @@
 #include <QString>
 #include <QJsonObject>
 #include "model/message.h"
+#include "ui/personinfo/UserEntity.h"
+
 /**
  * @brief ���ݿ���ҵ���߼� Worker
  * 
@@ -51,7 +53,6 @@ public slots:
      * @param keyword �����ؼ���
      */
     void searchMessages(const QString& keyword);
-    void queryMessages(const QString& localUser, const QString& peer, int limit);
     
 
     /**
@@ -98,6 +99,16 @@ public slots:
      */
     void processFile(const QString& filePath, const QJsonObject& options);
 
+
+    void queryMessages(const QString& localUser, const QString& peer, int limit);
+
+    
+    void queryUser(const UserEntity& localUser);
+
+    void updateUser(const UserEntity& localUser);
+
+    void addUser(const UserEntity& localUser);
+
 signals:
     /**
      * @brief ���ݿ��ʼ�����
@@ -122,8 +133,8 @@ signals:
      * @param results ���������JSON ���飩
      */
     void searchResultsReady(const QJsonArray& results);
-    void queryResultsReady(const QVector<Message>& results);
-
+    
+    
     /**
      * @brief ��Ϣ״̬�������
      */
@@ -148,6 +159,13 @@ signals:
      * @brief 用户搜索结果
      */
     void userSearchResult(const QJsonObject& userInfo, bool found);
+
+
+    void queryResultsReady(const QVector<Message>& results);
+    void queryUserReady(const UserEntity& localUser);
+
+    void updateUserReady(const bool& glag);
+    void addUserReady(const bool& glag);
 
 private:
     QString m_dbPath;
