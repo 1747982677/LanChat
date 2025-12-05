@@ -278,7 +278,7 @@ void SocketServer::onClientTextMessageReceived(const QString& message)
         // 检查是否需要转发
         QString receiverId = obj.value("receiverId").toString();
         if (!receiverId.isEmpty()) {
-            QString messageId = obj.value("msgId").toString();
+            QString messageId = obj.value("messageId").toString();
             
             // 转发消息给目标用户
             if (sendMessageToUser(receiverId, message)) {

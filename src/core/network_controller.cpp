@@ -35,11 +35,9 @@ bool NetworkController::initialize()
         return false;
     }
 
-    
-   
-
     qDebug() << "NetworkController initialized";
     emit initialized();
+
     // 设置 Worker 线程
     setupWorkerThread(worker);
 
@@ -47,7 +45,6 @@ bool NetworkController::initialize()
     connectSignals();
 
     // 注意：Worker 的 initialize() 将在 start() 后调用（线程启动后）
-    //Logger::getInstance().log("[NetworkController] Controller initialized (Worker will be initialized after thread starts)");
     QMetaObject::invokeMethod(worker, "initialize", Qt::QueuedConnection);
     return true;
 }
@@ -82,88 +79,68 @@ void NetworkController::connectSignals()
     }
 
     // Controller -> Worker 信号
-    connect(this, &NetworkController::requestConnect,
-            worker, &NetworkWorker::connectToServer);
-    connect(this, &NetworkController::requestDisconnect,
-            worker, &NetworkWorker::disconnectFromServer);
+    connect(this, &NetworkController::requestInitializeWithUserId,
+            worker, &NetworkWorker::initializeChatService);
     connect(this, &NetworkController::requestSendMessage,
             worker, &NetworkWorker::sendMessage);
     connect(this, &NetworkController::requestSendTextMessage,
             worker, &NetworkWorker::sendTextMessage);
-    connect(this, &NetworkController::requestStartServer,
-            worker, &NetworkWorker::startServer);
-    connect(this, &NetworkController::requestStopServer,
-            worker, &NetworkWorker::stopServer);
+	connect(this, &NetworkController::requestDisconnect,
+		worker, &NetworkWorker::disconnectFromServer);
+	connect(this, &NetworkController::requestStopServer,
+		worker, &NetworkWorker::stopServer);
 
     // Worker -> Controller 信号（转发）
     connect(worker, &NetworkWorker::connected,
             this, &NetworkController::connected);
     connect(worker, &NetworkWorker::disconnected,
             this, &NetworkController::disconnected);
-    connect(worker, &NetworkWorker::messageReceived,
-            this, [this](const QJsonObject& msg, const QString& from) {
-                Logger::getInstance().log(QString("[NetworkController] messageReceived from worker, forwarding signal. from: %1").arg(from));
-                emit messageReceived(msg, from);
-            });
+    connect(worker, &NetworkWorker::messageReceived, 
+            this, &NetworkController::onmessageReceivedFromWorker);
     connect(worker, &NetworkWorker::textMessageReceived,
             this, &NetworkController::textMessageReceived);
     connect(worker, &NetworkWorker::connectionStateChanged,
             this, &NetworkController::connectionStateChanged);
+    connect(worker, &NetworkWorker::messageSendSuccess,
+            this, &NetworkController::messageSendSuccess);
+    connect(worker, &NetworkWorker::messageSendFailed,
+            this, &NetworkController::messageSendFailed);
     connect(worker, &NetworkWorker::errorOccurred,
             this, &NetworkController::errorOccurred);
-
-    // 新增：转发消息发送结果
-    connect(worker, &NetworkWorker::messageSendSuccess,
-        this, &NetworkController::messageSendSuccess);
-    connect(worker, &NetworkWorker::messageSendFailed,
-        this, &NetworkController::messageSendFailed);
-    
-    // 转发 Worker 的 initialized 信号
     connect(worker, &NetworkWorker::initialized,
-        this, [this](){
-            Logger::getInstance().log("[NetworkController] Worker initialized, emitting controller initialized signal");
-            emit initialized();
-        });
-    
-    Logger::getInstance().log("[NetworkController] All signals connected");
+           this, &NetworkController::initialized);
+    // 🆕 转发 Worker 的状态变化
+   connect(worker, &NetworkWorker::statusChanged,
+            this, &NetworkController::statusChanged);
 }
 
-void NetworkController::connectToServer(const QString& host, quint16 port)
+void NetworkController::initializeWithUserId(const QString& userId)
 {
-    qDebug() << "NetworkController: Request connect to" << host << ":" << port;
-    emit requestConnect(host, port);
+    Logger::getInstance().log(QString("[NetworkController] Initializing with user ID: %1").arg(userId));
+    emit requestInitializeWithUserId(userId);
 }
 
-void NetworkController::disconnectFromServer()
-{
-    qDebug() << "NetworkController: Request disconnect";
-    Logger::getInstance().log("[NetworkController] disconnectFromServer called");
-    emit requestDisconnect();
-}
-
-void NetworkController::sendMessage(const QJsonObject& message)
+void NetworkController::sendMessage(const LanChat::Message& message)
 {
     Logger::getInstance().log(QString("[NetworkController] sendMessage called, JSON: %1")
-                             .arg(QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact))));
+                             .arg(message.messageId));
+
     emit requestSendMessage(message);
     Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted");
 }
 
-void NetworkController::sendTextMessage(const QString& text)
+void NetworkController::sendTextMessage(const QString& text, const QString& receiverId)
 {
     Logger::getInstance().log(QString("[NetworkController] sendTextMessage called, text: %1").arg(text));
-    emit requestSendTextMessage(text);
+    emit requestSendTextMessage(text, receiverId);
     Logger::getInstance().log("[NetworkController] requestSendTextMessage signal emitted");
 }
 
-void NetworkController::startServer(quint16 port)
+void NetworkController::onmessageReceivedFromWorker(const LanChat::Message& message)
 {
-    qDebug() << "NetworkController: Request start server on port" << port;
-    emit requestStartServer(port);
-}
-
-void NetworkController::stopServer()
-{
-    qDebug() << "NetworkController: Request stop server";
-    emit requestStopServer();
+	Logger::getInstance().log(QString("[NetworkController] onmessageReceivedFromWorker called, messageId: %1")
+		.arg(message.messageId));
+	//消息转换为QjsonObject格式
+	QJsonObject jasonMessage = message.toJson();
+	emit messageReceived(jasonMessage, message.senderId);
 }

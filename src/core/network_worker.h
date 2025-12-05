@@ -2,8 +2,9 @@
 #define NETWORK_WORKER_H
 
 #include "core/base_worker.h"
-#include "network/socket_client.h"
+#include "service/chat_service.h"
 #include <QJsonObject>
+#include "common/types.h"  
 
 /**
  * @brief 网络通信 Worker
@@ -13,6 +14,7 @@
  * 2. 连接管理
  * 3. 心跳维护
  * 4. 网络状态监控
+ * 5. 与 ChatService 集成，处理消息转发
  */
 class NetworkWorker : public BaseWorker
 {
@@ -26,12 +28,13 @@ public:
 
 public slots:
     bool initialize() override;
+    
     /**
-     * @brief 连接到服务器
-     * @param host 服务器地址
-     * @param port 服务器端口
+     * @brief 初始化网络服务（带用户ID）
+     * @param userId 用户ID，必须在调用此方法传入唯一Id
+     * @return 是否初始化成功
      */
-    void connectToServer(const QString& host, quint16 port);
+    void initializeChatService(const QString& UserId);
 
     /**
      * @brief 断开连接
@@ -39,22 +42,17 @@ public slots:
     void disconnectFromServer();
 
     /**
-     * @brief 发送 JSON 消息
-     * @param message JSON 对象
+     * @brief LanChat::Message 发送 推荐使用这种方法发送消息
+     * @param LanChat::Message 对象
      */
-    void sendMessage(const QJsonObject& message);
+    void sendMessage(const LanChat::Message& message);
 
     /**
-     * @brief 发送文本消息
+	 * @brief 发送文本消息，但需要指定接收者ID
      * @param text 文本内容
      */
-    void sendTextMessage(const QString& text);
+    void sendTextMessage(const QString& text, const QString& reveicerId);
 
-    /**
-     * @brief 启动服务器模式
-     * @param port 监听端口
-     */
-    void startServer(quint16 port);
 
     /**
      * @brief 停止服务器模式
@@ -77,7 +75,7 @@ signals:
      * @param message JSON 消息对象
      * @param from 发送者地址
      */
-    void messageReceived(const QJsonObject& message, const QString& from);
+    void messageReceived(const LanChat::Message& message);
 
     /**
      * @brief 收到文本消息信号
@@ -93,17 +91,22 @@ signals:
     // 消息发送结果信号
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
+	// 在线用户列表更新信号
+    void onlineUsersUpdated(QStringList& userIds);
 
 
 private slots:
-    void onSocketConnected();
-    void onSocketDisconnected();
-    void onSocketMessageReceived(const QString& message, const QString& from);
-    void onSocketError(const QString& error);
+    // ChatService 信号处理
+    void onChatServiceMessageSent(const LanChat::Message& message);
+    void onChatServiceMessageReceived(const LanChat::Message& message);
+    void onChatServiceError(const QString& error);
+    //ToDO 提供在线用户列表
+    void onChatServiceOnlineUsersUpdated(const QStringList& userIds); 
 
 private:
-    SocketClient* m_socketClient;
+    ChatService* m_chatService;  // ChatService 实例指针
     bool m_isConnected;
+    QString m_currentUserId;  // 当前用户ID
 };
 
 #endif // NETWORK_WORKER_H
