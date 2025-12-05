@@ -62,8 +62,6 @@ int main(int argc, char* argv[])
 		// 1. 启动本地 chat服务，需要传入用户的唯一 ID
 		QString usrID = "local_user"; // 本地测试用户 ID (一定要是唯一ID) 
         Logger::getInstance().log("[TEST] Starting local WebSocket server on port 8080...");
-        context.networkController()->initializeWithUserId(usrID);
-		context.networkController()->sendMessage(LanChat::Message());
         //发送消息最好使用 LanChat::Message 结构体，调用networkController->sendMessage(LanChat::Message());
 		//或者指定接收用户的ID调用 networkController->sendTextMessage(const QString& text, const QString& receiverId);
     });
