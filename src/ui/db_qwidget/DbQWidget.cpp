@@ -8,6 +8,7 @@
 #include "model/message_dao.h"
 #include <QtTest/QtTest>
 #include "utils/database.h"
+#include "core/app_context.h"
 
 DbQWidget::DbQWidget(QWidget *parent)
 	: QWidget(parent)
@@ -16,6 +17,17 @@ DbQWidget::DbQWidget(QWidget *parent)
     initUI();
     connectSignals();
     Logger::getInstance().log("MainWindow created");
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+    bool connected = connect(dbCtrl, &DbLogicController::queryResultsReady,
+        this, &DbQWidget::queryResultsReady);
+    Logger::getInstance().log(QString("[MainWindow] Signal connection result: %1").arg(connected ? "SUCCESS" : "FAILED"));
+
+    if (connected) {
+        Logger::getInstance().log("[MainWindow] Signal connected to DbLogicController");
+    }
+    else {
+        Logger::getInstance().error("[MainWindow] FAILED to connect signal!");
+    }
 }
 
 DbQWidget::~DbQWidget()
@@ -100,12 +112,7 @@ void DbQWidget::updateMessages() {
     }
 }
 
-void DbQWidget::searchMessages() {
-    //根据sender和receiver获取最多limit数量的消息记录
-    QVector<Message> conv = MessageDao::getConversation("alice", "bob", 100);
-    /*QCOMPARE(conv.size(), 1);
-    QCOMPARE(conv.first().content, m.content);*/
-
+void DbQWidget::queryResultsReady(const QVector<Message>& conv) {
     uii.listWidget->clear();
     for (const Message& msg : conv) {
         QString itemText = QString("[%1] %2: %3")
@@ -114,6 +121,18 @@ void DbQWidget::searchMessages() {
             .arg(msg.content);
         uii.listWidget->addItem(itemText);
     }
+}
+void DbQWidget::searchMessages() {
+    DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
+ 
+    //根据sender和receiver获取最多limit数量的消息记录
+    //QVector<Message> conv = MessageDao::getConversation("alice", "bob", 100);
+
+    dbCtrl->requestQueryMessages("alice", "bob", 100);
+    /*QCOMPARE(conv.size(), 1);
+    QCOMPARE(conv.first().content, m.content);*/
+
+   
 }
 
 void DbQWidget::createTable()

@@ -12,6 +12,10 @@
 #include <QDateTime>
 #include <QMap>
 #include <QUuid>
+#include "ui/personinfo/UserEntity.h"
+#include <QSqlRecord>
+#include <QFileInfo>
+#include <QDir>
 
 DbLogicWorker::DbLogicWorker(QObject* parent)
     : BaseWorker(parent)
@@ -57,18 +61,67 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
 {
     qDebug() << "Initializing database:" << dbPath;
     
-    m_dbPath = dbPath;
-    bool success = DatabaseManager::getInstance().init(dbPath);
-    m_dbInitialized = success;
-    
-    if (success) {
-        qDebug() << "Database initialized successfully";
-    } else {
-        qDebug() << "Failed to initialize database";
-        emit errorOccurred("Failed to initialize database");
+    // 确保数据库文件所在的目录存在
+    QFileInfo fileInfo(dbPath);
+    QDir dir = fileInfo.absoluteDir();
+    if (!dir.exists()) {
+        qDebug() << "Database directory does not exist, creating:" << dir.absolutePath();
+        if (!dir.mkpath(".")) {
+            qDebug() << "Failed to create database directory:" << dir.absolutePath();
+            emit errorOccurred("Failed to create database directory: " + dir.absolutePath());
+            emit databaseInitialized(false);
+            return;
+        }
     }
     
-    emit databaseInitialized(success);
+    m_dbPath = dbPath;
+    
+    // 初始化 lanchat 数据库（用于消息和用户认证）
+    bool success = DatabaseManager::getInstance().init(dbPath);
+    
+    if (!success) {
+        qDebug() << "Failed to initialize lanchat database";
+        emit errorOccurred("Failed to initialize lanchat database");
+        emit databaseInitialized(false);
+        return;
+    }
+    
+    qDebug() << "Lanchat database initialized successfully";
+    
+    // 初始化 public 数据库（用于用户信息管理）
+    // 从 dbPath 推导 public.db 的路径（在同一目录下）
+    QFileInfo lanchatInfo(dbPath);
+    QString publicDbPath = lanchatInfo.absoluteDir().absoluteFilePath("public.db");
+    
+    // 确保 public.db 目录存在
+    QFileInfo publicInfo(publicDbPath);
+    QDir publicDir = publicInfo.absoluteDir();
+    if (!publicDir.exists()) {
+        qDebug() << "Public database directory does not exist, creating:" << publicDir.absolutePath();
+        if (!publicDir.mkpath(".")) {
+            qDebug() << "Failed to create public database directory:" << publicDir.absolutePath();
+            emit errorOccurred("Failed to create public database directory: " + publicDir.absolutePath());
+            emit databaseInitialized(false);
+            return;
+        }
+    }
+    
+    qDebug() << "Initializing public database:" << publicDbPath;
+    bool success2 = DatabaseManager::getInstance().initConnection("public", publicDbPath);
+    
+    if (!success2) {
+        qDebug() << "Failed to initialize public database";
+        emit errorOccurred("Failed to initialize public database");
+        emit databaseInitialized(false);
+        return;
+    }
+    
+    qDebug() << "Public database initialized successfully";
+    
+    // 两个数据库都初始化成功才算成功
+    m_dbInitialized = success && success2;
+    
+    emit databaseInitialized(m_dbInitialized);
 }
 
 void DbLogicWorker::saveMessage(const QJsonObject& message)
@@ -127,6 +180,99 @@ void DbLogicWorker::searchMessages(const QString& keyword)
     
     emit searchResultsReady(results);
 }
+
+void DbLogicWorker::queryMessages(const QString& localUser, const QString& peer, int limit)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit searchResultsReady(QJsonArray());
+        return;
+    }
+    QVector<Message> conv = MessageDao::getConversation("alice", "bob", 100);
+    /*return conv;*/
+    qDebug() << "Searching messages with keyword:" << localUser;
+    emit queryResultsReady(conv);
+}
+
+void DbLogicWorker::updateUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit updateUserReady(false);
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.toUpdateSQL();
+    query.prepare(sql);
+   
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        emit updateUserReady(false);
+        return;
+    }
+    else {
+        emit updateUserReady(true);
+    }
+    
+}
+
+void DbLogicWorker::addUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit addUserReady(false);
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.toInsertSQL();
+    query.prepare(sql);
+
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        emit addUserReady(false);
+        return;
+    }
+    else {
+        emit addUserReady(true);
+    }
+}
+
+
+void DbLogicWorker::queryUser(const UserEntity& localUser)
+{
+    if (!m_dbInitialized) {
+        emit errorOccurred("Database not initialized");
+        emit queryUserReady(UserEntity());
+        return;
+    }
+    auto& dbm = DatabaseManager::getInstance();
+    QSqlDatabase db = dbm.database("public");
+    QSqlQuery query(db);
+    QString sql = localUser.selectByUserIdSQL(localUser.userId);
+    query.prepare(sql);
+
+    if (!query.exec()) {
+        qWarning() << "查询用户失败:" << query.lastError();
+        return;
+    }
+    if (query.next()) {
+        // 将查询结果转换为 QMap
+        QMap<QString, QVariant> row;
+        QSqlRecord record = query.record();
+        for (int i = 0; i < record.count(); ++i) {
+            row[record.fieldName(i)] = record.value(i);
+        }
+        emit queryUserReady(UserEntity::fromDatabase(row));
+    }
+    else {
+        emit queryUserReady(UserEntity());
+    }
+}
+
 
 void DbLogicWorker::updateMessageStatus(const QString& messageId, const QString& status)
 {

@@ -1,7 +1,7 @@
 
 #include <QWidget>
 #include "ui_DbQWidget.h"
-
+#include "model/message.h"
 class DbQWidget : public QWidget
 {
 	Q_OBJECT
@@ -23,6 +23,8 @@ private slots:
 	void updateData();
 	void searchData();
 	//void onSearchDbButClicked();
+	void queryResultsReady(const QVector<Message>& results);
+	
 private:
 	Ui::DbQWidgetClass uii;
 	void initUI();

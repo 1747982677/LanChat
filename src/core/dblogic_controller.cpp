@@ -1,6 +1,7 @@
 #include "dblogic_controller.h"
 #include "dblogic_worker.h"
 #include "utils/password_util.h"
+#include "ui/personinfo/UserEntity.h"
 #include <QDebug>
 #include <QUuid>
 #include <QTimer>
@@ -67,7 +68,7 @@ void DbLogicController::connectSignals()
         return;
     }
 
-    // Controller -> Worker �ź�
+    // Controller -> Worker 信号
     connect(this, &DbLogicController::requestInitializeDatabase,
             worker, &DbLogicWorker::initializeDatabase);
     connect(this, &DbLogicController::requestSaveMessage,
@@ -95,7 +96,7 @@ void DbLogicController::connectSignals()
     connect(this, &DbLogicController::requestVerifyUserPassword,
             worker, &DbLogicWorker::verifyUserPassword);
 
-    // Worker -> Controller �źţ�ת����
+    // Worker -> Controller 信号（转发）
     connect(worker, &DbLogicWorker::databaseInitialized,
             this, [this](bool success) {
                 m_dbInitialized = success;
@@ -124,6 +125,34 @@ void DbLogicController::connectSignals()
             this, &DbLogicController::userRegistered);
     connect(worker, &DbLogicWorker::passwordVerified,
             this, &DbLogicController::passwordVerified);
+
+    //*********关于lanchat/messages数据表的设计********
+    connect(this, &DbLogicController::requestQueryMessages,
+        worker, &DbLogicWorker::queryMessages);
+    connect(worker, &DbLogicWorker::queryResultsReady,
+        this, &DbLogicController::queryResultsReady);
+
+    //*********关于public/user数据表的设计********
+    connect(this, &DbLogicController::requestQueryUser,
+        worker, &DbLogicWorker::queryUser);
+    connect(worker, &DbLogicWorker::queryUserReady,
+        this, &DbLogicController::queryUserReady);
+
+    connect(this, &DbLogicController::requesUpdateUser,
+        worker, &DbLogicWorker::updateUser);
+    connect(worker, &DbLogicWorker::updateUserReady,
+        this, &DbLogicController::updateUserReady);
+
+    connect(this, &DbLogicController::requesAddUser,
+        worker, &DbLogicWorker::addUser);
+    connect(worker, &DbLogicWorker::addUserReady,
+        this, &DbLogicController::addUserReady);
+}
+
+void DbLogicController::queryMessages(const QString& localUser, const QString& peer, int limit)
+{
+    qDebug() << "DbLogicController: Request query messages:" << localUser << "to" << peer;
+    emit requestQueryMessages(localUser, peer, limit);
 }
 
 void DbLogicController::initializeDatabase(const QString& dbPath)
@@ -138,7 +167,7 @@ void DbLogicController::saveMessage(const QJsonObject& message)
     emit requestSaveMessage(message);
 }
 
-// �޸������ɲ����� requestId
+// 修复：生成并返回 requestId
 QString DbLogicController::loadHistoryMessages(const QString& contactId, int limit, int offset)
 {
     QString requestId = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -216,7 +245,7 @@ void DbLogicController::registerUser(const QString& email, const QString& passwo
                                qDebug() << "Database initialization failed";
                                emit userRegistered(false, QString(), "数据库初始化失败");
                            }
-                       }, Qt::UniqueConnection);
+                       });
         
         // 如果初始化正在进行中，上面的连接会等待
         // 如果还没有开始初始化，触发初始化
@@ -255,4 +284,22 @@ void DbLogicController::verifyUserPassword(const QString& email, const QString& 
 {
     qDebug() << "DbLogicController: Request verify password for:" << email;
     emit requestVerifyUserPassword(email, password);
+}
+
+void DbLogicController::queryUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request query user:" << localUser.userId;
+    emit requestQueryUser(localUser);
+}
+
+void DbLogicController::updateUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request update user:" << localUser.userId;
+    emit requesUpdateUser(localUser);
+}
+
+void DbLogicController::addUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request add user:" << localUser.userId;
+    emit requesAddUser(localUser);
 }

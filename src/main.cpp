@@ -27,18 +27,22 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
 
     // 初始化数据库 (使用相对路径，避免绝对路径在不同机器上失效)
-    QString dbPath = "lanchat.db"; // 默认放在运行目录下
-    if (!DatabaseManager::getInstance().init(dbPath)) {
-        qDebug().noquote() << "Failed to initialize database";
-    } else {
-        qDebug().noquote() << "Database initialized";
-    }
+    //QString dbPath = "lanchat.db"; // 默认放在运行目录下
+    //if (!DatabaseManager::getInstance().init(dbPath)) {
+    //    qDebug().noquote() << "Failed to initialize database";
+    //} else {
+    //    qDebug().noquote() << "Database initialized";
+    //}
+
+    quintptr id = reinterpret_cast<quintptr>(QThread::currentThreadId());
+    Logger::getInstance().log(QString("当前主线程：lanchat_conn_%1").arg(id));
 
     // 初始化应用上下文
     AppContext& context = AppContext::instance();
-
     // 设置数据库路径
-    context.setDatabasePath("src\\model\\lanchat.db");
+	//需要根据实际路径修改
+    context.setDatabasePath("C:\\mty\\QtProject\\LanChat\\src\\model\\lanchat.db");
+    /*context.setDatabasePath("src\\model\\lanchat.db");*/
 
     // 初始化所有模块
     if (!context.initialize()) {
@@ -76,7 +80,19 @@ int main(int argc, char* argv[])
     AuthService& authService = AuthService::getInstance();
     if (authService.isLoggedIn()) {
         // 如果已登录，直接显示主窗口
-        MainWindow::instance()->show();
+        MainWindow* mainWindow = MainWindow::instance();
+        // 从 AuthService 获取当前登录的用户ID
+        QString userId = authService.getCurrentUserId();
+        if (!userId.isEmpty()) {
+            mainWindow->userid = userId;
+            mainWindow->requestQueryUser();
+            mainWindow->show();
+            Logger::getInstance().log("User already logged in, userId: " + userId);
+        } else {
+            Logger::getInstance().error("User logged in but userId is empty, showing login window");
+            // 如果 userId 为空，清除登录状态，显示登录窗口
+            authService.logout();
+        }
 
         // Debug: simulate incoming message to test unread count
         // #ifdef QT_DEBUG
@@ -91,6 +107,11 @@ int main(int argc, char* argv[])
         // #endif
 
     } else {
+        
+
+		/*DbQWidget* dbTestWidget = new DbQWidget();
+        dbTestWidget->show();*/
+
         // 如果未登录，显示登录窗口
         LoginWindow* loginWindow = new LoginWindow();
 
@@ -101,7 +122,25 @@ int main(int argc, char* argv[])
                             // 登录成功后，隐藏登录窗口，显示主窗口
                             loginWindow->hide();
                             qDebug() << "main.cpp: 隐藏登录窗口，准备显示主窗口";
-                            MainWindow::instance()->show();
+                            
+                            // 从 AuthService 获取当前登录的用户ID
+                            AuthService& authService = AuthService::getInstance();
+                            QString userId = authService.getCurrentUserId();
+                            
+                            if (userId.isEmpty()) {
+                                Logger::getInstance().error("Login succeeded but userId is empty");
+                                qDebug() << "main.cpp: 错误：登录成功但 userId 为空";
+                                return;
+                            }
+                            
+                            MainWindow* mainWindow = MainWindow::instance();
+                            mainWindow->userid = userId;
+                            Logger::getInstance().log("Login succeeded, loading user data for userId: " + userId);
+                            
+                            // 读取用户数据
+                            mainWindow->requestQueryUser();
+                            mainWindow->show();
+                            //MainWindow::instance()->show();
                             qDebug() << "main.cpp: 主窗口已显示";
 
                             // Debug: simulate incoming message after login to test unread count
