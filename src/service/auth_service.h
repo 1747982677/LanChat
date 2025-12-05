@@ -52,9 +52,11 @@ public:
     // 获取保存的账号（不返回密码，安全考虑）
     QString getSavedAccount() const;
     
-    // 获取保存的账号和密码（用于自动填充，仅在注册后使用）
-    // 注意：此方法仅用于注册后自动填充，其他场景应使用 getSavedAccount()
+    // 获取保存的账号和密码（用于自动填充，从本地配置文件加载）
     void getSavedCredentials(QString& account, QString& password) const;
+    
+    // 获取注册后的临时暂存账号密码（用于注册成功后立即在登录窗口显示）
+    void getPendingCredentials(QString& account, QString& password) const;
 
 signals:
     // 登录成功信号
@@ -102,6 +104,9 @@ private:
     // 从本地加载账号密码
     void loadCredentialsFromLocal(QString& account, QString& password) const;
 
+    // 保存登录账号到本地（用于下次启动时自动填充，只保存账号，不保存密码）
+    void saveLoginCredentials(const QString& account);
+
     // 处理数据库操作的回调
     void onUserRegistered(bool success, const QString& userId, const QString& errorMessage);
     void onPasswordVerified(bool success, const QString& userId, const QString& errorMessage);
@@ -111,9 +116,9 @@ private:
     QString m_token;              // 当前 Token
     bool m_isLoggedIn;            // 是否已登录
     
-    // 临时保存注册时的账号密码（用于注册成功后保存）
-    QString m_pendingAccount;     // 待保存的账号
-    QString m_pendingPassword;    // 待保存的密码
+    // 临时保存注册时的账号密码（用于注册成功后立即在登录窗口显示，登录后删除）
+    QString m_pendingAccount;     // 待保存的账号（临时）
+    QString m_pendingPassword;    // 待保存的密码（临时）
 };
 
 #endif // AUTH_SERVICE_H

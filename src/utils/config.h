@@ -22,6 +22,8 @@ public:
     void setInt(const QString& key, int value);
     void setBool(const QString& key, bool value);
     
+    void remove(const QString& key); // Added remove method declaration
+    
     void save();
     
 private:
