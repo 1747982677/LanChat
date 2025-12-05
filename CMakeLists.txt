@@ -56,6 +56,7 @@ set(SOURCES
     src/utils/config.cpp
     src/utils/db_manager.cpp
     src/utils/datebase.cpp
+    src/utils/password_util.cpp
 
     # model (来自 feature/mty/db)
     src/model/message_dao.cpp

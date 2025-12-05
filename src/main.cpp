@@ -74,12 +74,21 @@ int main(int argc, char* argv[])
 
     // 检查是否已登录（有有效的 Token）
     AuthService& authService = AuthService::getInstance();
-    if (authService.isLoggedIn()) {//authService.isLoggedIn()
+    if (authService.isLoggedIn()) {
         // 如果已登录，直接显示主窗口
         MainWindow* mainWindow = MainWindow::instance();
-        mainWindow->userid = "UID158055";
-        mainWindow->requestQueryUser();
-        mainWindow->show();
+        // 从 AuthService 获取当前登录的用户ID
+        QString userId = authService.getCurrentUserId();
+        if (!userId.isEmpty()) {
+            mainWindow->userid = userId;
+            mainWindow->requestQueryUser();
+            mainWindow->show();
+            Logger::getInstance().log("User already logged in, userId: " + userId);
+        } else {
+            Logger::getInstance().error("User logged in but userId is empty, showing login window");
+            // 如果 userId 为空，清除登录状态，显示登录窗口
+            authService.logout();
+        }
 
         // Debug: simulate incoming message to test unread count
         // #ifdef QT_DEBUG
@@ -109,8 +118,22 @@ int main(int argc, char* argv[])
                             // 登录成功后，隐藏登录窗口，显示主窗口
                             loginWindow->hide();
                             qDebug() << "main.cpp: 隐藏登录窗口，准备显示主窗口";
+                            
+                            // 从 AuthService 获取当前登录的用户ID
+                            AuthService& authService = AuthService::getInstance();
+                            QString userId = authService.getCurrentUserId();
+                            
+                            if (userId.isEmpty()) {
+                                Logger::getInstance().error("Login succeeded but userId is empty");
+                                qDebug() << "main.cpp: 错误：登录成功但 userId 为空";
+                                return;
+                            }
+                            
                             MainWindow* mainWindow = MainWindow::instance();
-                            mainWindow->userid = "UID158055";
+                            mainWindow->userid = userId;
+                            Logger::getInstance().log("Login succeeded, loading user data for userId: " + userId);
+                            
+                            // 读取用户数据
                             mainWindow->requestQueryUser();
                             mainWindow->show();
                             //MainWindow::instance()->show();

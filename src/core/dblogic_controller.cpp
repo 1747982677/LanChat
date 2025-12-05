@@ -1,13 +1,17 @@
 #include "dblogic_controller.h"
 #include "dblogic_worker.h"
+#include "utils/password_util.h"
+#include "ui/personinfo/UserEntity.h"
 #include <QDebug>
 #include <QUuid>
-#include "ui/personinfo/UserEntity.h"
+#include <QTimer>
 
 DbLogicController* DbLogicController::s_instance = nullptr;
 
 DbLogicController::DbLogicController(QObject* parent)
     : BaseController(parent)
+    , m_dbInitialized(false)
+    , m_dbPath()
 {
 }
 
@@ -24,6 +28,11 @@ DbLogicController& DbLogicController::instance()
         s_instance = new DbLogicController();
     }
     return *s_instance;
+}
+
+bool DbLogicController::isDatabaseInitialized() const
+{
+    return m_dbInitialized;
 }
 
 bool DbLogicController::initialize()
@@ -80,10 +89,20 @@ void DbLogicController::connectSignals()
             worker, &DbLogicWorker::updateContact);
     connect(this, &DbLogicController::requestProcessFile,
             worker, &DbLogicWorker::processFile);
+    connect(this, &DbLogicController::requestSearchUserByAccount,
+            worker, &DbLogicWorker::searchUserByAccount);
+    connect(this, &DbLogicController::requestRegisterUser,
+            worker, &DbLogicWorker::registerUser);
+    connect(this, &DbLogicController::requestVerifyUserPassword,
+            worker, &DbLogicWorker::verifyUserPassword);
 
     // Worker -> Controller 信号（转发）
     connect(worker, &DbLogicWorker::databaseInitialized,
-            this, &DbLogicController::databaseInitialized);
+            this, [this](bool success) {
+                m_dbInitialized = success;
+                qDebug() << "DbLogicController: Database initialization status:" << success;
+                emit databaseInitialized(success);
+            });
     connect(worker, &DbLogicWorker::messageSaved,
             this, &DbLogicController::messageSaved);
     connect(worker, &DbLogicWorker::historyMessagesLoaded,
@@ -100,6 +119,12 @@ void DbLogicController::connectSignals()
             this, &DbLogicController::fileProcessed);
     connect(worker, &DbLogicWorker::errorOccurred,
             this, &DbLogicController::errorOccurred);
+    connect(worker, &DbLogicWorker::userSearchResult,
+            this, &DbLogicController::userSearchResult);
+    connect(worker, &DbLogicWorker::userRegistered,
+            this, &DbLogicController::userRegistered);
+    connect(worker, &DbLogicWorker::passwordVerified,
+            this, &DbLogicController::passwordVerified);
 
     //*********关于lanchat/messages数据表的设计********
     connect(this, &DbLogicController::requestQueryMessages,
@@ -108,7 +133,6 @@ void DbLogicController::connectSignals()
         this, &DbLogicController::queryResultsReady);
 
     //*********关于public/user数据表的设计********
-    
     connect(this, &DbLogicController::requestQueryUser,
         worker, &DbLogicWorker::queryUser);
     connect(worker, &DbLogicWorker::queryUserReady,
@@ -127,17 +151,14 @@ void DbLogicController::connectSignals()
 
 void DbLogicController::queryMessages(const QString& localUser, const QString& peer, int limit)
 {
-    qDebug() << "DbLogicController: Request search messages:" << localUser;
-    emit requestQueryMessages(localUser, peer,limit);
+    qDebug() << "DbLogicController: Request query messages:" << localUser << "to" << peer;
+    emit requestQueryMessages(localUser, peer, limit);
 }
-//QVector<Message> DbLogicController::queryResultsReady(const QVector<Message> &conv)
-//{
-//    return conv;
-//}
 
 void DbLogicController::initializeDatabase(const QString& dbPath)
 {
     qDebug() << "DbLogicController: Request initialize database:" << dbPath;
+    m_dbPath = dbPath;  // 保存数据库路径
     emit requestInitializeDatabase(dbPath);
 }
 
@@ -191,4 +212,94 @@ void DbLogicController::processFile(const QString& filePath, const QJsonObject& 
 {
     qDebug() << "DbLogicController: Request process file:" << filePath;
     emit requestProcessFile(filePath, options);
+}
+
+void DbLogicController::searchUserByAccount(const QString& account)
+{
+    qDebug() << "DbLogicController: Request search user by account:" << account;
+    emit requestSearchUserByAccount(account);
+}
+
+void DbLogicController::registerUser(const QString& email, const QString& password)
+{
+    qDebug() << "DbLogicController: Request register user:" << email;
+    
+    // 检查数据库是否已初始化
+    if (!m_dbInitialized) {
+        qDebug() << "Database not initialized, waiting for initialization...";
+        // 如果数据库未初始化，等待初始化完成
+        // 使用一次性连接，等待初始化完成后再注册
+        QMetaObject::Connection* conn = new QMetaObject::Connection();
+        *conn = connect(this, &DbLogicController::databaseInitialized,
+                       this, [this, email, password, conn](bool success) {
+                           disconnect(*conn);
+                           delete conn;
+                           
+                           if (success) {
+                               // 数据库初始化成功，继续注册
+                               qDebug() << "Database initialized, proceeding with registration";
+                               QString passwordHash = PasswordUtil::hashPassword(password);
+                               emit requestRegisterUser(email, passwordHash);
+                           } else {
+                               // 数据库初始化失败，通知 AuthService
+                               qDebug() << "Database initialization failed";
+                               emit userRegistered(false, QString(), "数据库初始化失败");
+                           }
+                       });
+        
+        // 如果初始化正在进行中，上面的连接会等待
+        // 如果还没有开始初始化，触发初始化
+        if (m_dbPath.isEmpty()) {
+            // 如果数据库路径为空，说明还没有调用过 initializeDatabase
+            // 尝试从 AppContext 获取路径，或者使用默认路径
+            qDebug() << "Database path not set, using default path";
+            m_dbPath = "lanchat.db";  // 使用默认路径
+        }
+        
+        // 触发数据库初始化
+        qDebug() << "Triggering database initialization with path:" << m_dbPath;
+        emit requestInitializeDatabase(m_dbPath);
+        
+        // 设置超时，如果 5 秒后仍未初始化，返回错误
+        QTimer::singleShot(5000, this, [this, conn]() {
+            if (!m_dbInitialized) {
+                qDebug() << "Database initialization timeout";
+                disconnect(*conn);
+                delete conn;
+                emit userRegistered(false, QString(), "数据库初始化超时，请稍后重试");
+            }
+        });
+        
+        return;
+    }
+    
+    // 数据库已初始化，直接注册
+    // 在 Controller 层进行密码哈希（因为需要访问密码工具类）
+    // 这样 Worker 层只需要处理哈希后的密码，更安全
+    QString passwordHash = PasswordUtil::hashPassword(password);
+    emit requestRegisterUser(email, passwordHash);
+}
+
+void DbLogicController::verifyUserPassword(const QString& email, const QString& password)
+{
+    qDebug() << "DbLogicController: Request verify password for:" << email;
+    emit requestVerifyUserPassword(email, password);
+}
+
+void DbLogicController::queryUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request query user:" << localUser.userId;
+    emit requestQueryUser(localUser);
+}
+
+void DbLogicController::updateUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request update user:" << localUser.userId;
+    emit requesUpdateUser(localUser);
+}
+
+void DbLogicController::addUser(const UserEntity& localUser)
+{
+    qDebug() << "DbLogicController: Request add user:" << localUser.userId;
+    emit requesAddUser(localUser);
 }

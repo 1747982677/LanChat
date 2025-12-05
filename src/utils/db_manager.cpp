@@ -184,7 +184,7 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             Logger::getInstance().error("Failed to create users table");
             return false;
         }
-        exec("CREATE INDEX IF NOT EXISTS idx_users_account ON users(account);", connectionName);
+        exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);", connectionName);
         return true;
     }
     else if (connectionName == "lanchat") {
@@ -199,11 +199,11 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             extra TEXT
         );
     )";
-        if (!exec(createMessages)) {
+        if (!exec(createMessages, connectionName)) {
             Logger::getInstance().error("Failed to create messages table");
             return false;
         }
-        exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender, receiver);");
+        exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender, receiver);", connectionName);
 
         // create chat_sessions table for unread counts
         const QString createSessions = R"(
@@ -216,10 +216,30 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             unreadCount INTEGER DEFAULT 0
         );
     )";
-        if (!exec(createSessions)) {
+        if (!exec(createSessions, connectionName)) {
             Logger::getInstance().error("Failed to create chat_sessions table");
             return false;
         }
+
+        // create users table for user authentication (in lanchat database)
+        const QString createUsers = R"(
+            CREATE TABLE IF NOT EXISTS users (
+                userId TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                passwordHash TEXT NOT NULL,
+                nickname TEXT,
+                avatarPath TEXT,
+                phone TEXT,
+                signature TEXT,
+                status INTEGER DEFAULT 0,
+                lastOnlineTime INTEGER DEFAULT 0
+            );
+        )";
+        if (!exec(createUsers, connectionName)) {
+            Logger::getInstance().error("Failed to create users table");
+            return false;
+        }
+        exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);", connectionName);
 
         const QString createFriends = R"(
         CREATE TABLE IF NOT EXISTS friends (
@@ -231,12 +251,12 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             UNIQUE(userId, friendId)
         );
     )";
-        if (!exec(createFriends)) {
+        if (!exec(createFriends, connectionName)) {
             Logger::getInstance().error("Failed to create friends table");
             return false;
         }
-        exec("CREATE INDEX IF NOT EXISTS idx_friends_userId ON friends(userId);");
-        exec("CREATE INDEX IF NOT EXISTS idx_friends_friendId ON friends(friendId);");
+        exec("CREATE INDEX IF NOT EXISTS idx_friends_userId ON friends(userId);", connectionName);
+        exec("CREATE INDEX IF NOT EXISTS idx_friends_friendId ON friends(friendId);", connectionName);
 
         // create friend_requests table for friend requests
         const QString createFriendRequests = R"(
@@ -252,12 +272,12 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
             timestamp INTEGER NOT NULL
         );
     )";
-        if (!exec(createFriendRequests)) {
+        if (!exec(createFriendRequests, connectionName)) {
             Logger::getInstance().error("Failed to create friend_requests table");
             return false;
         }
-        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_receiverId ON friend_requests(receiverId);");
-        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);");
+        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_receiverId ON friend_requests(receiverId);", connectionName);
+        exec("CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);", connectionName);
 
         return true;
     }
