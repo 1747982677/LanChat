@@ -84,8 +84,13 @@ set(SOURCES
     src/ui/main_window/ContactItem.h
     src/ui/network_error/network_error_dialog.cpp
     # network (来自 feature/mty/db)
+    src/common/types.h
     src/network/socket_client.cpp
     src/network/socket_client.h
+    src/network/socket_server.cpp
+    src/network/socket_server.h
+  
+    
  
     src/ui/personinfo/ProfileEditDialog.cpp
     src/ui/personinfo/ProfileViewDialog.cpp

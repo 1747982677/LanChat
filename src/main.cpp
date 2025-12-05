@@ -59,15 +59,13 @@ int main(int argc, char* argv[])
     QObject::connect(context.networkController(), &NetworkController::initialized, [&context](){
         Logger::getInstance().log("[TEST] NetworkController Worker initialized! Starting test server...");
         
-        // 1. 启动本地 WebSocket 服务器（端口 8086）
-        Logger::getInstance().log("[TEST] Starting local WebSocket server on port 8086...");
-        context.networkController()->startServer(8086);
-
-        // 2. 延迟 1 秒后连接到本地服务器
-        QTimer::singleShot(1000, [&context](){
-            Logger::getInstance().log("[TEST] Connecting to local WebSocket server...");
-            context.networkController()->connectToServer("127.0.0.1", 8086);
-        });
+		// 1. 启动本地 chat服务，需要传入用户的唯一 ID
+		QString usrID = "local_user"; // 本地测试用户 ID (一定要是唯一ID) 
+        Logger::getInstance().log("[TEST] Starting local WebSocket server on port 8080...");
+        context.networkController()->initializeWithUserId(usrID);
+		context.networkController()->sendMessage(LanChat::Message());
+        //发送消息最好使用 LanChat::Message 结构体，调用networkController->sendMessage(LanChat::Message());
+		//或者指定接收用户的ID调用 networkController->sendTextMessage(const QString& text, const QString& receiverId);
     });
     #endif
     // ========================

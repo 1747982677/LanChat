@@ -3,6 +3,7 @@
 
 #include "core/base_controller.h"
 #include <QJsonObject>
+#include "common/types.h"
 
 /**
  * @brief 网络通信控制器
@@ -30,54 +31,50 @@ public:
 
 public slots:
     /**
-     * @brief 连接到服务器
+     * @brief 使用用户ID初始化网络服务
+     * @param userId 用户ID
      */
-    void connectToServer(const QString& host, quint16 port);
-
-    /**
-     * @brief 断开连接
-     */
-    void disconnectFromServer();
+    void initializeWithUserId(const QString& userId);
 
     /**
      * @brief 发送消息
      */
-    void sendMessage(const QJsonObject& message);
+    void sendMessage(const LanChat::Message& message);
 
     /**
      * @brief 发送文本消息
      */
-    void sendTextMessage(const QString& text);
+    void sendTextMessage(const QString& text, const QString& receiverId);
 
-    /**
-     * @brief 启动服务器
-     */
-    void startServer(quint16 port);
-
-    /**
-     * @brief 停止服务器
-     */
-    void stopServer();
 
 signals:
     // 发送给 Worker 的信号
-    void requestConnect(const QString& host, quint16 port);
+    void requestInitializeWithUserId(const QString& userId);
     void requestDisconnect();
-    void requestSendMessage(const QJsonObject& message);
-    void requestSendTextMessage(const QString& text);
-    void requestStartServer(quint16 port);
-    void requestStopServer();
+    void requestSendMessage(const LanChat::Message& message);
+    void requestSendTextMessage(const QString& text, const QString& receiverId);
+	void requestStopServer(); // 停止服务器模式,但是转换为中心服务器模式后，并不是所有客户端都可以暂停服务器的，所以这里其实没有内部逻辑
 
     // 从 Worker 接收的信号（转发）
     void connected();
     void disconnected();
-    void messageReceived(const QJsonObject& message, const QString& from);
+	void messageReceived(QJsonObject& message, const QString& from);
     void textMessageReceived(const QString& text, const QString& from);
     void connectionStateChanged(bool isConnected);
 
     // 消息发送结果信号
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
+    
+    // 在线用户列表更新信号 chatservice提供这个接口但是暂时没有实现
+    //void onlineUsersUpdated(const QStringList& userIds);
+
+    // 🆕 Worker 状态变化转发
+    void statusChanged(const QString& status);
+	void errorOccurred(const QString& error);
+
+private slots:
+	void onmessageReceivedFromWorker(const LanChat::Message& message);
 
 protected:
     QObject* createWorker() override;
