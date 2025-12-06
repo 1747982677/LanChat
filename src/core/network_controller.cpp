@@ -89,6 +89,8 @@ void NetworkController::connectSignals()
 		worker, &NetworkWorker::disconnectFromServer);
 	connect(this, &NetworkController::requestStopServer,
 		worker, &NetworkWorker::stopServer);
+    connect(this, &NetworkController::requestOnlineUsers,
+		worker, &NetworkWorker::requestOnlineUsers);
 
     // Worker -> Controller 信号（转发）
     connect(worker, &NetworkWorker::connected,
@@ -105,6 +107,8 @@ void NetworkController::connectSignals()
             this, &NetworkController::messageSendSuccess);
     connect(worker, &NetworkWorker::messageSendFailed,
             this, &NetworkController::messageSendFailed);
+    connect(worker, &NetworkWorker::onlineUsersUpdated,
+            this, &NetworkController::onlineUsersUpdated);
     connect(worker, &NetworkWorker::errorOccurred,
             this, &NetworkController::errorOccurred);
     connect(worker, &NetworkWorker::initialized,
@@ -134,6 +138,12 @@ void NetworkController::sendTextMessage(const QString& text, const QString& rece
     Logger::getInstance().log(QString("[NetworkController] sendTextMessage called, text: %1").arg(text));
     emit requestSendTextMessage(text, receiverId);
     Logger::getInstance().log("[NetworkController] requestSendTextMessage signal emitted");
+}
+
+void NetworkController::getOnlineUsers()
+{
+    Logger::getInstance().log("[NetworkController] Requesting online users...");
+    emit requestOnlineUsers();
 }
 
 void NetworkController::onmessageReceivedFromWorker(const LanChat::Message& message)

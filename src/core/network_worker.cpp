@@ -226,10 +226,19 @@ void NetworkWorker::onChatServiceError(const QString& error)
     emit errorOccurred(error);
 }
 
+void NetworkWorker::requestOnlineUsers()
+{
+    if (!m_chatService) {
+        Logger::getInstance().log("[NetworkWorker] requestOnlineUsers: ChatService not ready");
+        return;
+    }
+    // 请求 ChatService 更新在线用户列表，这将触发 onlineUsersUpdated 信号
+    m_chatService->requestOnlineUsers();
+    Logger::getInstance().log("[NetworkWorker] Requested online users from ChatService.");
+}
+
 void NetworkWorker::onChatServiceOnlineUsersUpdated(const QStringList& userIds)
 {
-    Logger::getInstance().log(QString("[NetworkWorker] Online users updated: %1 users").arg(userIds.size()));
-    qDebug() << "Online users:" << userIds;
-    // ToDo :可以在这里添加转发在线用户列表的逻辑
-    //emit onlineUsersUpdated();
+    Logger::getInstance().log(QString("[NetworkWorker] Received online users update with %1 users.").arg(userIds.size()));
+    emit onlineUsersUpdated(userIds);
 }

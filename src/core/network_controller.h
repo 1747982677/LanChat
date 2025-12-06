@@ -46,6 +46,9 @@ public slots:
      */
     void sendTextMessage(const QString& text, const QString& receiverId);
 
+	// 请求在线用户列表，触发onlineUsersUpdated信号，就算不调用这个函数，也会自动更新在线用户列表
+    void getOnlineUsers();
+
 
 signals:
     // 发送给 Worker 的信号
@@ -54,6 +57,7 @@ signals:
     void requestSendMessage(const LanChat::Message& message);
     void requestSendTextMessage(const QString& text, const QString& receiverId);
 	void requestStopServer(); // 停止服务器模式,但是转换为中心服务器模式后，并不是所有客户端都可以暂停服务器的，所以这里其实没有内部逻辑
+    void requestOnlineUsers();
 
     // 从 Worker 接收的信号（转发）
     void connected();
@@ -66,8 +70,8 @@ signals:
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
     
-    // 在线用户列表更新信号 chatservice提供这个接口但是暂时没有实现
-    //void onlineUsersUpdated(const QStringList& userIds);
+	// 在线用户列表更新信号，需要连接此信号以获取最新的在线用户列表，每五秒刷新一次
+    void onlineUsersUpdated(const QStringList& userIds);
 
     // 🆕 Worker 状态变化转发
     void statusChanged(const QString& status);
