@@ -28,13 +28,15 @@ public:
      * 注意：此方法必须在调用其他方法之前调用一次
      */
     bool initialize(const QString& myUserId);
-    
-    /**
-     * @brief 检查是否已初始化
-     * @return 已初始化返回 true
-     */
     bool isInitialized() const { return m_isInitialized; }
-    
+
+    /**
+    * @brief 兼容旧接口 - 初始化并自动判断是否为第一个客户端
+    * @param port 端口号（8080表示作为服务器，其他表示作为客户端连接到localhost:8080）
+    * @param myUserId 本地用户ID
+    */
+    void Init(quint16 port, const QString& myUserId);
+
     /**
      * @brief 自动初始化 - 检测局域网内是否有服务器，自动决定模式
      * @param serverPort 服务器端口（默认8080）
@@ -48,111 +50,50 @@ public:
      */
     bool autoInit(quint16 serverPort = 8080, int timeoutMs = 1000);
     
-    /**
-     * @brief 初始化为服务器模式（第一个客户端）
-     * @param serverPort 服务器端口（默认8080）
-     * @return 成功返回 true
-     * 
-     * 功能：启动 WebSocket 服务器，并作为客户端连接到自己的服务器
-     * 前提：必须先调用 initialize()
-     */
+    //初始化为服务器模式（第一个客户端）
     bool initAsServer(quint16 serverPort = 8080);
     
-    /**
-     * @brief 初始化为客户端模式（后续客户端）
-     * @param serverHost 服务器地址
-     * @param serverPort 服务器端口
-     * @return 成功返回 true
-     * 
-     * 功能：只作为客户端连接到指定的服务器
-     * 前提：必须先调用 initialize()
-     */
+    // 初始化为客户端模式（后续客户端）
     bool initAsClient(const QString& serverHost, quint16 serverPort);
     
-    /**
-     * @brief 兼容旧接口 - 初始化并自动判断是否为第一个客户端
-     * @param port 端口号（8080表示作为服务器，其他表示作为客户端连接到localhost:8080）
-     * @param myUserId 本地用户ID
-     */
-    void Init(quint16 port, const QString& myUserId);
-    
-    /**
-     * @brief 发送消息（通过中心服务器转发）
-     * @param message 消息对象
-     */
+	//发送消息（通过中心服务器转发）
     void sendMessage(const LanChat::Message& message);
-    
-    /**
-     * @brief 获取在线用户ID列表
-     * @return 用户ID列表
-     */
+	//发送Jason对象消息（通过中心服务器转发，通过自己构建的QJsonObject 可以实现发送已读回执，发送用户状态等功能）
+	void sendJsonMessage(const QJsonObject& jsonMessage);
     QStringList getOnlineUsers() const;
-    
-    /**
-     * @brief 获取本机用户ID
-     * @return 用户ID
-     */
     QString getMyUserId() const { return m_myUserId; }
-    
-    /**
-     * @brief 设置在线用户刷新间隔(ms)，传入 <=0 关闭定时刷新
-     * @param intervalMs 刷新间隔（毫秒）
-     */
     void setOnlineRefreshInterval(int intervalMs);
     
-    /**
-     * @brief 注册在线用户（本地缓存）
-     * @param userId 用户ID
-     * @param address 地址（在服务器模式下不使用）
-     */
+    //注册在线用户（本地缓存）
     void registerUser(const QString& userId, const QString& address = QString());
     
-    /**
-     * @brief 获取用户地址（在服务器模式下不使用）
-     */
+    //获取用户地址（在服务器模式下不使用）
     QString getUserAddress(const QString& userId) const;
     
-    /**
-     * @brief 获取地址对应的用户ID（在服务器模式下不使用）
-     */
+    //获取地址对应的用户ID（在服务器模式下不使用）
     QString getAddressUserId(const QString& address) const;
 
-    /**
-     * @brief 请求服务器返回在线用户列表
-     */
+     //请求服务器返回在线用户列表
     void requestOnlineUsers();
-    
-    /**
-     * @brief 检查是否为服务器模式
-     */
+
+    //检查是否为服务器模式
     bool isServerMode() const { return m_isServerMode; }
 
 signals:
-    /**
-     * @brief 消息发送信号（本地触发，不等待服务器确认）
-     */
+     // 消息发送信号（本地触发，不等待服务器确认）
     void messageSent(const LanChat::Message& message);
+	void JsonMessageSent(const QJsonObject& jsonMessage);
     
-    /**
-     * @brief 收到消息信号
-     */
+    //收到消息信号
     void messageReceived(const LanChat::Message& message);
-    
-    /**
-     * @brief 错误发生信号
-     */
+	void JsonMessageReceived(const QJsonObject& jsonMessage);
+    //错误发生信号
     void errorOccurred(const QString& error);
     
-    /**
-     * @brief 在线用户列表更新信号
-     */
+    //在线用户列表更新信号
     void onlineUsersUpdated(const QStringList& userIds);
     
-    /**
-     * @brief 服务器发现结果信号
-     * @param found 是否发现服务器
-     * @param serverAddress 服务器地址（如果发现）
-     */
+    //服务器发现结果信号
     void serverDiscovered(bool found, const QString& serverAddress);
 
 private slots:
@@ -167,21 +108,13 @@ private:
     ChatService(const ChatService&) = delete;
     ChatService& operator=(const ChatService&) = delete;
 
-    /**
-     * @brief 向服务器注册自己的 userId
-     */
+    //向服务器注册自己的 userId
     void registerToServer();
 
-    /**
-     * @brief 生成临时用户ID（在服务器模式下不使用）
-     */
+    //生成临时用户ID（在服务器模式下不使用）
     QString generateTempUserId(const QString& address);
     
-    /**
-     * @brief 发送 UDP 广播检测服务器
-     * @param port 服务器端口
-     * @param timeoutMs 超时时间
-     */
+    //发送 UDP 广播检测服务器
     void discoverServer(quint16 port, int timeoutMs);
 
     SocketServer* m_socketServer = nullptr;      // 服务器（仅服务器模式）

@@ -46,7 +46,7 @@ public slots:
      * @param LanChat::Message 对象
      */
     void sendMessage(const LanChat::Message& message);
-
+	void sendJsonMessage(const QJsonObject& jsonMessage);
     /**
 	 * @brief 发送文本消息，但需要指定接收者ID
      * @param text 文本内容
@@ -79,7 +79,7 @@ signals:
      * @param from 发送者地址
      */
     void messageReceived(const LanChat::Message& message);
-
+	void jsonMessageReceived(const QJsonObject& message);
     /**
      * @brief 收到文本消息信号
      */

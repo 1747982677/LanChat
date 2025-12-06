@@ -67,6 +67,8 @@ void NetworkWorker::initializeChatService(const QString& UserId)
         this, &NetworkWorker::onChatServiceError);
     connect(m_chatService, &ChatService::onlineUsersUpdated,
         this, &NetworkWorker::onChatServiceOnlineUsersUpdated);
+    connect(m_chatService, &ChatService::JsonMessageReceived,
+		this, &NetworkWorker::jsonMessageReceived);
 
 	m_chatService->autoInit(8080, 3000); // 使用自动发现，端口8080，超时3000ms
 	emit connected();
@@ -168,6 +170,18 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
             emit messageSendFailed(messageId, errorDetail);
         }
     }
+}
+
+void NetworkWorker::sendJsonMessage(const QJsonObject& jsonMessage)
+{
+    if (!m_initialized || !m_chatService) {
+        emit errorOccurred("NetworkWorker not initialized");
+        return;
+    }
+    Logger::getInstance().log("[NetworkWorker] Sending JSON message");
+    qDebug() << "Sending JSON message:" << QJsonDocument(jsonMessage).toJson(QJsonDocument::Compact);
+    // 直接调用 ChatService 的 sendJsonMessage 方法
+    m_chatService->sendJsonMessage(jsonMessage);
 }
 
 void NetworkWorker::sendTextMessage(const QString& text, const QString& receiverId)

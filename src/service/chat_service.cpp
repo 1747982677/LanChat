@@ -311,6 +311,34 @@ void ChatService::sendMessage(const LanChat::Message& message)
     emit messageSent(message);
 }
 
+void ChatService::sendJsonMessage(const QJsonObject& jsonMessage)
+{
+    if (!m_socketClient->isConnected()) {
+        Logger::getInstance().error("Cannot send JSON message: not connected to server");
+        emit errorOccurred("Not connected to server");
+        return;
+    }
+	// 检测是否有 messageId 字段
+	if (!jsonMessage.contains("receiverId") || !jsonMessage.contains("senderId")) {
+		Logger::getInstance().error("Cannot send JSON message: missing receiverId field or senderId field");
+		emit errorOccurred("JSON message missing messageId field");
+		return;
+	}
+    //消息中加入一个非Message类型判断字段
+    QJsonObject messageToSend = jsonMessage; // 创建一个可修改的副本
+    messageToSend["is_control"] = true;      // 添加自定义字段
+    QString payload = QString::fromUtf8(QJsonDocument(messageToSend).toJson(QJsonDocument::Compact));
+    // 直接发送给服务器
+    m_socketClient->sendMessage(payload);
+    
+    Logger::getInstance().log("Sent JSON message to server: " + payload);
+    
+    // 注意：这里先触发 messageSent，实际应该等待服务器 ACK
+    // 在生产环境中，应该等待 message_ack 再触发
+    //LanChat::Message msg = LanChat::Message::fromJson(jsonMessage);
+    emit JsonMessageSent(jsonMessage);
+}
+
 QStringList ChatService::getOnlineUsers() const
 {
     return m_onlineUserIds;
@@ -395,8 +423,14 @@ void ChatService::onSocketMessageReceived(const QString& message)
         Logger::getInstance().error(QString("Received non-object JSON: %1").arg(message));
         return;
     }
-
+ 
     QJsonObject obj = doc.object();
+    if(obj.contains("is_control") && obj.value("is_control").toBool() == true) {
+        // 处理控制消息
+        Logger::getInstance().log(QString("Received control JSON message: %1").arg(message));
+        emit JsonMessageReceived(obj);
+        return;
+	}
     QString msgType = obj.value("type").toString();
 
     // 处理注册确认

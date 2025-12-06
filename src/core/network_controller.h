@@ -40,7 +40,7 @@ public slots:
      * @brief 发送消息
      */
     void sendMessage(const LanChat::Message& message);
-
+	void sendJsonMessage(const QJsonObject& jsonMessage);
     /**
      * @brief 发送文本消息
      */
@@ -55,6 +55,8 @@ signals:
     void requestInitializeWithUserId(const QString& userId);
     void requestDisconnect();
     void requestSendMessage(const LanChat::Message& message);
+	//可以通过定义type字段实现发送已读回执，发送用户状态等功能，需要自己构建QJsonObject中一定包含senderId和receiverId字段
+	void requestSendJsonMessage(const QJsonObject& jsonMessage);
     void requestSendTextMessage(const QString& text, const QString& receiverId);
 	void requestStopServer(); // 停止服务器模式,但是转换为中心服务器模式后，并不是所有客户端都可以暂停服务器的，所以这里其实没有内部逻辑
     void requestOnlineUsers();
@@ -63,6 +65,7 @@ signals:
     void connected();
     void disconnected();
 	void messageReceived(QJsonObject& message, const QString& from);
+	void jsonMessageReceived(const QJsonObject& message);
     void textMessageReceived(const QString& text, const QString& from);
     void connectionStateChanged(bool isConnected);
 

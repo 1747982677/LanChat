@@ -83,6 +83,8 @@ void NetworkController::connectSignals()
             worker, &NetworkWorker::initializeChatService);
     connect(this, &NetworkController::requestSendMessage,
             worker, &NetworkWorker::sendMessage);
+	connect(this, &NetworkController::requestSendJsonMessage,
+		worker, &NetworkWorker::sendJsonMessage);
     connect(this, &NetworkController::requestSendTextMessage,
             worker, &NetworkWorker::sendTextMessage);
 	connect(this, &NetworkController::requestDisconnect,
@@ -99,6 +101,8 @@ void NetworkController::connectSignals()
             this, &NetworkController::disconnected);
     connect(worker, &NetworkWorker::messageReceived, 
             this, &NetworkController::onmessageReceivedFromWorker);
+    connect(worker, &NetworkWorker::jsonMessageReceived,
+		this, &NetworkController::jsonMessageReceived);
     connect(worker, &NetworkWorker::textMessageReceived,
             this, &NetworkController::textMessageReceived);
     connect(worker, &NetworkWorker::connectionStateChanged,
@@ -131,6 +135,14 @@ void NetworkController::sendMessage(const LanChat::Message& message)
 
     emit requestSendMessage(message);
     Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted");
+}
+
+void NetworkController::sendJsonMessage(const QJsonObject& jsonMessage)
+{
+    Logger::getInstance().log(QString("[NetworkController] sendJsonMessage called, JSON: %1")
+                             .arg(QString::fromUtf8(QJsonDocument(jsonMessage).toJson(QJsonDocument::Compact))));
+    emit requestSendJsonMessage(jsonMessage);
+    Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted for JSON message");
 }
 
 void NetworkController::sendTextMessage(const QString& text, const QString& receiverId)
