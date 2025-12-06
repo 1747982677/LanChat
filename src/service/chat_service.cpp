@@ -37,8 +37,11 @@ ChatService::ChatService() : QObject(nullptr), m_isServerMode(false), m_serverPo
     
     // UDP 发现套接字
     m_discoverySocket = new QUdpSocket(this);
-    m_discoverySocket->bind(QHostAddress::AnyIPv4, m_discoveryPort, 
+    bool ok = m_discoverySocket->bind(QHostAddress::AnyIPv4, m_discoveryPort, 
                             QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
+    if (!ok) {
+        Logger::getInstance().error("UDP bind failed: " + m_discoverySocket->errorString());
+    }
     connect(m_discoverySocket, &QUdpSocket::readyRead, this, &ChatService::onDiscoveryResponse);
     
     // 发现超时定时器
@@ -87,8 +90,23 @@ bool ChatService::autoInit(quint16 serverPort, int timeoutMs)
     QByteArray data = QJsonDocument(discoveryRequest).toJson(QJsonDocument::Compact);
     
     // 发送到广播地址和本地回环
-    m_discoverySocket->writeDatagram(data, QHostAddress::Broadcast, m_discoveryPort);
-    m_discoverySocket->writeDatagram(data, QHostAddress::LocalHost, m_discoveryPort);
+    /*m_discoverySocket->writeDatagram(data, QHostAddress::Broadcast, m_discoveryPort);
+    m_discoverySocket->writeDatagram(data, QHostAddress::LocalHost, m_discoveryPort);*/
+    for (auto& iface : QNetworkInterface::allInterfaces()) {
+        if (!(iface.flags() & QNetworkInterface::IsUp) ||
+            iface.flags() & QNetworkInterface::IsLoopBack)
+            continue;
+
+        for (auto& entry : iface.addressEntries()) {
+            if (entry.ip().protocol() != QAbstractSocket::IPv4Protocol)
+                continue;
+
+            QHostAddress broadcast = entry.broadcast();
+            if (broadcast.isNull()) continue;
+
+            m_discoverySocket->writeDatagram(data, broadcast, m_discoveryPort);
+        }
+    }
     
     Logger::getInstance().log(QString("Sent server discovery broadcast (timeout: %1ms)").arg(timeoutMs));
     
@@ -163,7 +181,19 @@ bool ChatService::initAsServer(quint16 serverPort)
                         
                         // 获取本机 IP 地址
                         QString myAddress = "127.0.0.1";
-                        for (const QNetworkInterface &iface : QNetworkInterface::allInterfaces()) {
+                        const QHostAddress& localhost = QHostAddress(QHostAddress::LocalHost);
+                        for (const QHostAddress& address : QNetworkInterface::allAddresses()) {
+                            if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost) {
+                                // 优先选择局域网IP
+                                if (address.toString().startsWith("192.168.")) {
+                                    myAddress = address.toString();
+                                    break; // 找到合适的，就跳出循环
+                                }
+                                // 否则，暂存一个非环回地址
+                                myAddress = address.toString();
+                            }
+                        }
+                        /*for (const QNetworkInterface &iface : QNetworkInterface::allInterfaces()) {
                             if (iface.flags() & QNetworkInterface::IsUp && 
                                 !(iface.flags() & QNetworkInterface::IsLoopBack)) {
                                 for (const QNetworkAddressEntry &entry : iface.addressEntries()) {
@@ -173,15 +203,21 @@ bool ChatService::initAsServer(quint16 serverPort)
                                     }
                                 }
                             }
-                        }
-                        
+                        }*/
+                    
                         response["address"] = myAddress;
                         
                         QByteArray responseData = QJsonDocument(response).toJson(QJsonDocument::Compact);
                         m_discoverySocket->writeDatagram(responseData, sender, senderPort);
+                        m_discoverySocket->writeDatagram(responseData, QHostAddress::Broadcast, m_discoveryPort);
+                        m_discoverySocket->writeDatagram(responseData, QHostAddress::LocalHost, m_discoveryPort);
+                        //m_discoverySocket->writeDatagram(responseData, sender, m_discoveryPort);
+                        m_discoverySocket->waitForReadyRead(100);
                         
                         Logger::getInstance().log(QString("Sent discovery response to %1:%2")
                             .arg(sender.toString()).arg(senderPort));
+                        Logger::getInstance().log(QString("MyAddress %1")
+                            .arg(myAddress));
                     }
                 }
             }
@@ -441,11 +477,14 @@ void ChatService::onDiscoveryResponse()
         QHostAddress sender;
         quint16 senderPort;
         m_discoverySocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+        QString rawDatagramStr = QString::fromUtf8(datagram);
+        Logger::getInstance().log(QString("onDiscovered found received: %1").arg(rawDatagramStr));
         
         QJsonDocument doc = QJsonDocument::fromJson(datagram);
         if (doc.isObject()) {
             QJsonObject obj = doc.object();
             if (obj.value("type").toString() == "discover_response") {
+                Logger::getInstance().log("is discover_response");
                 QString address = obj.value("address").toString();
                 quint16 port = static_cast<quint16>(obj.value("port").toInt());
                 QString userId = obj.value("userId").toString();
