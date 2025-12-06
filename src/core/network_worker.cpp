@@ -67,6 +67,8 @@ void NetworkWorker::initializeChatService(const QString& UserId)
         this, &NetworkWorker::onChatServiceError);
     connect(m_chatService, &ChatService::onlineUsersUpdated,
         this, &NetworkWorker::onChatServiceOnlineUsersUpdated);
+    connect(m_chatService, &ChatService::JsonMessageReceived,
+		this, &NetworkWorker::jsonMessageReceived);
 
 	m_chatService->autoInit(8080, 3000); // 使用自动发现，端口8080，超时3000ms
 	emit connected();
@@ -170,6 +172,18 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
     }
 }
 
+void NetworkWorker::sendJsonMessage(const QJsonObject& jsonMessage)
+{
+    if (!m_initialized || !m_chatService) {
+        emit errorOccurred("NetworkWorker not initialized");
+        return;
+    }
+    Logger::getInstance().log("[NetworkWorker] Sending JSON message");
+    qDebug() << "Sending JSON message:" << QJsonDocument(jsonMessage).toJson(QJsonDocument::Compact);
+    // 直接调用 ChatService 的 sendJsonMessage 方法
+    m_chatService->sendJsonMessage(jsonMessage);
+}
+
 void NetworkWorker::sendTextMessage(const QString& text, const QString& receiverId)
 {
     if (!m_initialized || !m_chatService) {
@@ -226,10 +240,19 @@ void NetworkWorker::onChatServiceError(const QString& error)
     emit errorOccurred(error);
 }
 
+void NetworkWorker::requestOnlineUsers()
+{
+    if (!m_chatService) {
+        Logger::getInstance().log("[NetworkWorker] requestOnlineUsers: ChatService not ready");
+        return;
+    }
+    // 请求 ChatService 更新在线用户列表，这将触发 onlineUsersUpdated 信号
+    m_chatService->requestOnlineUsers();
+    Logger::getInstance().log("[NetworkWorker] Requested online users from ChatService.");
+}
+
 void NetworkWorker::onChatServiceOnlineUsersUpdated(const QStringList& userIds)
 {
-    Logger::getInstance().log(QString("[NetworkWorker] Online users updated: %1 users").arg(userIds.size()));
-    qDebug() << "Online users:" << userIds;
-    // ToDo :可以在这里添加转发在线用户列表的逻辑
-    //emit onlineUsersUpdated();
+    Logger::getInstance().log(QString("[NetworkWorker] Received online users update with %1 users.").arg(userIds.size()));
+    emit onlineUsersUpdated(userIds);
 }

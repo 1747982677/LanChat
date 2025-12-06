@@ -46,7 +46,7 @@ public slots:
      * @param LanChat::Message 对象
      */
     void sendMessage(const LanChat::Message& message);
-
+	void sendJsonMessage(const QJsonObject& jsonMessage);
     /**
 	 * @brief 发送文本消息，但需要指定接收者ID
      * @param text 文本内容
@@ -58,6 +58,9 @@ public slots:
      * @brief 停止服务器模式
      */
     void stopServer();
+
+	//要求更新在线用户列表，触发onlineUsersUpdated信号，就算不调用这个函数，也会自动更新在线用户列表
+    void requestOnlineUsers();
 
 signals:
     /**
@@ -76,7 +79,7 @@ signals:
      * @param from 发送者地址
      */
     void messageReceived(const LanChat::Message& message);
-
+	void jsonMessageReceived(const QJsonObject& message);
     /**
      * @brief 收到文本消息信号
      */
@@ -92,7 +95,7 @@ signals:
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
 	// 在线用户列表更新信号
-    void onlineUsersUpdated(QStringList& userIds);
+    void onlineUsersUpdated(const QStringList& userIds);
 
 
 private slots:
@@ -100,8 +103,8 @@ private slots:
     void onChatServiceMessageSent(const LanChat::Message& message);
     void onChatServiceMessageReceived(const LanChat::Message& message);
     void onChatServiceError(const QString& error);
-    //ToDO 提供在线用户列表
-    void onChatServiceOnlineUsersUpdated(const QStringList& userIds); 
+    void onChatServiceOnlineUsersUpdated(const QStringList& userIds);
+    
 
 private:
     ChatService* m_chatService;  // ChatService 实例指针
