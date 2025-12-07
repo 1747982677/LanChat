@@ -1,4 +1,4 @@
-#include "dblogic_controller.h"
+﻿#include "dblogic_controller.h"
 #include "dblogic_worker.h"
 #include "utils/password_util.h"
 #include "ui/personinfo/UserEntity.h"
@@ -70,74 +70,80 @@ void DbLogicController::connectSignals()
 
     // Controller -> Worker 信号
     connect(this, &DbLogicController::requestInitializeDatabase,
-            worker, &DbLogicWorker::initializeDatabase);
+        worker, &DbLogicWorker::initializeDatabase);
     connect(this, &DbLogicController::requestSaveMessage,
-            worker, &DbLogicWorker::saveMessage);
+        worker, &DbLogicWorker::saveMessage);
     connect(this, &DbLogicController::requestLoadHistoryMessages,
-            worker, &DbLogicWorker::loadHistoryMessages);
+        worker, &DbLogicWorker::loadHistoryMessages);
     connect(this, &DbLogicController::requestSearchMessages,
-            worker, &DbLogicWorker::searchMessages);
+        worker, &DbLogicWorker::searchMessages);
     connect(this, &DbLogicController::requestUpdateMessageStatus,
-            worker, &DbLogicWorker::updateMessageStatus);
+        worker, &DbLogicWorker::updateMessageStatus);
     connect(this, &DbLogicController::requestDeleteMessage,
-            worker, &DbLogicWorker::deleteMessage);
+        worker, &DbLogicWorker::deleteMessage);
     connect(this, &DbLogicController::requestLoadContactList,
-            worker, &DbLogicWorker::loadContactList);
+        worker, &DbLogicWorker::loadContactList);
     connect(this, &DbLogicController::requestAddContact,
-            worker, &DbLogicWorker::addContact);
+        worker, &DbLogicWorker::addContact);
     connect(this, &DbLogicController::requestUpdateContact,
-            worker, &DbLogicWorker::updateContact);
+        worker, &DbLogicWorker::updateContact);
     connect(this, &DbLogicController::requestProcessFile,
-            worker, &DbLogicWorker::processFile);
+        worker, &DbLogicWorker::processFile);
     connect(this, &DbLogicController::requestSearchUserByAccount,
-            worker, &DbLogicWorker::searchUserByAccount);
+        worker, &DbLogicWorker::searchUserByAccount);
     connect(this, &DbLogicController::requestRegisterUser,
-            worker, &DbLogicWorker::registerUser);
+        worker, &DbLogicWorker::registerUser);
     connect(this, &DbLogicController::requestVerifyUserPassword,
-            worker, &DbLogicWorker::verifyUserPassword);
+        worker, &DbLogicWorker::verifyUserPassword);
     connect(this, &DbLogicController::requestSendFriendRequest,
-            worker, &DbLogicWorker::sendFriendRequest);
+        worker, &DbLogicWorker::sendFriendRequest);
     connect(this, &DbLogicController::requestQueryFriendRequests,
-            worker, &DbLogicWorker::queryFriendRequests);
+        worker, &DbLogicWorker::queryFriendRequests);
     connect(this, &DbLogicController::requestAcceptFriendRequest,
-            worker, &DbLogicWorker::acceptFriendRequest);
-
+        worker, &DbLogicWorker::acceptFriendRequest);
+    connect(this, &DbLogicController::requestClearAllChatHistory,
+        worker, &DbLogicWorker::clearAllChatHistory);
+    connect(this, &DbLogicController::requestMessagesTableSize,
+        worker, &DbLogicWorker::calculateMessagesTableSize);
     // Worker -> Controller 信号（转发）
     connect(worker, &DbLogicWorker::databaseInitialized,
-            this, [this](bool success) {
-                m_dbInitialized = success;
-                qDebug() << "DbLogicController: Database initialization status:" << success;
-                emit databaseInitialized(success);
-            });
+        this, [this](bool success) {
+            m_dbInitialized = success;
+            qDebug() << "DbLogicController: Database initialization status:" << success;
+            emit databaseInitialized(success);
+        });
     connect(worker, &DbLogicWorker::messageSaved,
-            this, &DbLogicController::messageSaved);
+        this, &DbLogicController::messageSaved);
     connect(worker, &DbLogicWorker::historyMessagesLoaded,
-            this, &DbLogicController::historyMessagesLoaded);
+        this, &DbLogicController::historyMessagesLoaded);
     connect(worker, &DbLogicWorker::searchResultsReady,
-            this, &DbLogicController::searchResultsReady);
+        this, &DbLogicController::searchResultsReady);
     connect(worker, &DbLogicWorker::messageStatusUpdated,
-            this, &DbLogicController::messageStatusUpdated);
+        this, &DbLogicController::messageStatusUpdated);
     connect(worker, &DbLogicWorker::contactListLoaded,
-            this, &DbLogicController::contactListLoaded);
+        this, &DbLogicController::contactListLoaded);
     connect(worker, &DbLogicWorker::contactOperationCompleted,
-            this, &DbLogicController::contactOperationCompleted);
+        this, &DbLogicController::contactOperationCompleted);
     connect(worker, &DbLogicWorker::fileProcessed,
-            this, &DbLogicController::fileProcessed);
+        this, &DbLogicController::fileProcessed);
     connect(worker, &DbLogicWorker::errorOccurred,
-            this, &DbLogicController::errorOccurred);
+        this, &DbLogicController::errorOccurred);
     connect(worker, &DbLogicWorker::userSearchResult,
-            this, &DbLogicController::userSearchResult);
+        this, &DbLogicController::userSearchResult);
     connect(worker, &DbLogicWorker::userRegistered,
-            this, &DbLogicController::userRegistered);
+        this, &DbLogicController::userRegistered);
     connect(worker, &DbLogicWorker::passwordVerified,
-            this, &DbLogicController::passwordVerified);
+        this, &DbLogicController::passwordVerified);
     connect(worker, &DbLogicWorker::friendRequestSent,
-            this, &DbLogicController::friendRequestSent);
+        this, &DbLogicController::friendRequestSent);
     connect(worker, &DbLogicWorker::friendRequestsLoaded,
-            this, &DbLogicController::friendRequestsLoaded);
+        this, &DbLogicController::friendRequestsLoaded);
     connect(worker, &DbLogicWorker::friendRequestAccepted,
-            this, &DbLogicController::friendRequestAccepted);
-
+        this, &DbLogicController::friendRequestAccepted);
+    connect(worker, &DbLogicWorker::allChatHistoryCleared,
+        this, &DbLogicController::allChatHistoryCleared);
+    connect(worker, &DbLogicWorker::messagesTableSizeCalculated,
+        this, &DbLogicController::messagesTableSizeCalculated);
     //*********关于lanchat/messages数据表的设计********
     connect(this, &DbLogicController::requestQueryMessages,
         worker, &DbLogicWorker::queryMessages);
@@ -203,7 +209,16 @@ void DbLogicController::deleteMessage(const QString& messageId)
 {
     emit requestDeleteMessage(messageId);
 }
-
+void DbLogicController::clearAllChatHistory()
+{
+    qDebug() << "DbLogicController: Request clear ALL chat history";
+    emit requestClearAllChatHistory();
+}
+void DbLogicController::getMessagesTableSize()
+{
+    qDebug() << "DbLogicController: Request messages table size";
+    emit requestMessagesTableSize();
+}
 void DbLogicController::loadContactList(const QString& userId)
 {
     qDebug() << "DbLogicController: Request load contact list for user:" << userId;
@@ -235,7 +250,7 @@ void DbLogicController::searchUserByAccount(const QString& account)
 void DbLogicController::registerUser(const QString& email, const QString& password)
 {
     qDebug() << "DbLogicController: Request register user:" << email;
-    
+
     // 检查数据库是否已初始化
     if (!m_dbInitialized) {
         qDebug() << "Database not initialized, waiting for initialization...";
@@ -243,22 +258,23 @@ void DbLogicController::registerUser(const QString& email, const QString& passwo
         // 使用一次性连接，等待初始化完成后再注册
         QMetaObject::Connection* conn = new QMetaObject::Connection();
         *conn = connect(this, &DbLogicController::databaseInitialized,
-                       this, [this, email, password, conn](bool success) {
-                           disconnect(*conn);
-                           delete conn;
-                           
-                           if (success) {
-                               // 数据库初始化成功，继续注册
-                               qDebug() << "Database initialized, proceeding with registration";
-                               QString passwordHash = PasswordUtil::hashPassword(password);
-                               emit requestRegisterUser(email, passwordHash);
-                           } else {
-                               // 数据库初始化失败，通知 AuthService
-                               qDebug() << "Database initialization failed";
-                               emit userRegistered(false, QString(), "数据库初始化失败");
-                           }
-                       });
-        
+            this, [this, email, password, conn](bool success) {
+                disconnect(*conn);
+                delete conn;
+
+                if (success) {
+                    // 数据库初始化成功，继续注册
+                    qDebug() << "Database initialized, proceeding with registration";
+                    QString passwordHash = PasswordUtil::hashPassword(password);
+                    emit requestRegisterUser(email, passwordHash);
+                }
+                else {
+                    // 数据库初始化失败，通知 AuthService
+                    qDebug() << "Database initialization failed";
+                    emit userRegistered(false, QString(), "数据库初始化失败");
+                }
+            });
+
         // 如果初始化正在进行中，上面的连接会等待
         // 如果还没有开始初始化，触发初始化
         if (m_dbPath.isEmpty()) {
@@ -267,11 +283,11 @@ void DbLogicController::registerUser(const QString& email, const QString& passwo
             qDebug() << "Database path not set, using default path";
             m_dbPath = "lanchat.db";  // 使用默认路径
         }
-        
+
         // 触发数据库初始化
         qDebug() << "Triggering database initialization with path:" << m_dbPath;
         emit requestInitializeDatabase(m_dbPath);
-        
+
         // 设置超时，如果 5 秒后仍未初始化，返回错误
         QTimer::singleShot(5000, this, [this, conn]() {
             if (!m_dbInitialized) {
@@ -280,11 +296,11 @@ void DbLogicController::registerUser(const QString& email, const QString& passwo
                 delete conn;
                 emit userRegistered(false, QString(), "数据库初始化超时，请稍后重试");
             }
-        });
-        
+            });
+
         return;
     }
-    
+
     // 数据库已初始化，直接注册
     // 在 Controller 层进行密码哈希（因为需要访问密码工具类）
     // 这样 Worker 层只需要处理哈希后的密码，更安全
@@ -317,8 +333,8 @@ void DbLogicController::addUser(const UserEntity& localUser)
 }
 
 void DbLogicController::sendFriendRequest(const QString& senderId, const QString& receiverId,
-                                         const QString& senderAccount, const QString& senderNickname,
-                                         const QString& avatarPath, const QString& verifymsg)
+    const QString& senderAccount, const QString& senderNickname,
+    const QString& avatarPath, const QString& verifymsg)
 {
     qDebug() << "DbLogicController: Request send friend request from" << senderId << "to" << receiverId;
     emit requestSendFriendRequest(senderId, receiverId, senderAccount, senderNickname, avatarPath, verifymsg);
