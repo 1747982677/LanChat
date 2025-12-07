@@ -1,4 +1,4 @@
-#ifndef DBLOGIC_WORKER_H
+﻿#ifndef DBLOGIC_WORKER_H
 #define DBLOGIC_WORKER_H
 
 #include "core/base_worker.h"
@@ -9,7 +9,7 @@
 
 /**
  * @brief 数据库与业务逻辑 Worker
- * 
+ *
  * 运行在独立业务逻辑线程中，负责：
  * 1. 数据库增删改查操作
  * 2. 耗时业务逻辑处理
@@ -48,7 +48,7 @@ public slots:
      * @param offset 偏移量
      */
     void loadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset);
-    
+
     /**
      * @brief 搜索消息
      * @param keyword 搜索关键字
@@ -74,7 +74,7 @@ public slots:
      * @param password 明文密码
      */
     void verifyUserPassword(const QString& email, const QString& password);
-    
+
     /**
      * @brief 发送好友请求
      * @param senderId 发送者用户ID
@@ -85,15 +85,15 @@ public slots:
      * @param verifymsg 验证消息（可选）
      */
     void sendFriendRequest(const QString& senderId, const QString& receiverId,
-                          const QString& senderAccount, const QString& senderNickname,
-                          const QString& avatarPath, const QString& verifymsg = QString());
-    
+        const QString& senderAccount, const QString& senderNickname,
+        const QString& avatarPath, const QString& verifymsg = QString());
+
     /**
      * @brief 查询收到的好友请求（状态为 Pending）
      * @param receiverId 接收者用户ID
      */
     void queryFriendRequests(const QString& receiverId);
-    
+
     /**
      * @brief 接受好友请求
      * @param requestId 请求ID
@@ -166,7 +166,14 @@ public slots:
      * @param localUser 用户实体
      */
     void addUser(const UserEntity& localUser);
-
+    /**
+    * @brief 清空所有聊天记录（设置页）
+    */
+    void clearAllChatHistory();
+    /**
+   * @brief 统计 messages 表占用空间（字节数）
+   */
+    void calculateMessagesTableSize();
 signals:
     /**
      * @brief 数据库初始化完成
@@ -191,7 +198,7 @@ signals:
      * @param results 搜索结果（JSON 数组）
      */
     void searchResultsReady(const QJsonArray& results);
-    
+
     /**
      * @brief 消息状态更新完成
      */
@@ -260,20 +267,32 @@ signals:
      * @param errorMessage 错误信息（失败时）
      */
     void friendRequestSent(bool success, const QString& requestId, const QString& errorMessage);
-    
+
     /**
      * @brief 好友请求查询结果
      * @param requests 好友请求列表（JSON数组）
      */
     void friendRequestsLoaded(const QJsonArray& requests);
-    
+
     /**
      * @brief 好友请求接受结果
      * @param success 是否成功
      * @param errorMessage 错误信息（失败时）
      */
     void friendRequestAccepted(bool success, const QString& errorMessage);
-
+    /**
+     * @brief 清空所有聊天记录的结果
+     * @param success 是否成功
+     * @param errorMessage 失败时的错误信息（成功时为空）
+     */
+    void allChatHistoryCleared(bool success, const QString& errorMessage);
+    /**
+    * @brief messages 表大小统计结果
+    * @param success 是否成功
+    * @param sizeBytes 占用字节数
+    * @param errorMessage 失败原因（失败时）
+    */
+    void messagesTableSizeCalculated(bool success, qint64 sizeBytes, const QString& errorMessage);
 private:
     QString m_dbPath;
     bool m_dbInitialized;

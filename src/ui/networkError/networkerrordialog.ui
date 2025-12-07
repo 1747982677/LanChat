@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NetworkErrorDialog</class>
+ <widget class="QDialog" name="NetworkErrorDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>360</width>
+    <height>200</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Network Disconnected</string>
+  </property>
+
+  <!-- 外层布局：0 边距，内部是一个“卡片”控件 -->
+  <layout class="QVBoxLayout" name="verticalLayout_outer">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+
+   <item>
+    <!-- 中间白色卡片 -->
+    <widget class="QWidget" name="cardWidget">
+     <property name="objectName">
+      <string>cardWidget</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_card">
+      <property name="spacing">
+       <number>16</number>
+      </property>
+      <property name="leftMargin">
+       <number>24</number>
+      </property>
+      <property name="topMargin">
+       <number>24</number>
+      </property>
+      <property name="rightMargin">
+       <number>24</number>
+      </property>
+      <property name="bottomMargin">
+       <number>24</number>
+      </property>
+
+      <!-- 标题 -->
+      <item>
+       <widget class="QLabel" name="lblTitle">
+        <property name="text">
+         <string>Network Disconnected</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+
+      <!-- 副标题 -->
+      <item>
+       <widget class="QLabel" name="lblSubtitle">
+        <property name="text">
+         <string>The network is unavailable. Some features may not work properly.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+
+      <!-- 中间红色感叹号图标 -->
+      <item>
+       <widget class="QLabel" name="lblBigIcon">
+        <property name="minimumSize">
+         <size>
+          <width>48</width>
+          <height>48</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignHCenter|Qt::AlignVCenter</set>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+        <property name="pixmap">
+         <!-- 注意：这里使用 icons.qrc 里的 :/icons/warning_red.png -->
+         <pixmap resource="icons.qrc">:/icons/warning_red.png</pixmap>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+
+ <!-- 资源引用：包含 icons.qrc -->
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+
+ <connections/>
+</ui>
