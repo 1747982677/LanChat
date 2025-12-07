@@ -1,19 +1,42 @@
 ﻿#include "settingdialog.h"
 #include "ui_settingdialog.h"
-#include "ui/main_window/main_window.h" // 两个分支都有，只保留一个
-#include "ui/db_qwidget/DbQWidget.h"
+
+#include "ui/main_window/main_window.h"
 #include "ui/login/login_window.h"
 #include "service/auth_service.h"
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QDir>
-#include <QDebug>
+#include "utils/logger.h"
 
+#include <QMessageBox>
+#include <QDebug>
+#include <QSettings>
+
+#include "core/dblogic_controller.h"
+
+// 构造函数
 SettingDialog::SettingDialog(QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::SettingDialog)
 {
     ui->setupUi(this);
+
+    // 监听“清空所有聊天记录”操作的结果
+    connect(&DbLogicController::instance(),
+        &DbLogicController::allChatHistoryCleared,
+        this,
+        &SettingDialog::onChatHistoryCleared);
+
+    // 监听 messages 表大小统计结果
+    DbLogicController& dbCtrl = DbLogicController::instance();
+    connect(&dbCtrl,
+        &DbLogicController::messagesTableSizeCalculated,
+        this,
+        &SettingDialog::onMessagesTableSizeCalculated);
+
+    // 打开设置页时先刷一次 messages 表大小
+    dbCtrl.getMessagesTableSize();
+
+    // 初始化日志级别下拉框
+    initLogLevelUi();
 }
 
 SettingDialog::~SettingDialog()
@@ -21,47 +44,58 @@ SettingDialog::~SettingDialog()
     delete ui;
 }
 
-// 「更改存储路径」按钮
-void SettingDialog::on_btnChangeStoragePath_clicked()
+// -------------------- 工具函数：退出账号并回到登录页 --------------------
+static void logoutAndShowLogin()
 {
-    // 以当前显示的路径作为初始目录；如果为空就用用户家目录
-    QString currentPath = ui->lblStoragePath->text().trimmed();
-    if (currentPath.isEmpty()) {
-        currentPath = QDir::homePath();
-    }
+    // 1. 清除登录状态
+    AuthService& authService = AuthService::getInstance();
+    authService.logout();
 
-    QString dir = QFileDialog::getExistingDirectory(
-        this,
-        tr("选择聊天数据保存路径"),
-        currentPath
-    );
+    // 2. 设置用户状态为离线并隐藏主窗口
+    MainWindow* mainWindow = MainWindow::instance();
+    mainWindow->updateUserStatus(false);
+    mainWindow->hide();
 
-    if (!dir.isEmpty()) {
-        ui->lblStoragePath->setText(dir);
-        qDebug() << "[SettingDialog] Storage path changed to:" << dir;
-        // TODO: 在这里调用配置模块，真正把路径写入配置文件
-        // 例如：Config::instance().setStoragePath(dir);
-    }
+    // 3. 打开登录窗口
+    LoginWindow* loginWindow = new LoginWindow();
+
+    QObject::connect(loginWindow, &LoginWindow::loginSucceeded,
+        [loginWindow]() {
+            qDebug() << "logout flow: 收到 loginSucceeded 信号";
+
+            loginWindow->hide();
+
+            AuthService& authService = AuthService::getInstance();
+            QString userId = authService.getCurrentUserId();
+
+            if (userId.isEmpty()) {
+                Logger::getInstance().error("logout flow: 错误：登录成功但 userId 为空");
+                qDebug() << "logout flow: 错误：登录成功但 userId 为空";
+                loginWindow->deleteLater();
+                return;
+            }
+
+            MainWindow* mainWindow = MainWindow::instance();
+            mainWindow->userid = userId;
+            Logger::getInstance().log("logout flow: 登录成功，重新加载用户数据，userId: " + userId);
+
+            // 重新查询用户信息并加载联系人列表
+            mainWindow->requestQueryUser();
+            mainWindow->show();
+
+            loginWindow->deleteLater();
+        });
+
+    loginWindow->show();
 }
 
-// 「清理」按钮
+// -------------------- 清理聊天数据按钮 --------------------
 void SettingDialog::on_btnClearStorage_clicked()
 {
-    const QString path = ui->lblStoragePath->text().trimmed();
-    if (path.isEmpty()) {
-        QMessageBox::warning(
-            this,
-            "清理聊天数据",
-            "当前存储路径为空，无法清理。"
-        );
-        return;
-    }
-
-    // 二次确认
     QMessageBox::StandardButton ret = QMessageBox::question(
         this,
-        "清理聊天数据",
-        QString("确定要清理以下路径下的所有聊天数据吗？\n%1").arg(path),
+        tr("清理聊天数据"),
+        tr("确定要清理所有聊天数据吗？该操作无法恢复。"),
         QMessageBox::Yes | QMessageBox::No,
         QMessageBox::No
     );
@@ -71,43 +105,61 @@ void SettingDialog::on_btnClearStorage_clicked()
         return;
     }
 
-    // TODO: 在这里调用实际的清理逻辑（删除数据库 / 文件 / 缓存等）
-    // 例如：
-    // DbLogicController::instance().clearChatHistory(path);
+    // 只清空数据库中的聊天记录，不再管“路径”
+    DbLogicController::instance().clearAllChatHistory();
 
-    qDebug() << "[SettingDialog] Request to clear storage at:" << path;
-
-    QMessageBox::information(
-        this,
-        "清理聊天数据",
-        "已发起清理请求（具体清理逻辑待实现）。"
-    );
+    qDebug() << "[SettingDialog] Request to clear ALL chat history";
 }
-void logoutAndShowLogin()
+
+// -------------------- 清空聊天记录完成回调 --------------------
+void SettingDialog::onChatHistoryCleared(bool success, const QString& errorMessage)
 {
-    // 1. 清除登录状态（token 等）
-    AuthService& authService = AuthService::getInstance();
-    authService.logout();    // 需要你在 AuthService 里实现这个函数，清 token / 标记未登录
-
-    // 2. 隐藏主窗口
-    MainWindow::instance()->hide();
-
-    // 3. 创建登录窗口，按原来的方式连接 loginSucceeded
-    LoginWindow* loginWindow = new LoginWindow();
-
-    QObject::connect(loginWindow, &LoginWindow::loginSucceeded,
-        [loginWindow]() {
-            qDebug() << "logout flow: 收到 loginSucceeded 信号";
-            // 登录成功后，隐藏登录窗口，显示主窗口
-            loginWindow->hide();
-            MainWindow::instance()->show();
-            loginWindow->deleteLater();
-        });
-
-    // 4. 显示登录窗口
-    loginWindow->show();
+    if (success) {
+        QMessageBox::information(
+            this,
+            tr("清理聊天数据"),
+            tr("已成功清空所有聊天记录。")
+        );
+        // 再刷一遍 messages 表大小
+        DbLogicController::instance().getMessagesTableSize();
+    }
+    else {
+        QMessageBox::warning(
+            this,
+            tr("清理聊天数据"),
+            tr("清空聊天记录失败：%1").arg(errorMessage)
+        );
+    }
 }
-// 「退出账号」按钮（对象名：pushButton_3）
+
+// -------------------- 统计 messages 表大小回调 --------------------
+void SettingDialog::onMessagesTableSizeCalculated(bool success,
+    qint64 sizeBytes,
+    const QString& errorMessage)
+{
+    if (!success) {
+        ui->lblDataSize->setText(
+            tr("无法统计（%1）").arg(errorMessage)
+        );
+        qDebug() << "[SettingDialog] calc size failed:" << errorMessage;
+        return;
+    }
+
+    if (sizeBytes < 1024) {
+        ui->lblDataSize->setText(tr("%1 B").arg(sizeBytes));
+    }
+    else {
+        double sizeKB = sizeBytes / 1024.0;
+        ui->lblDataSize->setText(
+            tr("%1 KB").arg(QString::number(sizeKB, 'f', 2))
+        );
+    }
+
+    qDebug() << "[SettingDialog] messages size =" << sizeBytes
+        << "bytes, label =" << ui->lblDataSize->text();
+}
+
+// -------------------- 退出账号按钮 --------------------
 void SettingDialog::on_pushButton_3_clicked()
 {
     QMessageBox::StandardButton ret = QMessageBox::question(
@@ -125,9 +177,50 @@ void SettingDialog::on_pushButton_3_clicked()
 
     qDebug() << "[SettingDialog] Logout confirmed by user";
 
-    // 调用刚才写的工具函数：退出并切回登录页
     logoutAndShowLogin();
-
-    // 关闭设置对话框本身
     accept();
+}
+
+// -------------------- 日志级别初始化 --------------------
+void SettingDialog::initLogLevelUi()
+{
+    QSettings settings("LanChat", "LanChatClient");
+
+    int levelIndex = settings.value(
+        "log/level",
+        static_cast<int>(Logger::Level::Info)
+    ).toInt();
+
+    if (levelIndex < static_cast<int>(Logger::Level::Error) ||
+        levelIndex > static_cast<int>(Logger::Level::Debug)) {
+        levelIndex = static_cast<int>(Logger::Level::Info);
+    }
+
+    if (ui->comboLogLevel) {
+        bool old = ui->comboLogLevel->blockSignals(true);
+        ui->comboLogLevel->setCurrentIndex(levelIndex);
+        ui->comboLogLevel->blockSignals(old);
+    }
+
+    Logger::getInstance().setLevel(static_cast<Logger::Level>(levelIndex));
+}
+
+// -------------------- 日志级别下拉框变更 --------------------
+void SettingDialog::on_comboLogLevel_currentIndexChanged(int index)
+{
+    QSettings settings("LanChat", "LanChatClient");
+    settings.setValue("log/level", index);
+
+    Logger::Level level = Logger::Level::Info;
+
+    switch (index) {
+    case 0: level = Logger::Level::Error; break;
+    case 1: level = Logger::Level::Warn;  break;
+    case 2: level = Logger::Level::Info;  break;
+    case 3: level = Logger::Level::Debug; break;
+    default: level = Logger::Level::Info; break;
+    }
+
+    Logger::getInstance().setLevel(level);
+    Logger::getInstance().log(QString("日志级别已修改，index=%1").arg(index));
 }

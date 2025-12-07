@@ -14,12 +14,27 @@ class SettingDialog : public QDialog
 public:
     explicit SettingDialog(QWidget* parent = nullptr);
     ~SettingDialog();
-   
+
 private slots:
-    void on_btnChangeStoragePath_clicked();  // change path button
-    void on_btnClearStorage_clicked();       // clear button
-    void on_pushButton_3_clicked();          // logout button
-    
+    // 清理聊天数据
+    void on_btnClearStorage_clicked();
+
+    // 退出账号按钮（pushButton_3）
+    void on_pushButton_3_clicked();
+
+    // 清空聊天记录操作完成回调
+    void onChatHistoryCleared(bool success, const QString& errorMessage);
+
+    // 统计 messages 表大小回调
+    void onMessagesTableSizeCalculated(bool success, qint64 sizeBytes, const QString& errorMessage);
+
+    // 日志级别下拉框
+    void on_comboLogLevel_currentIndexChanged(int index);
+
+private:
+    // 初始化日志级别下拉框
+    void initLogLevelUi();
+
 private:
     Ui::SettingDialog* ui;
 };
