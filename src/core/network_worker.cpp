@@ -149,8 +149,6 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
     }
     catch (const std::exception& e) {
         QString errorDetail = QString("Exception: %1").arg(e.what());
-        Logger::getInstance().error(QString("[NetworkWorker] Failed to send message, messageId: %1, error: %2")
-            .arg(messageId).arg(errorDetail));
         qWarning() << "Failed to send message, messageId:" << messageId << ", error:" << e.what();
 
         if (!messageId.isEmpty()) {
@@ -160,8 +158,6 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
     catch (...) {
         // 捕获所有未知异常，避免程序崩溃
         QString errorDetail = "Unknown exception occurred";
-        Logger::getInstance().error(QString("[NetworkWorker] Failed to send message (unknown error), messageId: %1")
-            .arg(messageId));
         qWarning() << "Failed to send message (unknown error), messageId:" << messageId;
 
         if (!messageId.isEmpty()) {

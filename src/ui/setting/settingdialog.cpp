@@ -4,6 +4,7 @@
 #include "ui/db_qwidget/DbQWidget.h"
 #include "ui/login/login_window.h"
 #include "service/auth_service.h"
+#include "core/app_context.h"
 #include "utils/logger.h"
 #include <QFileDialog>
 #include <QMessageBox>
@@ -121,6 +122,12 @@ void logoutAndShowLogin()
             MainWindow* mainWindow = MainWindow::instance();
             mainWindow->userid = userId;
             Logger::getInstance().log("logout flow: 登录成功，重新加载用户数据，userId: " + userId);
+            // 使用新的用户 ID 初始化网络层（NetworkWorker / ChatService）
+            AppContext& context = AppContext::instance();
+            NetworkController* netCtrl = context.networkController();
+            if (netCtrl) {
+                netCtrl->initializeWithUserId(userId);
+            }
             
             // 重新查询用户信息（这会触发联系人列表的重新加载）
             // queryUserReady 信号会调用 loadContacts()，而 loadContacts() 在加载新数据前会先清空旧数据

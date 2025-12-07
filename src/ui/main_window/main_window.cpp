@@ -7,7 +7,7 @@
 
 // src/ui/main_window/main_window.cpp
 #include "main_window.h"
-#include "ChatWindow.h"
+#include "ui/chatpage/chatwindow.h"
 #include "ContactList.h"
 #include "MessageList.h"
 #include "ui/setting/settingdialog.h"
@@ -393,10 +393,10 @@ void MainWindow::setupPages()
     //===================== 创建页面 =====================
     m_pages = new QStackedWidget(this);
 
-    //聊天框
-    Logger::getInstance().log("[MainWindow] Creating ChatWindow...");
+    //聊天框（使用 ui/chatpage/chatwindow.h 实现的完整聊天窗口）
+    Logger::getInstance().log("[MainWindow] Creating ChatWindow (ui/chatpage version)...");
     m_chatPage = new ChatWindow(this);
-    Logger::getInstance().log(QString("[MainWindow] ChatWindow created at: %1").arg((quintptr)m_chatPage, 0, 16));
+    Logger::getInstance().log(QString("[MainWindow] ChatWindow (chatpage) created at: %1").arg((quintptr)m_chatPage, 0, 16));
     
     // 联系人资料
     m_friendInfoPage = new QWidget(this);
@@ -448,6 +448,18 @@ void MainWindow::openSettingsDialog()
     // 以当前 MainWindow 作为父窗口
     SettingDialog dlg(this);
     dlg.exec();   // 模态对话框（阻塞当前，直到关闭）
+}
+
+void MainWindow::openChatPage(const QString& userId, const QString& displayName)
+{
+    // 切换右侧到聊天页
+    setRightPages(ChatPage);
+
+    // 将右侧页面转换为 chatpage 版本的 ChatWindow，并切换当前聊天对象
+    ChatWindow* chatWin = qobject_cast<ChatWindow*>(m_chatPage);
+    if (chatWin) {
+        chatWin->switchChat(userId, displayName);
+    }
 }
 
 void MainWindow::setupUi()

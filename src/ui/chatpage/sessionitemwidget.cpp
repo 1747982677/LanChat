@@ -46,6 +46,8 @@ SessionItemWidget::SessionItemWidget(QWidget *parent) : QWidget(parent)
     m_msgLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     m_timeLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 
+    // 关键修复：让整个自定义 Widget 也不拦截鼠标事件，从而让 QListWidget 接收点击
+    this->setAttribute(Qt::WA_TransparentForMouseEvents);
 }
 
 void SessionItemWidget::setAvatar(const QString &path)

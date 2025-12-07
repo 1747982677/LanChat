@@ -45,6 +45,7 @@ private:
 private slots:
     void onLoadMoreHistory();
     void onSendClicked();
+    void onMessageReceived(const QJsonObject &msgJson, const QString &from);
 };
 
 #endif // CHATWINDOW_H

@@ -1,6 +1,7 @@
 #include "logger.h"
 #include <QDebug>
-
+#include <QMutex>
+#include <QMutexLocker>
 Logger::Logger()
     : logFile()
 {
@@ -34,10 +35,12 @@ void Logger::write(const QString& levelName, const QString& message)
     QString logLine = QString("[%1] %2: %3")
         .arg(timestamp, levelName, message);
 
-    // VS Êä³ö´°¿Ú
+    // VS ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     qDebug().noquote() << logLine;
-
-    // ÎÄ¼þ
+    // ï¿½ï¿½
+    static QMutex s_mutex;
+    QMutexLocker locker(&s_mutex);
+    // ï¿½Ä¼ï¿½
     if (logFile.isOpen()) {
         QTextStream out(&logFile);
         out << logLine << "\n";
