@@ -152,10 +152,10 @@ public:
         return false;
     }
 
-    // 转换为SQL插入语句（统一字段顺序：userId, email, passwordHash, nickname, avatarPath, phone, signature, status, lastOnlineTime）
+    // 转换为SQL插入语句（统一字段顺序：userId, email, password, nickname, avatarPath, phone, signature, status, lastOnlineTime）
     QString toInsertSQL() const
     {
-        return QString("INSERT INTO users (userId, email, passwordHash, nickname, avatarPath, phone, "
+        return QString("INSERT INTO users (userId, email, password, nickname, avatarPath, phone, "
             "signature, status, lastOnlineTime) "
             "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', %8, %9)")
             .arg(userId)
@@ -174,7 +174,7 @@ public:
     {
         return QString("UPDATE users SET "
             "email = '%1', "
-            "passwordHash = '%2', "
+            "password = '%2', "
             "nickname = '%3', "
             "avatarPath = '%4', "
             "phone = '%5', "
@@ -203,7 +203,7 @@ public:
         UserEntity user;
         user.userId = row.value("userId").toString();
         user.email = row.value("email").toString();
-        user.passwordHash = row.value("passwordHash").toString();
+        user.passwordHash = row.value("password").toString();
         user.nickname = row.value("nickname").toString();
         user.avatarPath = row.value("avatarPath").toString();
         user.phone = row.value("phone").toString();

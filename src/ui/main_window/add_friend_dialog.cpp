@@ -12,9 +12,14 @@ AddFriendDialog::AddFriendDialog(QWidget* parent)
     : QDialog(parent)
     , m_hasResult(false)
 {
-    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    // 使用标准窗口标志，允许拖动和调整大小
+    setWindowFlags(Qt::Dialog);
     setAttribute(Qt::WA_DeleteOnClose);
-    setFixedSize(400, 500);
+    
+    // 设置窗口大小和最小/最大尺寸
+    resize(400, 500);
+    setMinimumSize(350, 400);
+    setMaximumSize(800, 1000);
     
     setupUi();
     setupStyle();
@@ -38,20 +43,13 @@ void AddFriendDialog::setupUi()
     m_headerWidget = new QWidget(this);
     m_headerWidget->setFixedHeight(50);
     QHBoxLayout* headerLayout = new QHBoxLayout(m_headerWidget);
-    headerLayout->setContentsMargins(20, 0, 10, 0);
+    headerLayout->setContentsMargins(20, 0, 20, 0);
     
     m_titleLabel = new QLabel("添加朋友", m_headerWidget);
     m_titleLabel->setAlignment(Qt::AlignCenter);
-    
-    m_closeButton = new QPushButton(m_headerWidget);
-    m_closeButton->setFixedSize(30, 30);
-    m_closeButton->setText("×");
-    m_closeButton->setStyleSheet("QPushButton { background-color: #ff4444; color: white; border: none; border-radius: 4px; font-size: 20px; }"
-                                  "QPushButton:hover { background-color: #ff6666; }");
+    m_titleLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #333;");
     
     headerLayout->addWidget(m_titleLabel);
-    headerLayout->addStretch();
-    headerLayout->addWidget(m_closeButton);
     
     m_mainLayout->addWidget(m_headerWidget);
     
@@ -123,7 +121,32 @@ void AddFriendDialog::setupUi()
     
     m_mainLayout->addWidget(m_resultWidget);
     
-    m_mainLayout->addStretch();
+    // ===================== 底部关闭按钮 =====================
+    QWidget* bottomWidget = new QWidget(this);
+    QHBoxLayout* bottomLayout = new QHBoxLayout(bottomWidget);
+    bottomLayout->setContentsMargins(20, 20, 20, 20);
+    bottomLayout->addStretch();
+    
+    m_closeButton = new QPushButton("Close", bottomWidget);
+    m_closeButton->setFixedSize(100, 35);
+    m_closeButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: #f0f0f0;"
+        "   color: #333;"
+        "   border: 1px solid #d0d0d0;"
+        "   border-radius: 4px;"
+        "   font-size: 14px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #e0e0e0;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #d0d0d0;"
+        "}"
+    );
+    bottomLayout->addWidget(m_closeButton);
+    
+    m_mainLayout->addWidget(bottomWidget);
 }
 
 void AddFriendDialog::setupStyle()

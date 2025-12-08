@@ -433,7 +433,8 @@ void MainWindow::setupPages()
     m_friendRequestLayout = new QVBoxLayout(scrollContent);
     m_friendRequestLayout->setContentsMargins(0, 0, 0, 0);
     m_friendRequestLayout->setSpacing(0);
-    m_friendRequestLayout->addStretch();
+    m_friendRequestLayout->setAlignment(Qt::AlignTop);  // 设置布局顶部对齐
+    // 不添加 addStretch()，让内容置顶显示
     
     scrollArea->setWidget(scrollContent);
     nfLayout->addWidget(scrollArea);
@@ -521,11 +522,11 @@ void MainWindow::onFriendRequestsLoaded(const QJsonArray& requests)
         QLabel* emptyLabel = new QLabel("暂无好友申请", m_newFriendPage);
         emptyLabel->setAlignment(Qt::AlignCenter);
         emptyLabel->setStyleSheet("color: #999; font-size: 14px; padding: 50px;");
-        m_friendRequestLayout->insertWidget(0, emptyLabel);
+        m_friendRequestLayout->addWidget(emptyLabel);
         return;
     }
     
-    // 添加好友申请项
+    // 添加好友申请项（置顶显示）
     for (int i = 0; i < requests.size(); ++i) {
         QJsonObject requestObj = requests[i].toObject();
         QString requestId = requestObj["requestId"].toString();
@@ -541,7 +542,7 @@ void MainWindow::onFriendRequestsLoaded(const QJsonArray& requests)
         connect(item, &FriendRequestItem::acceptClicked,
                 this, &MainWindow::onAcceptButtonClicked);
         
-        m_friendRequestLayout->insertWidget(i, item);
+        m_friendRequestLayout->addWidget(item);
     }
 }
 
@@ -567,6 +568,15 @@ void MainWindow::onFriendRequestAccepted(bool success, const QString& errorMessa
         QMessageBox::information(this, "成功", "已同意好友申请");
         // 重新加载好友申请列表
         loadFriendRequests();
+        
+        // 重新加载联系人列表，立即显示新增的联系人
+        QWidget* contactPage = m_contactPages->widget(1);  // 联系人页面是第二个（索引1）
+        if (contactPage) {
+            ContactList* contactList = qobject_cast<ContactList*>(contactPage);
+            if (contactList) {
+                contactList->loadContacts();
+            }
+        }
     } else {
         QMessageBox::warning(this, "失败", errorMessage.isEmpty() ? "同意好友申请失败" : errorMessage);
     }
