@@ -41,7 +41,7 @@ QList<SessionInfo> DataLoader::loadFromFile(const QString& filePath)
             for (const QJsonValue& msgVal : msgArray) {
                 QJsonObject msgObj = msgVal.toObject();
 
-                Message msg;
+                UiMessage msg;
                 msg.senderId = msgObj["senderId"].toString();
                 msg.content = msgObj["content"].toString();
                 msg.isSelf = msgObj["isSelf"].toBool();

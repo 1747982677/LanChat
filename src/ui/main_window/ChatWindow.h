@@ -21,7 +21,7 @@ public slots:
 
 signals:
 	// 【转发信号】聊天窗口发送消息时，转发给 MainWindow
-	void sigSendMessage(const QString& targetUid, const Message& msg);
+    void sigSendMessage(const QString& targetUid, const UiMessage& msg);
 
 private slots:
 	void onMessageReceived(const QJsonObject &msgJson, const QString &from);

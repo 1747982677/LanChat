@@ -1,10 +1,11 @@
-﻿#ifndef LOGGER_H
+#ifndef LOGGER_H
 #define LOGGER_H
 
 #include <QString>
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QMutex>
 
 class Logger
 {
@@ -49,6 +50,7 @@ private:
 private:
     QFile logFile;
     Level m_level;
+    QMutex m_mutex; // 保护文件写入的互斥锁
 };
 
 #endif // LOGGER_H

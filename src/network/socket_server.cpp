@@ -73,7 +73,7 @@ quint16 SocketServer::getServerPort() const
 {
     return (m_server && m_server->isListening()) ? m_server->serverPort() : 0;
 }
-
+//根据用户ID发送消息
 bool SocketServer::sendMessageToUser(const QString& userId, const QString& message)
 {
     if (!isRunning()) {
@@ -81,7 +81,7 @@ bool SocketServer::sendMessageToUser(const QString& userId, const QString& messa
         return false;
     }
 
-    QWebSocket* client = getClientByUserId(userId);
+    QWebSocket* client = getClientByUserId(userId);//根据用户ID获取客户端
     if (!client) {
         Logger::getInstance().error(QString("User %1 not found or not connected").arg(userId));
         return false;
@@ -96,7 +96,7 @@ bool SocketServer::sendMessageToUser(const QString& userId, const QString& messa
     Logger::getInstance().log(QString("Forwarded message to user %1: %2").arg(userId).arg(message));
     return true;
 }
-
+//根据客户端地址发送消息
 void SocketServer::sendMessageToClient(const QString& clientAddress, const QString& message)
 {
     if (!isRunning()) {
@@ -104,7 +104,7 @@ void SocketServer::sendMessageToClient(const QString& clientAddress, const QStri
         return;
     }
 
-    QWebSocket* client = getClientByAddress(clientAddress);
+    QWebSocket* client = getClientByAddress(clientAddress);//根据客户端地址获取客户端
     if (!client) {
         Logger::getInstance().error(QString("Client %1 not found").arg(clientAddress));
         return;
@@ -119,6 +119,7 @@ void SocketServer::sendMessageToClient(const QString& clientAddress, const QStri
     Logger::getInstance().log(QString("Sent message to client %1: %2").arg(clientAddress).arg(message));
 }
 
+//广播消息
 void SocketServer::broadcastMessage(const QString& message)
 {
     if (!isRunning()) {
@@ -222,7 +223,7 @@ void SocketServer::onClientDisconnected()
     emit clientDisconnected(addr, userId);
     client->deleteLater();
 }
-
+//接收客户端消息
 void SocketServer::onClientTextMessageReceived(const QString& message)
 {
     QWebSocket *client = qobject_cast<QWebSocket*>(sender());
@@ -334,5 +335,5 @@ QWebSocket* SocketServer::getClientByUserId(const QString& userId) const
     if (address.isEmpty()) {
         return nullptr;
     }
-    return getClientByAddress(address);
+    return getClientByAddress(address);//返回目标客户端
 }

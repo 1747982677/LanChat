@@ -7,10 +7,10 @@
 #include "core/network_controller.h"
 #include "core/app_context.h"
 #include "common/types.h"
-#include "utils/logger.h"
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QMessageBox>
+#include <QDebug>
 
 
 //聊天框占位
@@ -18,7 +18,7 @@
 ChatWindow::ChatWindow(QWidget *parent)
 	: QWidget(parent)
 {
-	Logger::getInstance().log("[ChatWindow] Constructor started");
+	qDebug() << "[ChatWindow] Constructor started";
 	//ui.setupUi(this);
 	this->setMinimumWidth(500);
 	initUI();
@@ -26,37 +26,42 @@ ChatWindow::ChatWindow(QWidget *parent)
 	
 	// 连接网络消息接收信号
 	NetworkController* netCtrl = AppContext::instance().networkController();
-	Logger::getInstance().log(QString("[ChatWindow] NetworkController pointer: %1").arg((quintptr)netCtrl, 0, 16));
+	qDebug() << "[ChatWindow] NetworkController pointer:" << (quintptr)netCtrl;
 	
 	bool connected = connect(netCtrl, &NetworkController::messageReceived,
 							 this, &ChatWindow::onMessageReceived);
-	Logger::getInstance().log(QString("[ChatWindow] Signal connection result: %1").arg(connected ? "SUCCESS" : "FAILED"));
+	qDebug() << "[ChatWindow] Signal connection result:" << (connected ? "SUCCESS" : "FAILED");
 	
 	if (connected) {
-		Logger::getInstance().log("[ChatWindow] Signal connected to NetworkController");
+		qDebug() << "[ChatWindow] Signal connected to NetworkController";
 	} else {
-		Logger::getInstance().error("[ChatWindow] FAILED to connect signal!");
+		qDebug() << "[ChatWindow] FAILED to connect signal!";
 	}
 }
 
 ChatWindow::~ChatWindow()
 {
-	Logger::getInstance().log("[ChatWindow] Destructor called");
+	qDebug() << "[ChatWindow] Destructor called";
 }
 
 void ChatWindow::onMessageReceived(const QJsonObject &msgJson, const QString &from)
 {
-	Logger::getInstance().log(QString("[ChatWindow] *** onMessageReceived CALLED! from: %1").arg(from));
+	qDebug() << "[ChatWindow] *** onMessageReceived CALLED! from:" << from;
 	
 	// 反序列化消息
 	LanChat::Message msg = LanChat::Message::fromJson(msgJson);
-	Logger::getInstance().log(QString("[ChatWindow] Parsed message - sender: %1, content: %2")
-							 .arg(msg.senderId).arg(msg.content));
-	
-	// 显示弹窗验证消息接收
-	QMessageBox::information(this, "收到网络消息",
-							 QString("发送者: %1\n内容: %2")
-							 .arg(msg.senderId).arg(msg.content));
+	qDebug() << "[ChatWindow] Parsed message - sender:" << msg.senderId << "content:" << msg.content;
+
+	// 如果当前会话正是对方，则在聊天视图中追加
+	if (m_chatPage && m_chatPage->currentSessionId() == msg.senderId) {
+		UiMessage uiMsg;
+		uiMsg.mid = msg.messageId;
+		uiMsg.senderId = msg.senderId;
+		uiMsg.content = msg.content;
+		uiMsg.timestamp = QDateTime::fromMSecsSinceEpoch(msg.timestamp);
+		uiMsg.isSelf = false;
+		m_chatPage->appendIncomingMessage(uiMsg);
+	}
 }
 
 void ChatWindow::initUI()

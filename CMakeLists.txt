@@ -75,8 +75,6 @@ set(SOURCES
     
     # ui - dev 新增的 UI 文件
     src/ui/main_window/main_window.h
-    src/ui/main_window/ChatWindow.cpp
-    src/ui/main_window/ChatWindow.h
     src/ui/main_window/ContactList.cpp
     src/ui/main_window/ContactList.h
     src/ui/main_window/MessageList.cpp
@@ -95,6 +93,8 @@ set(SOURCES
     src/network/socket_server.cpp
     src/network/socket_server.h
 
+    src/ui/main_window/ChatWindow.cpp
+    src/ui/main_window/ChatWindow.h
     src/ui/main_window/ChatInputWidget.h
     src/ui/main_window/ChatInputWidget.cpp
     src/ui/main_window/ChatPage.cpp

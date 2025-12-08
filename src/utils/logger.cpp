@@ -1,7 +1,8 @@
 ﻿#include "logger.h"
 #include <QDebug>
 #include <QIODevice>
-
+#include <QMutex>
+#include <QMutexLocker>
 Logger& Logger::getInstance()
 {
     static Logger instance;
@@ -61,8 +62,8 @@ void Logger::write(const QString& levelName, const QString& message)
 
     // 控制台 / Qt Creator 输出窗口
     qDebug().noquote() << logLine;
-
-    // 写入文件
+    // 保护文件写入，避免多线程竞态破坏内部缓冲
+    QMutexLocker locker(&m_mutex);
     if (logFile.isOpen()) {
         QTextStream out(&logFile);
         out << logLine << '\n';

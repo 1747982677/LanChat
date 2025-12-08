@@ -1,10 +1,11 @@
-﻿#ifndef MESSAGE_H
-#define MESSAGE_H
+﻿#ifndef UI_MESSAGE_H
+#define UI_MESSAGE_H
 
 #include <QString>
 #include <QDateTime>
 
-struct Message {
+// UI 层消息模型，避免与模型/网络层 Message 混淆
+struct UiMessage {
     QString mid;
     QString senderId;
     QString content;
@@ -13,4 +14,4 @@ struct Message {
 };
 
 
-#endif // MESSAGE_H
+#endif // UI_MESSAGE_H

@@ -97,6 +97,7 @@ private:
     
     // 从本地加载 Token（如果需要）
     QString loadTokenFromLocal() const;
+    bool isAutoLoginEnabled() const;
     
     // 保存账号密码到本地（用于注册后自动填充）
     void saveCredentialsToLocal(const QString& account, const QString& password);
