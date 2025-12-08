@@ -40,11 +40,14 @@ public slots:
      * @brief 发送消息
      */
     void sendMessage(const LanChat::Message& message);
-
+	void sendJsonMessage(const QJsonObject& jsonMessage);
     /**
      * @brief 发送文本消息
      */
     void sendTextMessage(const QString& text, const QString& receiverId);
+
+	// 请求在线用户列表，触发onlineUsersUpdated信号，就算不调用这个函数，也会自动更新在线用户列表
+    void getOnlineUsers();
 
 
 signals:
@@ -52,13 +55,17 @@ signals:
     void requestInitializeWithUserId(const QString& userId);
     void requestDisconnect();
     void requestSendMessage(const LanChat::Message& message);
+	//可以通过定义type字段实现发送已读回执，发送用户状态等功能，需要自己构建QJsonObject中一定包含senderId和receiverId字段
+	void requestSendJsonMessage(const QJsonObject& jsonMessage);
     void requestSendTextMessage(const QString& text, const QString& receiverId);
 	void requestStopServer(); // 停止服务器模式,但是转换为中心服务器模式后，并不是所有客户端都可以暂停服务器的，所以这里其实没有内部逻辑
+    void requestOnlineUsers();
 
     // 从 Worker 接收的信号（转发）
     void connected();
     void disconnected();
 	void messageReceived(QJsonObject& message, const QString& from);
+	void jsonMessageReceived(const QJsonObject& message);
     void textMessageReceived(const QString& text, const QString& from);
     void connectionStateChanged(bool isConnected);
 
@@ -66,8 +73,8 @@ signals:
     void messageSendSuccess(const QString& messageId);
     void messageSendFailed(const QString& messageId, const QString& reason);
     
-    // 在线用户列表更新信号 chatservice提供这个接口但是暂时没有实现
-    //void onlineUsersUpdated(const QStringList& userIds);
+	// 在线用户列表更新信号，需要连接此信号以获取最新的在线用户列表，每五秒刷新一次
+    void onlineUsersUpdated(const QStringList& userIds);
 
     // 🆕 Worker 状态变化转发
     void statusChanged(const QString& status);

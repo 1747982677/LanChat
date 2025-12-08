@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <QWidget>
 #include <QStackedWidget>
@@ -12,6 +12,10 @@
 #include <QString>
 #include "ui/personinfo/UserProfile.h"  // 确保包含 UserProfile 头文件
 #include "ui/personinfo/UserEntity.h"   // 确保包含 UserEntity 头文件
+#include "SessionList.h" 
+#include "ChatWindow.h"
+
+
 class MainWindow : public QWidget {
     Q_OBJECT
 public:
@@ -63,6 +67,7 @@ private:
     QStackedWidget* m_contactPages;
     QLineEdit* m_searchEdit;
     QWidget* m_middleWidget;
+    SessionList* m_sessionList;
     void setupMiddleColumn();
 
 
@@ -70,8 +75,9 @@ private:
     QStackedWidget* m_pages;
     QMap<PageType, QWidget*> m_pageMap;//枚举类型映射
 
+
     //页面List
-    QWidget* m_chatPage;
+    ChatWindow* m_chatPage;
     QWidget* m_friendInfoPage;
     QWidget* m_settingsPage;
     QWidget* m_newFriendPage;

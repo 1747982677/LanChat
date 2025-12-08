@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(dbCtrl, &DbLogicController::friendRequestAccepted,
             this, &MainWindow::onFriendRequestAccepted);
 
+    connect(m_sessionList, &SessionList::sessionSelected,
+        m_chatPage, &ChatWindow::setSessionInfo);
     
 
 }
@@ -362,8 +364,8 @@ void MainWindow::setupMiddleColumn()
     
     m_contactPages = new QStackedWidget(this);
     // ===================== 消息列表 =====================
-    QWidget* recentPage = new MessageList(this);
-    m_contactPages->addWidget(recentPage);
+    m_sessionList = new SessionList(this);
+    m_contactPages->addWidget(m_sessionList); // index 0
 
     // ===================== 联系人列表  =====================
     QWidget* friendsPage = new ContactList(this);
@@ -382,7 +384,7 @@ void MainWindow::setupMiddleColumn()
     }
 
     middleLayout->addWidget(m_contactPages);
-    m_middleWidget->setFixedWidth(200);
+    m_middleWidget->setFixedWidth(310);
 }
 
 //右侧

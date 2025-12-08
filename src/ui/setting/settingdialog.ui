@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>SettingDialog</class>
  <widget class="QDialog" name="SettingDialog">
@@ -6,210 +6,195 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>551</width>
-    <height>487</height>
+    <width>560</width>
+    <height>420</height>
    </rect>
-  </property>
-  <property name="font">
-   <font>
-    <pointsize>11</pointsize>
-   </font>
   </property>
   <property name="windowTitle">
    <string>设置</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>511</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item alignment="Qt::AlignmentFlag::AlignTop">
-     <widget class="QLabel" name="lblStorageTitle">
-      <property name="font">
-       <font>
-        <pointsize>14</pointsize>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>存储选项</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBoxStorage">
+     <property name="font">
+      <font>
+       <pointsize>17</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>存储选项</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_size">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item alignment="Qt::AlignmentFlag::AlignLeft">
-         <widget class="QLabel" name="lblStoreTo">
-          <property name="text">
-           <string>聊天信息保存到</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lblStoragePath">
-          <property name="font">
-           <font>
-            <pointsize>9</pointsize>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: #999999;</string>
-          </property>
-          <property name="text">
-           <string>F:xxxxxx</string>
-          </property>
-          <property name="scaledContents">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item alignment="Qt::AlignmentFlag::AlignRight">
-       <widget class="QPushButton" name="btnChangeStoragePath">
+       <widget class="QLabel" name="labelSizeTitle">
         <property name="font">
          <font>
-          <pointsize>9</pointsize>
-          <bold>true</bold>
+          <pointsize>12</pointsize>
          </font>
         </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton {
-    border: 1px solid black;
-    border-radius: 10px;   /* 自己调大小 */
-    background-color: transparent;
-    color: black;
-    padding: 6px 14px;
-}</string>
-        </property>
         <property name="text">
-         <string>更改存储路径</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
+         <string>当前聊天数据大小：</string>
         </property>
        </widget>
       </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item alignment="Qt::AlignmentFlag::AlignLeft">
-         <widget class="QLabel" name="lblStoreTo_2">
-          <property name="text">
-           <string>聊天数据</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lblDataSize">
-          <property name="font">
-           <font>
-            <pointsize>9</pointsize>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: #999999;</string>
-          </property>
-          <property name="text">
-           <string>61.8MB</string>
-          </property>
-          <property name="scaledContents">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QLabel" name="lblDataSize">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>计算中...</string>
+        </property>
+       </widget>
       </item>
-      <item alignment="Qt::AlignmentFlag::AlignRight">
+      <item>
+       <spacer name="horizontalSpacer_storage">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
        <widget class="QPushButton" name="btnClearStorage">
         <property name="font">
          <font>
-          <pointsize>11</pointsize>
-          <bold>true</bold>
+          <pointsize>12</pointsize>
          </font>
         </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton {
-    border: 1px solid black;
-    border-radius: 10px;   /* 自己调大小 */
-    background-color: transparent;
-    color: black;
-    padding: 6px 14px;
-}</string>
-        </property>
         <property name="text">
-         <string>清理</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
+         <string>清理聊天数据</string>
         </property>
        </widget>
       </item>
      </layout>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QPushButton" name="pushButton_3">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>390</y>
-     <width>111</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>-1</pointsize>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QPushButton {
-    background-color: #E5E5E5;      /* 浅灰背景 */
-    color: #666666;                 /* 深灰文字 */
-    border: none;                   /* 无边框 */
-    border-radius: 20px;            /* 高度约 40px 时效果最佳 */
-    padding: 8px 20px;              /* 内边距，让按钮更圆润 */
-    font-size: 16px;                /* 字体大小 */
-}
-QPushButton:hover {
-    background-color: #DCDCDC;      /* hover 略深一点 */
-}
-QPushButton:pressed {
-    background-color: #CFCFCF;      /* 点击更深灰 */
-}</string>
-   </property>
-   <property name="text">
-    <string>退出账号</string>
-   </property>
-   <property name="autoDefault">
-    <bool>false</bool>
-   </property>
-   <property name="default">
-    <bool>false</bool>
-   </property>
-  </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxLog">
+     <property name="font">
+      <font>
+       <pointsize>17</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>日志选项</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_log">
+      <item>
+       <widget class="QLabel" name="labelLogLevel">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>日志级别：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboLogLevel">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <item>
+         <property name="text">
+          <string>错误</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>警告</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>信息</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>调试</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_log">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+     <item>
+      <spacer name="horizontalSpacer_buttons">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="text">
+        <string>退出账号</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::StandardButton::Close</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SettingDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>400</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>200</x>
+     <y>200</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

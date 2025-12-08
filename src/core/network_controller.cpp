@@ -83,12 +83,16 @@ void NetworkController::connectSignals()
             worker, &NetworkWorker::initializeChatService);
     connect(this, &NetworkController::requestSendMessage,
             worker, &NetworkWorker::sendMessage);
+	connect(this, &NetworkController::requestSendJsonMessage,
+		worker, &NetworkWorker::sendJsonMessage);
     connect(this, &NetworkController::requestSendTextMessage,
             worker, &NetworkWorker::sendTextMessage);
 	connect(this, &NetworkController::requestDisconnect,
 		worker, &NetworkWorker::disconnectFromServer);
 	connect(this, &NetworkController::requestStopServer,
 		worker, &NetworkWorker::stopServer);
+    connect(this, &NetworkController::requestOnlineUsers,
+		worker, &NetworkWorker::requestOnlineUsers);
 
     // Worker -> Controller 信号（转发）
     connect(worker, &NetworkWorker::connected,
@@ -97,6 +101,8 @@ void NetworkController::connectSignals()
             this, &NetworkController::disconnected);
     connect(worker, &NetworkWorker::messageReceived, 
             this, &NetworkController::onmessageReceivedFromWorker);
+    connect(worker, &NetworkWorker::jsonMessageReceived,
+		this, &NetworkController::jsonMessageReceived);
     connect(worker, &NetworkWorker::textMessageReceived,
             this, &NetworkController::textMessageReceived);
     connect(worker, &NetworkWorker::connectionStateChanged,
@@ -105,6 +111,8 @@ void NetworkController::connectSignals()
             this, &NetworkController::messageSendSuccess);
     connect(worker, &NetworkWorker::messageSendFailed,
             this, &NetworkController::messageSendFailed);
+    connect(worker, &NetworkWorker::onlineUsersUpdated,
+            this, &NetworkController::onlineUsersUpdated);
     connect(worker, &NetworkWorker::errorOccurred,
             this, &NetworkController::errorOccurred);
     connect(worker, &NetworkWorker::initialized,
@@ -129,11 +137,25 @@ void NetworkController::sendMessage(const LanChat::Message& message)
     Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted");
 }
 
+void NetworkController::sendJsonMessage(const QJsonObject& jsonMessage)
+{
+    Logger::getInstance().log(QString("[NetworkController] sendJsonMessage called, JSON: %1")
+                             .arg(QString::fromUtf8(QJsonDocument(jsonMessage).toJson(QJsonDocument::Compact))));
+    emit requestSendJsonMessage(jsonMessage);
+    Logger::getInstance().log("[NetworkController] requestSendMessage signal emitted for JSON message");
+}
+
 void NetworkController::sendTextMessage(const QString& text, const QString& receiverId)
 {
     Logger::getInstance().log(QString("[NetworkController] sendTextMessage called, text: %1").arg(text));
     emit requestSendTextMessage(text, receiverId);
     Logger::getInstance().log("[NetworkController] requestSendTextMessage signal emitted");
+}
+
+void NetworkController::getOnlineUsers()
+{
+    Logger::getInstance().log("[NetworkController] Requesting online users...");
+    emit requestOnlineUsers();
 }
 
 void NetworkController::onmessageReceivedFromWorker(const LanChat::Message& message)
