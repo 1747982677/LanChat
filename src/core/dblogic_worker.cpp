@@ -652,11 +652,11 @@ void DbLogicWorker::registerUser(const QString& email, const QString& passwordHa
 
     // 插入新用户（昵称字段留空，用户可以在后续设置）
     QSqlQuery insertQuery(db);
-    insertQuery.prepare("INSERT INTO users (userId, email, passwordHash, nickname, status, lastOnlineTime) "
-        "VALUES (:userId, :email, :passwordHash, :nickname, :status, :lastOnlineTime)");
+    insertQuery.prepare("INSERT INTO users (userId, email, password, nickname, status, lastOnlineTime) "
+        "VALUES (:userId, :email, :password, :nickname, :status, :lastOnlineTime)");
     insertQuery.bindValue(":userId", userId);
     insertQuery.bindValue(":email", email);
-    insertQuery.bindValue(":passwordHash", passwordHash);
+    insertQuery.bindValue(":password", passwordHash);
     insertQuery.bindValue(":nickname", QString());  // 昵称留空，不自动生成
     insertQuery.bindValue(":status", 0);  // 默认离线状态
     insertQuery.bindValue(":lastOnlineTime", QDateTime::currentSecsSinceEpoch());
@@ -698,7 +698,7 @@ void DbLogicWorker::verifyUserPassword(const QString& email, const QString& pass
 
     // 查询用户信息（包括密码哈希）
     QSqlQuery q(db);
-    q.prepare("SELECT userId, passwordHash FROM users WHERE email = :email");
+    q.prepare("SELECT userId, password FROM users WHERE email = :email");
     q.bindValue(":email", email);
 
     if (!q.exec()) {
@@ -715,7 +715,7 @@ void DbLogicWorker::verifyUserPassword(const QString& email, const QString& pass
     }
 
     QString userId = q.value("userId").toString();
-    QString storedPasswordHash = q.value("passwordHash").toString();
+    QString storedPasswordHash = q.value("password").toString();
 
     // 验证密码
     bool isValid = PasswordUtil::verifyPassword(password, storedPasswordHash);

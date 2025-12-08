@@ -173,7 +173,7 @@ bool DatabaseManager::ensureSchema(const QString& connectionName)
         CREATE TABLE IF NOT EXISTS users (
             userId TEXT PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
-            passwordHash TEXT NOT NULL,
+            password TEXT NOT NULL,
             nickname TEXT,
             avatarPath TEXT,
             phone TEXT,
