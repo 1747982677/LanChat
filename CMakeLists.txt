@@ -75,9 +75,6 @@ set(SOURCES
     
     # ui - dev 新增的 UI 文件
     src/ui/main_window/main_window.h
-    # 使用 chatpage 版本的 ChatWindow 作为主聊天界面
-    src/ui/chatpage/chatwindow.cpp
-    src/ui/chatpage/chatwindow.h
     src/ui/main_window/ContactList.cpp
     src/ui/main_window/ContactList.h
     src/ui/main_window/MessageList.cpp
@@ -89,13 +86,6 @@ set(SOURCES
     src/ui/main_window/friend_request_item.cpp
     src/ui/main_window/friend_request_item.h
     src/ui/network_error/network_error_dialog.cpp
-    # chatpage 依赖的通用聊天控件
-    src/ui/chatpage/nchatview.cpp
-    src/ui/chatpage/nchatview.h
-    src/ui/chatpage/nchatmessageitem.cpp
-    src/ui/chatpage/nchatmessageitem.h
-    src/ui/chatpage/pixmaputils.cpp
-    src/ui/chatpage/pixmaputils.h
     # network (来自 feature/mty/db)
     src/common/types.h
     src/network/socket_client.cpp
@@ -103,6 +93,8 @@ set(SOURCES
     src/network/socket_server.cpp
     src/network/socket_server.h
 
+    src/ui/main_window/ChatWindow.cpp
+    src/ui/main_window/ChatWindow.h
     src/ui/main_window/ChatInputWidget.h
     src/ui/main_window/ChatInputWidget.cpp
     src/ui/main_window/ChatPage.cpp

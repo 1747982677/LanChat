@@ -6,6 +6,8 @@
 #include "ChatTitle.h"
 #include "ChatInputWidget.h"
 #include "NChatView.h"
+#include "model/message_dao.h"
+#include "service/auth_service.h"
 
 
 class ChatPage : public QWidget
@@ -16,6 +18,8 @@ public:
 
     // 获取当前会话ID
     QString currentSessionId() const;
+    // 追加一条来自对方的消息（需当前会话匹配）
+    void appendIncomingMessage(const UiMessage& msg);
 
 public slots:
     // 【核心槽函数】响应左侧列表点击，切换会话
@@ -23,7 +27,7 @@ public slots:
 
 signals:
     // 当用户发送消息时，向外发出信号（通知 Manager 更新数据）
-    void sigSendMessage(const QString& targetUid, const Message& msg);
+    void sigSendMessage(const QString& targetUid, const UiMessage& msg);
 
 private slots:
     // 内部槽：处理输入框发来的文本

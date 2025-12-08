@@ -73,25 +73,6 @@ SessionList::SessionList(QWidget* parent) : QListWidget(parent)
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QListWidget::customContextMenuRequested, this, &SessionList::onContextMenuRequested);
 
-    QString resourcePath = "";
-    QString localPath = "";
-
-    QList<SessionInfo> list;
-
-    if (QFile::exists(resourcePath)) {
-        list = DataLoader::loadFromFile(resourcePath);
-    }
-    else if (QFile::exists(localPath)) {
-        list = DataLoader::loadFromFile(localPath);
-    }
-    else {
-        qDebug() << "Warning: mock_data.json not found in resources or local directory.";
-    }
-
-    if (!list.isEmpty()) {
-        this->loadSessions(list);
-    }
-
 }
 
 void SessionList::loadSessions(const QList<SessionInfo>& list)
@@ -124,6 +105,20 @@ void SessionList::addSession(const SessionInfo& info)
     widget->setData(info);
 
     this->setItemWidget(item, widget);
+}
+
+void SessionList::upsertSession(const SessionInfo& info)
+{
+    // 查找是否已有同 uid 的会话，若有则更新数据后返回
+    for (int i = 0; i < this->count(); ++i) {
+        QWidget* w = this->itemWidget(this->item(i));
+        SessionListItem* sItem = qobject_cast<SessionListItem*>(w);
+        if (sItem && sItem->getData().uid() == info.uid()) {
+            sItem->setData(info);
+            return;
+        }
+    }
+    addSession(info);
 }
 
 void SessionList::onItemClicked(QListWidgetItem* item)

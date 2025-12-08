@@ -15,7 +15,7 @@ public:
     void setSessionInfo(const SessionInfo& info);
 
     // 追加单条消息（发送或接收新消息时调用）
-    void appendMessage(const Message& msg, const QString& avatarPath);
+    void appendMessage(const UiMessage& msg, const QString& avatarPath);
 
     // 添加时间条
     void addTimeItem(const QDateTime& time);

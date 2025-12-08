@@ -21,7 +21,7 @@ public:
     QString lastMessage() const { return m_lastMessage; }
     QDateTime lastTime() const { return m_lastTime; }
     int unreadCount() const { return m_unreadCount; }
-    const QList<Message>& messages() const { return m_messages; }
+    const QList<UiMessage>& messages() const { return m_messages; }
 
     // setter
     void setTop(const bool isTop) { m_isTop = isTop; }
@@ -32,7 +32,7 @@ public:
     void setLastTime(const QDateTime& time) { m_lastTime = time; }
     void setUnreadCount(int count) { m_unreadCount = count; }
 
-    void addNewMessage(const Message& msg);
+    void addNewMessage(const UiMessage& msg);
     void clearUnread();
 
 private:
@@ -43,7 +43,7 @@ private:
     QString m_lastMessage;
     QDateTime m_lastTime;
     int m_unreadCount = 0;
-    QList<Message> m_messages;
+    QList<UiMessage> m_messages;
 };
 
 #endif // SESSIONINFO_H

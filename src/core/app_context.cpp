@@ -1,6 +1,7 @@
 #include "app_context.h"
 #include <QDebug>
 #include <QDateTime>
+#include "service/auth_service.h"
 
 AppContext* AppContext::s_instance = nullptr;
 
@@ -59,6 +60,16 @@ bool AppContext::initialize()
     }
 
     connectControllers();
+
+    // 确保登录后网络层使用最新的 userId（支持重新登录/切换账号）
+    AuthService& auth = AuthService::getInstance();
+    connect(&auth, &AuthService::loginSucceeded,
+            this, [this](const QString& userId, const QString& /*token*/) {
+                if (m_networkController) {
+                    qDebug() << "[AppContext] Re-initializing NetworkController with userId" << userId;
+                    m_networkController->initializeWithUserId(userId);
+                }
+            });
 
     m_initialized = true;
     qDebug() << "AppContext initialized successfully";

@@ -7,7 +7,8 @@
 
 // src/ui/main_window/main_window.cpp
 #include "main_window.h"
-#include "ui/chatpage/chatwindow.h"
+#include "ChatWindow.h"
+#include "SessionInfo.h"
 #include "ContactList.h"
 #include "MessageList.h"
 #include "ui/setting/settingdialog.h"
@@ -19,6 +20,9 @@
 #include "friend_request_item.h"
 #include "service/auth_service.h"
 #include "utils/logger.h"
+#include "core/network_controller.h"
+#include "core/app_context.h"
+#include "common/types.h"
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -32,6 +36,7 @@
 #include <QFrame>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QDebug>
 #include "core/app_context.h"
 #include "core/dblogic_controller.h"
 
@@ -400,6 +405,10 @@ void MainWindow::setupPages()
     m_chatPage = new ChatWindow(this);
     Logger::getInstance().log(QString("[MainWindow] ChatWindow (chatpage) created at: %1").arg((quintptr)m_chatPage, 0, 16));
     
+    // 连接发送消息信号
+    connect(m_chatPage, &ChatWindow::sigSendMessage,
+            this, &MainWindow::onSendMessage);
+    
     // 联系人资料
     m_friendInfoPage = new QWidget(this);
     auto* fIndoLayout = new QVBoxLayout(m_friendInfoPage);
@@ -457,11 +466,61 @@ void MainWindow::openChatPage(const QString& userId, const QString& displayName)
     // 切换右侧到聊天页
     setRightPages(ChatPage);
 
-    // 将右侧页面转换为 chatpage 版本的 ChatWindow，并切换当前聊天对象
+    // 将右侧页面转换为 ChatWindow，并切换当前聊天对象
     ChatWindow* chatWin = qobject_cast<ChatWindow*>(m_chatPage);
     if (chatWin) {
-        chatWin->switchChat(userId, displayName);
+        SessionInfo info(userId, displayName);
+        // 将会话写入会话列表，确保 uid 使用真实的对方 userId
+        if (m_sessionList) {
+            info.setAvatarPath(""); // 头像可按需补充
+            m_sessionList->upsertSession(info);
+        }
+        chatWin->setSessionInfo(info);
     }
+}
+
+void MainWindow::onSendMessage(const QString& targetUid, const UiMessage& msg)
+{
+    qDebug() << "[MainWindow] onSendMessage called - target:" << targetUid << "content:" << msg.content;
+    Logger::getInstance().log(QString("[MainWindow] onSendMessage called - target: %1, content: %2")
+                             .arg(targetUid).arg(msg.content));
+    
+    // 构造 LanChat::Message 对象
+    LanChat::Message lanChatMsg;
+    lanChatMsg.messageId = msg.mid.isEmpty() ? QUuid::createUuid().toString(QUuid::WithoutBraces) : msg.mid;
+    // 使用当前登录用户ID
+    AuthService& authService = AuthService::getInstance();
+    QString currentUserId = authService.getCurrentUserId();
+    lanChatMsg.senderId = currentUserId;
+    lanChatMsg.receiverId = targetUid;
+    lanChatMsg.content = msg.content;
+    lanChatMsg.timestamp = msg.timestamp.toMSecsSinceEpoch();  // 用毫秒时间戳
+    lanChatMsg.type = LanChat::MessageType::Text;
+    lanChatMsg.status = LanChat::MessageStatus::Pending;
+    
+    // 先写入本地数据库，保持历史可见
+    {
+        Message daoMsg;
+        daoMsg.sender = lanChatMsg.senderId;
+        daoMsg.receiver = lanChatMsg.receiverId;
+        daoMsg.content = lanChatMsg.content;
+        daoMsg.timestamp = QDateTime::fromMSecsSinceEpoch(lanChatMsg.timestamp);
+        daoMsg.status = static_cast<int>(lanChatMsg.status);
+        MessageDao::insertMessage(daoMsg);
+    }
+
+    qDebug() << "[MainWindow] Calling NetworkController::sendMessage";
+    // 通过 NetworkController 发送消息
+    NetworkController* netCtrl = AppContext::instance().networkController();
+    if (netCtrl) {
+        netCtrl->sendMessage(lanChatMsg);
+        Logger::getInstance().log("[MainWindow] Message sent to NetworkController");
+        qDebug() << "[MainWindow] Message sent to NetworkController";
+    } else {
+        Logger::getInstance().error("[MainWindow] NetworkController is null!");
+        qDebug() << "[MainWindow] NetworkController is null!";
+    }
+    qDebug() << "[MainWindow] onSendMessage finished";
 }
 
 void MainWindow::setupUi()

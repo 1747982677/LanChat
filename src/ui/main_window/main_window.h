@@ -14,6 +14,7 @@
 #include "ui/personinfo/UserEntity.h"   // 确保包含 UserEntity 头文件
 #include "SessionList.h" 
 #include "ChatWindow.h"
+#include "Message.h"
 
 
 class MainWindow : public QWidget {
@@ -37,13 +38,19 @@ public:
 
     // 打开聊天页，并切换到指定用户的会话
     void openChatPage(const QString& userId, const QString& displayName);
-	UserEntity m_currentUser; // 当前用户实体
-    
-    // 加载好友申请列表
-    void loadFriendRequests();
     
     // 更新用户状态显示（在线/离线）
     void updateUserStatus(bool isOnline);
+    
+	UserEntity m_currentUser; // 当前用户实体
+
+private slots:
+    // 处理发送消息
+    void onSendMessage(const QString& targetUid, const UiMessage& msg);
+    
+    // 加载好友申请列表
+    void loadFriendRequests();
+
 private:
     void updateUserReady(const bool& glag);
     UserProfile m_userProfile;
