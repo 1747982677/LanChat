@@ -107,6 +107,7 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
     }
 
     qDebug() << "Initializing public database:" << publicDbPath;
+    publicDbPath = "C:\\mty\\QtProject\\public.db";
     bool success2 = DatabaseManager::getInstance().initConnection("public", publicDbPath);
 
     if (!success2) {
@@ -648,18 +649,19 @@ void DbLogicWorker::registerUser(const QString& email, const QString& passwordHa
     }
 
     // 生成用户ID
-    QString userId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QString userId = "UID_" + QString::number(qHash(email)).mid(2, 6);// QUuid::createUuid().toString(QUuid::WithoutBraces);
 
     // 插入新用户（昵称字段留空，用户可以在后续设置）
     QSqlQuery insertQuery(db);
-    insertQuery.prepare("INSERT INTO users (userId, email, password, nickname, status, lastOnlineTime) "
-        "VALUES (:userId, :email, :password, :nickname, :status, :lastOnlineTime)");
+    insertQuery.prepare("INSERT INTO users (userId, email, password, nickname, status, lastOnlineTime,avatarPath) "
+        "VALUES (:userId, :email, :password, :nickname, :status, :lastOnlineTime,:avatarPath)");
     insertQuery.bindValue(":userId", userId);
     insertQuery.bindValue(":email", email);
     insertQuery.bindValue(":password", passwordHash);
-    insertQuery.bindValue(":nickname", QString());  // 昵称留空，不自动生成
+    insertQuery.bindValue(":nickname", "lanchat_"+QString::number(qHash(email)).mid(2, 6));  // 昵称留空，不自动生成
     insertQuery.bindValue(":status", 0);  // 默认离线状态
     insertQuery.bindValue(":lastOnlineTime", QDateTime::currentSecsSinceEpoch());
+    insertQuery.bindValue(":avatarPath", "/ui/assets/bubu.jpg");  // 昵称留空，不自动生成
 
     if (!insertQuery.exec()) {
         qDebug() << "Register user failed:" << insertQuery.lastError().text();

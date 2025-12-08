@@ -34,7 +34,7 @@
 #include <QJsonObject>
 #include "core/app_context.h"
 #include "core/dblogic_controller.h"
-
+#include "utils/password_util.h"
 MainWindow* MainWindow::m_instance = nullptr;
 
 MainWindow* MainWindow::instance()
@@ -100,6 +100,12 @@ void MainWindow::queryUserReady(const UserEntity& localUser)
     m_currentUser = localUser;
     Logger::getInstance().log("[MainWindow] 加载当前用户信息成功！");
     
+    QString img_path = m_currentUser.avatarPath.isEmpty() ? ":/lanchat/bubu.jpg" : "C:/mty/QtProject/LanChat/src" + m_currentUser.avatarPath;
+    QPixmap pixmap(img_path);
+    if (!pixmap.isNull()) {
+        m_avatarLabel->setPixmap(pixmap);
+    }
+
     // 设置用户状态为在线（登录成功后）
     updateUserStatus(true);
     
@@ -269,8 +275,9 @@ void MainWindow::showProfileViewDialog()
     m_userProfile.signure = m_currentUser.signature;
 	m_userProfile.password = m_currentUser.passwordHash;  // 注意：UserProfile.password 存储的是密码哈希
     m_userProfile.rootpath = "C:/mty/QtProject/LanChat/src";//请换成你的绝对路径
-	m_userProfile.avatarpath = m_userProfile.rootpath +m_currentUser.avatarPath;
-    QPixmap pixmap(m_userProfile.avatarpath);
+    m_userProfile.avatarpath = m_currentUser.avatarPath;
+    QPixmap pixmap(m_userProfile.rootpath + m_userProfile.avatarpath);
+
     m_userProfile.avatar = pixmap;
     // 创建并显示个人信息查看对话框
     ProfileViewDialog* viewDialog = new ProfileViewDialog(m_userProfile, this);
@@ -294,7 +301,8 @@ void MainWindow::showProfileViewDialog()
 			m_currentUser.nickname = m_userProfile.nickname;
 			m_currentUser.email = m_userProfile.email;
             m_currentUser.phone = m_userProfile.phone;
-            
+			m_currentUser.signature = m_userProfile.signure;
+            m_currentUser.passwordHash = m_userProfile.password; // 注意：这里存储的是密码哈希
             /*UserEntity user(userid, "", "", "");*/
             DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
             dbCtrl->requesUpdateUser(m_currentUser);

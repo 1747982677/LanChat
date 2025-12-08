@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QTextEdit>  // 新增
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -17,25 +18,30 @@
 #include <QRegularExpression>
 #include <QFile>
 #include <QTextStream>
-
+#include "UserProfile.h"
+#include "utils/password_util.h"
 ProfileEditDialog::ProfileEditDialog(const UserProfile& profile, QWidget* parent)
     : QDialog(parent), m_originalProfile(profile), m_updatedProfile(profile)
     , avatarLabel(nullptr)
     , nicknameEdit(nullptr)
     , emailEdit(nullptr)
     , phoneEdit(nullptr)
+    , signatureEdit(nullptr)  // 新增
     , passwordEdit(nullptr)
+    , confirmPasswordEdit(nullptr)
+    , confirmPasswordLabel(nullptr)
     , uploadButton(nullptr)
     , nicknameModifyBtn(nullptr)
     , emailModifyBtn(nullptr)
     , phoneModifyBtn(nullptr)
+    , signatureModifyBtn(nullptr)  // 新增
     , passwordModifyBtn(nullptr)
     , saveButton(nullptr)
     , cancelButton(nullptr)
 {
     setupUI();
     setWindowTitle("编辑个人信息");
-    setFixedSize(500, 520);
+    setFixedSize(500, 550);  // 调整高度
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     // 安装事件过滤器
@@ -200,7 +206,7 @@ void ProfileEditDialog::setupUI()
             QLabel* titleLabel = new QLabel(title, editFrame);
             titleLabel->setFont(QFont("微软雅黑", 10, QFont::Medium));
             titleLabel->setStyleSheet("color: #555; min-width: 60px;");
-            titleLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+            titleLabel->setAlignment(Qt::AlignCenter);//Qt::AlignRight | Qt::AlignVCenter
 
             // 编辑框
             editField = new QLineEdit(value, editFrame);
@@ -270,8 +276,106 @@ void ProfileEditDialog::setupUI()
     editLayout->addLayout(createEditRow("电话", phoneEdit, phoneModifyBtn, m_originalProfile.phone));
     editLayout->addWidget(createGradientLine(editFrame));
 
+    // === 签名行 ===
+    QHBoxLayout* signatureLayout = new QHBoxLayout();
+    signatureLayout->setSpacing(10);
+
+    QLabel* signatureLabel = new QLabel("签名", editFrame);
+    signatureLabel->setFont(QFont("微软雅黑", 10, QFont::Medium));
+    signatureLabel->setStyleSheet("color: #555; min-width: 60px;");
+    signatureLabel->setAlignment(Qt::AlignCenter);
+
+    signatureEdit = new QTextEdit(m_originalProfile.signure, editFrame);  // 使用QTextEdit
+    signatureEdit->setFont(QFont("微软雅黑", 10));
+    signatureEdit->setMaximumHeight(60);
+    signatureEdit->setStyleSheet(
+        "QTextEdit {"
+        "   border: 1px solid #DDD;"
+        "   border-radius: 4px;"
+        "   padding: 8px 12px;"
+        "   background-color: #F5F5F5;"
+        "   color: #666;"
+        "   max-height: 60px;"
+        "}"
+        "QTextEdit:focus {"
+        "   border-color: #4CAF50;"
+        "   background-color: #FFFFE0;"
+        "}"
+        "QTextEdit:disabled {"
+        "   background-color: #F5F5F5;"
+        "   color: #666;"
+        "}"
+    );
+    signatureEdit->setEnabled(false);
+
+    signatureModifyBtn = new QPushButton("修改", editFrame);
+    signatureModifyBtn->setFixedSize(60, 30);
+    signatureModifyBtn->setFont(QFont("微软雅黑", 9));
+    signatureModifyBtn->setStyleSheet(
+        "QPushButton {"
+        "   background-color: #FF9800;"
+        "   color: white;"
+        "   border: none;"
+        "   border-radius: 4px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #F57C00;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #E65100;"
+        "}"
+        "QPushButton:disabled {"
+        "   background-color: #FFCC80;"
+        "}"
+    );
+
+    signatureLayout->addWidget(signatureLabel);
+    signatureLayout->addWidget(signatureEdit, 1);
+    signatureLayout->addWidget(signatureModifyBtn);
+
+    editLayout->addLayout(signatureLayout);
+    editLayout->addWidget(createGradientLine(editFrame));
+
     // 密码行
     editLayout->addLayout(createEditRow("密码", passwordEdit, passwordModifyBtn, "", true));
+
+    // 确认密码行（初始隐藏）
+    QHBoxLayout* confirmPasswordLayout = new QHBoxLayout();
+    confirmPasswordLayout->setSpacing(10);
+
+    confirmPasswordLabel = new QLabel("确认密码", editFrame);
+    confirmPasswordLabel->setFont(QFont("微软雅黑", 10, QFont::Medium));
+    confirmPasswordLabel->setStyleSheet("color: #555; min-width: 60px;");
+    confirmPasswordLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    confirmPasswordLabel->setVisible(false);
+
+    confirmPasswordEdit = new QLineEdit(editFrame);
+    confirmPasswordEdit->setFont(QFont("微软雅黑", 10));
+    confirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    confirmPasswordEdit->setPlaceholderText("请再次输入新密码");
+    confirmPasswordEdit->setStyleSheet(
+        "QLineEdit {"
+        "   border: 1px solid #DDD;"
+        "   border-radius: 4px;"
+        "   padding: 8px 12px;"
+        "   background-color: white;"
+        "}"
+        "QLineEdit:focus {"
+        "   border-color: #4CAF50;"
+        "   background-color: #FFFFE0;"
+        "}"
+    );
+    confirmPasswordEdit->setVisible(false);
+
+    QLabel* placeholderLabel = new QLabel(editFrame);
+    placeholderLabel->setFixedSize(60, 30);
+    placeholderLabel->setVisible(false);
+
+    confirmPasswordLayout->addWidget(confirmPasswordLabel);
+    confirmPasswordLayout->addWidget(confirmPasswordEdit, 1);
+    confirmPasswordLayout->addWidget(placeholderLabel);
+
+    editLayout->addLayout(confirmPasswordLayout);
 
     // === 按钮区域 ===
     QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -339,13 +443,16 @@ void ProfileEditDialog::setupUI()
     connect(nicknameModifyBtn, &QPushButton::clicked, this, [this]() { onModifyClicked(nicknameEdit, nicknameModifyBtn); });
     connect(emailModifyBtn, &QPushButton::clicked, this, [this]() { onModifyClicked(emailEdit, emailModifyBtn); });
     connect(phoneModifyBtn, &QPushButton::clicked, this, [this]() { onModifyClicked(phoneEdit, phoneModifyBtn); });
-    connect(passwordModifyBtn, &QPushButton::clicked, this, [this]() { onModifyClicked(passwordEdit, passwordModifyBtn); });
+    connect(signatureModifyBtn, &QPushButton::clicked, this, &ProfileEditDialog::onSignatureModifyClicked);
+    connect(passwordModifyBtn, &QPushButton::clicked, this, &ProfileEditDialog::onPasswordModifyClicked);
 
     // 编辑框内容改变时更新按钮状态
     connect(nicknameEdit, &QLineEdit::textChanged, this, [this]() { onEditFieldChanged(nicknameEdit, nicknameModifyBtn); });
     connect(emailEdit, &QLineEdit::textChanged, this, [this]() { onEditFieldChanged(emailEdit, emailModifyBtn); });
     connect(phoneEdit, &QLineEdit::textChanged, this, [this]() { onEditFieldChanged(phoneEdit, phoneModifyBtn); });
-    connect(passwordEdit, &QLineEdit::textChanged, this, [this]() { onEditFieldChanged(passwordEdit, passwordModifyBtn); });
+    connect(signatureEdit, &QTextEdit::textChanged, this, &ProfileEditDialog::onSignatureChanged);
+    connect(passwordEdit, &QLineEdit::textChanged, this, &ProfileEditDialog::onPasswordChanged);
+    connect(confirmPasswordEdit, &QLineEdit::textChanged, this, &ProfileEditDialog::onPasswordChanged);
 
     connect(cancelButton, &QPushButton::clicked, this, &ProfileEditDialog::reject);
     connect(saveButton, &QPushButton::clicked, this, &ProfileEditDialog::onSaveClicked);
@@ -425,9 +532,6 @@ void ProfileEditDialog::onModifyClicked(QLineEdit* editField, QPushButton* modif
         else if (editField == phoneEdit) {
             originalValue = m_originalProfile.phone;
         }
-        else if (editField == passwordEdit) {
-            originalValue = "";
-        }
 
         editField->setText(originalValue);
         editField->setEnabled(false);
@@ -459,15 +563,271 @@ void ProfileEditDialog::onModifyClicked(QLineEdit* editField, QPushButton* modif
     }
 }
 
+void ProfileEditDialog::onSignatureModifyClicked()
+{
+    if (!signatureEdit->isEnabled()) {
+        signatureEdit->setEnabled(true);
+        signatureEdit->setFocus();
+        signatureModifyBtn->setText("取消");
+        signatureModifyBtn->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #F44336;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #D32F2F;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #B71C1C;"
+            "}"
+        );
+    }
+    else {
+        signatureEdit->setText(m_originalProfile.signure);
+        signatureEdit->setEnabled(false);
+        signatureEdit->setStyleSheet(
+            "QTextEdit {"
+            "   border: 1px solid #DDD;"
+            "   border-radius: 4px;"
+            "   padding: 8px 12px;"
+            "   background-color: #F5F5F5;"
+            "   color: #666;"
+            "   max-height: 60px;"
+            "}"
+        );
+
+        signatureModifyBtn->setText("修改");
+        signatureModifyBtn->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #FF9800;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #F57C00;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #E65100;"
+            "}"
+        );
+    }
+}
+
+void ProfileEditDialog::onPasswordModifyClicked()
+{
+    if (!passwordEdit->isEnabled()) {
+        // 启用密码编辑并显示确认密码行
+        passwordEdit->setEnabled(true);
+        passwordEdit->setFocus();
+        passwordEdit->selectAll();
+
+        // 显示确认密码行
+        confirmPasswordLabel->setVisible(true);
+        confirmPasswordEdit->setVisible(true);
+        confirmPasswordEdit->setEnabled(true);
+        confirmPasswordEdit->clear();
+
+        passwordModifyBtn->setText("取消");
+        passwordModifyBtn->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #F44336;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #D32F2F;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #B71C1C;"
+            "}"
+        );
+
+        // 调整对话框高度
+        this->setFixedSize(500, 590);  // 增加高度
+    }
+    else {
+        // 取消密码修改
+        passwordEdit->setText("");
+        passwordEdit->setEnabled(false);
+
+        // 隐藏确认密码行
+        confirmPasswordLabel->setVisible(false);
+        confirmPasswordEdit->setVisible(false);
+        confirmPasswordEdit->clear();
+
+        passwordEdit->setStyleSheet(
+            "QLineEdit {"
+            "   border: 1px solid #DDD;"
+            "   border-radius: 4px;"
+            "   padding: 8px 12px;"
+            "   background-color: #F5F5F5;"
+            "   color: #666;"
+            "}"
+        );
+
+        passwordModifyBtn->setText("修改");
+        passwordModifyBtn->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #FF9800;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #F57C00;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #E65100;"
+            "}"
+        );
+
+        // 恢复对话框高度
+        this->setFixedSize(500, 550);
+    }
+}
+
 void ProfileEditDialog::onEditFieldChanged(QLineEdit* editField, QPushButton* modifyBtn)
 {
     if (editField->isEnabled() && modifyBtn->text() == "取消") {
         // 如果编辑框有内容，启用保存按钮
         bool hasChanges = !editField->text().trimmed().isEmpty();
-        if (editField == passwordEdit || hasChanges) {
+        if (hasChanges) {
             saveButton->setEnabled(true);
         }
     }
+}
+
+void ProfileEditDialog::onSignatureChanged()
+{
+    if (signatureEdit->isEnabled() && signatureModifyBtn->text() == "取消") {
+        saveButton->setEnabled(true);
+    }
+}
+
+void ProfileEditDialog::onPasswordChanged()
+{
+    // 检查密码一致性
+    QString password = passwordEdit->text();
+    QString confirmPassword = confirmPasswordEdit->text();
+
+    // 只有确认密码行可见时才验证一致性
+    if (confirmPasswordEdit->isVisible()) {
+        if (!password.isEmpty() && !confirmPassword.isEmpty()) {
+            if (password != confirmPassword) {
+                // 密码不一致，显示错误样式
+                passwordEdit->setStyleSheet(
+                    "QLineEdit {"
+                    "   border: 1px solid #FF5722;"
+                    "   border-radius: 4px;"
+                    "   padding: 8px 12px;"
+                    "   background-color: #FFF8F7;"
+                    "}"
+                );
+
+                confirmPasswordEdit->setStyleSheet(
+                    "QLineEdit {"
+                    "   border: 1px solid #FF5722;"
+                    "   border-radius: 4px;"
+                    "   padding: 8px 12px;"
+                    "   background-color: #FFF8F7;"
+                    "}"
+                );
+
+                saveButton->setEnabled(false);
+                return;
+            }
+            else {
+                // 密码一致，恢复正常样式
+                passwordEdit->setStyleSheet(
+                    "QLineEdit {"
+                    "   border: 1px solid #4CAF50;"
+                    "   border-radius: 4px;"
+                    "   padding: 8px 12px;"
+                    "   background-color: #F8FFF8;"
+                    "}"
+                );
+
+                confirmPasswordEdit->setStyleSheet(
+                    "QLineEdit {"
+                    "   border: 1px solid #4CAF50;"
+                    "   border-radius: 4px;"
+                    "   padding: 8px 12px;"
+                    "   background-color: #F8FFF8;"
+                    "}"
+                );
+
+                saveButton->setEnabled(true);
+                return;
+            }
+        }
+        else if (!password.isEmpty() && confirmPassword.isEmpty()) {
+            // 只输入了密码，未输入确认密码
+            passwordEdit->setStyleSheet(
+                "QLineEdit {"
+                "   border: 1px solid #FF9800;"
+                "   border-radius: 4px;"
+                "   padding: 8px 12px;"
+                "   background-color: #FFFBF0;"
+                "}"
+            );
+
+            confirmPasswordEdit->setStyleSheet(
+                "QLineEdit {"
+                "   border: 1px solid #DDD;"
+                "   border-radius: 4px;"
+                "   padding: 8px 12px;"
+                "   background-color: white;"
+                "}"
+            );
+
+            saveButton->setEnabled(false);
+            return;
+        }
+    }
+
+    // 默认样式
+    passwordEdit->setStyleSheet(
+        "QLineEdit {"
+        "   border: 1px solid #DDD;"
+        "   border-radius: 4px;"
+        "   padding: 8px 12px;"
+        "   background-color: white;"
+        "}"
+        "QLineEdit:focus {"
+        "   border-color: #4CAF50;"
+        "   background-color: #FFFFE0;"
+        "}"
+    );
+
+    if (confirmPasswordEdit->isVisible()) {
+        confirmPasswordEdit->setStyleSheet(
+            "QLineEdit {"
+            "   border: 1px solid #DDD;"
+            "   border-radius: 4px;"
+            "   padding: 8px 12px;"
+            "   background-color: white;"
+            "}"
+            "QLineEdit:focus {"
+            "   border-color: #4CAF50;"
+            "   background-color: #FFFFE0;"
+            "}"
+        );
+    }
+
+    // 检查其他字段是否有变化
+    bool hasOtherChanges = (
+        nicknameEdit->text() != m_originalProfile.nickname ||
+        emailEdit->text() != m_originalProfile.email ||
+        phoneEdit->text() != m_originalProfile.phone ||
+        signatureEdit->toPlainText() != m_originalProfile.signure ||
+        !password.isEmpty()
+        );
+
+    saveButton->setEnabled(hasOtherChanges);
 }
 
 void ProfileEditDialog::onSaveClicked()
@@ -476,16 +836,31 @@ void ProfileEditDialog::onSaveClicked()
     m_updatedProfile.nickname = nicknameEdit->text().trimmed();
     m_updatedProfile.email = emailEdit->text().trimmed();
     m_updatedProfile.phone = phoneEdit->text().trimmed();
+    m_updatedProfile.signure = signatureEdit->toPlainText().trimmed();  // 新增
 
     QString newPassword = passwordEdit->text().trimmed();
+    QString confirmPassword = confirmPasswordEdit->text().trimmed();
+
+    // 如果密码被修改，需要验证
     if (!newPassword.isEmpty()) {
+        // 验证密码长度
         if (newPassword.length() < 6) {
             QMessageBox::warning(this, "警告", "密码长度不能少于6位！");
             passwordEdit->setFocus();
             passwordEdit->selectAll();
             return;
         }
-        m_updatedProfile.password = newPassword;
+
+        // 如果确认密码行可见，验证一致性
+        if (confirmPasswordEdit->isVisible()) {
+            if (newPassword != confirmPassword) {
+                QMessageBox::warning(this, "警告", "两次输入的密码不一致！");
+                confirmPasswordEdit->setFocus();
+                confirmPasswordEdit->selectAll();
+                return;
+            }
+        }
+        m_updatedProfile.password = PasswordUtil::hashPassword(newPassword);
     }
 
     // 验证必填项
@@ -537,29 +912,6 @@ void ProfileEditDialog::onSaveClicked()
     accept();
 }
 
-//void ProfileEditDialog::updateAvatar(const QString& imagePath)
-//{
-//    QPixmap pixmap(imagePath);
-//    if (!pixmap.isNull()) {
-//        QPixmap roundedPixmap = getRoundedPixmap(pixmap, 80);
-//        m_updatedProfile.avatar = pixmap; // 保存原始图片
-//        avatarLabel->setPixmap(roundedPixmap);
-//        avatarLabel->setText("");
-//
-//        // 移除虚线边框
-//        avatarLabel->setStyleSheet(
-//            "QLabel {"
-//            "   background-color: transparent;"
-//            "   border: none;"
-//            "   border-radius: 40px;"
-//            "}"
-//        );
-//    }
-//    else {
-//        QMessageBox::warning(this, "错误", "无法加载图片文件！");
-//    }
-//}
-
 void ProfileEditDialog::updateAvatar(const QString& imagePath)
 {
     QPixmap pixmap(imagePath);
@@ -568,14 +920,13 @@ void ProfileEditDialog::updateAvatar(const QString& imagePath)
         m_updatedProfile.avatar = pixmap;
         avatarLabel->setPixmap(roundedPixmap);
         avatarLabel->setText("");
-       
 
         // 1. 复制到assets目录
         QString assetsPath = m_updatedProfile.rootpath;
         QFileInfo fileInfo(imagePath);
-        QString suffix = fileInfo.suffix();  // 
-        QString userpicname = "/ui/assets/"+m_updatedProfile.userid +"."+ suffix;
-        QString targetPath = assetsPath + userpicname;  // 固定文件名
+        QString suffix = fileInfo.suffix();
+        QString userpicname = "/ui/assets/" + m_updatedProfile.userid + "." + suffix;
+        QString targetPath = assetsPath + userpicname;
 
         // 删除旧文件（如果存在）
         if (QFile::exists(targetPath)) {
@@ -584,37 +935,6 @@ void ProfileEditDialog::updateAvatar(const QString& imagePath)
 
         // 复制新文件
         if (QFile::copy(imagePath, targetPath)) {
-            // 2. 尝试修改.qrc文件（需要手动重新编译）
-            //QString qrcPath = assetsPath + "resources.qrc";
-            //if (QFile::exists(qrcPath)) {
-            //    // 读取.qrc文件
-            //    QFile qrcFile(qrcPath);
-            //    if (qrcFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            //        QString content = qrcFile.readAll();
-            //        qrcFile.close();
-
-            //        // 检查是否已包含bubu.jpg
-            //        if (!content.contains("bubu1.jpg")) {
-            //            // 在合适的位置添加
-            //            content.replace("</qresource>",
-            //                "    <file>bubu1.jpg</file>\n    </qresource>");
-
-            //            // 写回文件
-            //            if (qrcFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            //                QTextStream out(&qrcFile);
-            //                out << content;
-            //                qrcFile.close();
-
-            //                QMessageBox::information(this, "提示",
-            //                    "头像已保存。请重新编译项目以更新资源文件。\n\n"
-            //                    "可以使用快捷键 Ctrl+B 重新构建。");
-            //            }
-            //        }
-            //    }
-            //}
-
-            // 存储路径
-            //m_updatedProfile.avatarpath = ":/lanchat/bubu1.jpg";
             m_updatedProfile.avatarpath = userpicname;
         }
 
