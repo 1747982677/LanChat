@@ -72,44 +72,16 @@ void NChatView::setSessionInfo(const SessionInfo& info)
 
 void NChatView::appendMessage(const UiMessage& msg, const QString& avatarPath)
 {
-    qDebug() << "[NChatView] ========== appendMessage called ==========";
-    qDebug() << "[NChatView] isSelf:" << msg.isSelf << "content:" << msg.content;
-    Logger::getInstance().log("[NChatView] ========== appendMessage called ==========");
-    Logger::getInstance().log(QString("[NChatView] isSelf: %1, content: %2").arg(msg.isSelf).arg(msg.content));
-    
-    qDebug() << "[NChatView] Creating NChatMessageItem";
-    Logger::getInstance().log("[NChatView] About to create NChatMessageItem");
-    NChatMessageItem* widget = new NChatMessageItem(msg.isSelf, msg.content, avatarPath);
-    qDebug() << "[NChatView] NChatMessageItem created";
-    Logger::getInstance().log("[NChatView] NChatMessageItem created successfully");
 
+    NChatMessageItem* widget = new NChatMessageItem(msg.isSelf, msg.content, avatarPath);
     int viewportWidth = this->viewport()->width();
     int itemRealWidth = viewportWidth - 30;
     if (itemRealWidth < 200) itemRealWidth = 200;
-
-    qDebug() << "[NChatView] Adjusting content, width:" << itemRealWidth;
-    Logger::getInstance().log(QString("[NChatView] Adjusting content, width: %1").arg(itemRealWidth));
     widget->adjustContent(itemRealWidth);
-    qDebug() << "[NChatView] Content adjusted";
-    Logger::getInstance().log("[NChatView] Content adjusted");
-
-    qDebug() << "[NChatView] Creating QListWidgetItem";
-    Logger::getInstance().log("[NChatView] Creating QListWidgetItem");
     QListWidgetItem* item = new QListWidgetItem(this);
-    qDebug() << "[NChatView] QListWidgetItem created";
-    Logger::getInstance().log("[NChatView] QListWidgetItem created");
-
-    qDebug() << "[NChatView] Setting size hint";
-    Logger::getInstance().log("[NChatView] Setting size hint");
     item->setSizeHint(widget->sizeHint());
-    qDebug() << "[NChatView] Size hint set";
-    Logger::getInstance().log("[NChatView] Size hint set");
-
-    qDebug() << "[NChatView] Setting item widget";
-    Logger::getInstance().log("[NChatView] About to call setItemWidget");
     this->setItemWidget(item, widget);
-    qDebug() << "[NChatView] Item widget set - DONE";
-    Logger::getInstance().log("[NChatView] setItemWidget returned - DONE");
+
 }
 
 void NChatView::addTimeItem(const QDateTime& time)

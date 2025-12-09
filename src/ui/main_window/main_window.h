@@ -42,11 +42,17 @@ public:
     // 更新用户状态显示（在线/离线）
     void updateUserStatus(bool isOnline);
     
+    // 获取用户的显示名称（优先级：备注 > 昵称 > 邮箱 > userId）
+    QString getUserDisplayName(const QString& userId);
+    
 	UserEntity m_currentUser; // 当前用户实体
 
 private slots:
     // 处理发送消息
     void onSendMessage(const QString& targetUid, const UiMessage& msg);
+    
+    // 处理接收消息
+    void onMessageReceived(const QJsonObject& msgJson, const QString& from);
     
     // 加载好友申请列表
     void loadFriendRequests();
@@ -68,7 +74,11 @@ private:
     QLabel* m_avatarLabel;
     QLabel* m_statusLabel;  // 状态标签（在线/离线）
     QButtonGroup* m_sideButtonGroup;
+    QPushButton* m_messageButton;  // 消息按钮引用
+    QLabel* m_unreadBadge;  // 未读消息红点标签
     void setupLeftNav();
+    void updateUnreadBadge();  // 更新未读消息提示
+    int getTotalUnreadCount();  // 获取总未读消息数
 
     // 中间页面
     QStackedWidget* m_contactPages;

@@ -9,46 +9,46 @@
 #include <QList>
 
 namespace LanChat {
-	//----------Ã¶¾Ù¶¨Òå----------
-	//ÏûÏ¢ÀàĞÍ
+	//----------Ã¶ï¿½Ù¶ï¿½ï¿½ï¿½----------
+	//ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
 	enum class MessageType {
-		Text = 0,   //ÎÄ±¾ÏûÏ¢
-		Image = 1,  //Í¼Æ¬ÏûÏ¢
-		Voice = 2,  //ÓïÒôÏûÏ¢
-		System = 99 //ÏµÍ³ÏûÏ¢
+		Text = 0,   //ï¿½Ä±ï¿½ï¿½ï¿½Ï¢
+		Image = 1,  //Í¼Æ¬ï¿½ï¿½Ï¢
+		Voice = 2,  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+		System = 99 //ÏµÍ³ï¿½ï¿½Ï¢
 	};
-	//ÏûÏ¢×´Ì¬£¨UIÏÔÊ¾ÓÃ£©
+	//ï¿½ï¿½Ï¢×´Ì¬ï¿½ï¿½UIï¿½ï¿½Ê¾ï¿½Ã£ï¿½
 	enum class MessageStatus {
-		Pending = 0, //·¢ËÍÖĞ(×ªÈ¦loading)
-		Sent = 1,    //ÒÑ·¢ËÍ
-		Read = 2,    //ÒÑ¶Á(ÂÌÉ«¶Ô¹´)
-		Failed = 3   //·¢ËÍÊ§°Ü(ºìÉ«¸ĞÌ¾ºÅ)
+		Pending = 0, //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(×ªÈ¦loading)
+		Sent = 1,    //ï¿½Ñ·ï¿½ï¿½ï¿½
+		Read = 2,    //ï¿½Ñ¶ï¿½(ï¿½ï¿½É«ï¿½Ô¹ï¿½)
+		Failed = 3   //ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½(ï¿½ï¿½É«ï¿½ï¿½Ì¾ï¿½ï¿½)
 	};
-	//ÓÃ»§×´Ì¬
+	//ï¿½Ã»ï¿½×´Ì¬
 	enum class UserStatus {
-		Offline = 0, //ÀëÏß(»ÒÉ«¿ÕĞÄµã)
-		Online = 1,  //ÔÚÏß(ÂÌÉ«ÊµĞÄµã)
-		Busy = 2,    //Ã¦Âµ(»ÆÉ«ÊµĞÄµã)
+		Offline = 0, //ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½É«ï¿½ï¿½ï¿½Äµï¿½)
+		Online = 1,  //ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½É«Êµï¿½Äµï¿½)
+		Busy = 2,    //Ã¦Âµ(ï¿½ï¿½É«Êµï¿½Äµï¿½)
 	};
-	//ºÃÓÑÉêÇë´¦Àí×´Ì¬
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë´¦ï¿½ï¿½×´Ì¬
 	enum class FriendRequestStatus {
-		Pending = 0, //´ı´¦Àí(ÏÔÊ¾Í¬Òâ°´Å¥)
-		Accepted = 1,//ÒÑ½ÓÊÜ(ÏÔÊ¾ÒÑÌí¼Ó)
-		Rejected = 2 //ÒÑ¾Ü¾ø
+		Pending = 0, //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½Ê¾Í¬ï¿½â°´Å¥)
+		Accepted = 1,//ï¿½Ñ½ï¿½ï¿½ï¿½(ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
+		Rejected = 2 //ï¿½Ñ¾Ü¾ï¿½
 	};
-	//----------ÊµÌå½á¹¹Ìå----------
-	//ÓÃ»§ÏêÏ¸ĞÅÏ¢(¿ÉÓÃÓÚ¸öÈË×ÊÁÏÒ³¡¢ÁªÏµÈËÏêÇé)
+	//----------Êµï¿½ï¿½á¹¹ï¿½ï¿½----------
+	//ï¿½Ã»ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢(ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 	struct UserInfo{
-		QString userId;		//ÓÃ»§Î¨Ò»ID
-		QString account;	//ÓÃ»§ÕËºÅ
-		QString nickname;	//ÓÃ»§êÇ³Æ
-		QString avatarPath;	//Í·ÏñÎÄ¼şÂ·¾¶
-		QString email;		//µç×ÓÓÊÏä
-		QString phone;		//ÁªÏµµç»°
-		QString signature;	//¸öĞÔÇ©Ãû
-		UserStatus status = UserStatus::Offline;	//ÓÃ»§×´Ì¬
+		QString userId;		//ï¿½Ã»ï¿½Î¨Ò»ID
+		QString account;	//ï¿½Ã»ï¿½ï¿½Ëºï¿½
+		QString nickname;	//ï¿½Ã»ï¿½ï¿½Ç³ï¿½
+		QString avatarPath;	//Í·ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+		QString email;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		QString phone;		//ï¿½ï¿½Ïµï¿½ç»°
+		QString signature;	//ï¿½ï¿½ï¿½ï¿½Ç©ï¿½ï¿½
+		UserStatus status = UserStatus::Offline;	//ï¿½Ã»ï¿½×´Ì¬
 
-		//ĞòÁĞ»¯£º½«ÓÃ»§ÏêÏ¸ĞÅÏ¢×ªJSON·¢ËÍ¸øÍøÂç²ã
+		//ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢×ªJSONï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		QJsonObject toJson() const {
 			QJsonObject json;
 			json["userId"] = userId;
@@ -61,7 +61,7 @@ namespace LanChat {
 			json["status"] = static_cast<int>(status);
 			return json;
 		}
-		//·´ĞòÁĞ»¯£º´ÓÍøÂç²ã½âÎöJSON³ÉÓÃ»§ÏêÏ¸ĞÅÏ¢
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½JSONï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢
 		static UserInfo fromJson(const QJsonObject& json) {
 			UserInfo userInfo;
 			userInfo.userId = json["userId"].toString();
@@ -76,21 +76,21 @@ namespace LanChat {
 		}
 
 	};
-	//ÁÄÌìÏûÏ¢ÊµÌå(¿ÉÓÃÓÚÁÄÌì¿ò¡¢±¾µØ´æ´¢)
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Êµï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò¡¢±ï¿½ï¿½Ø´æ´¢)
 	struct Message {
-		QString messageId;      //ÏûÏ¢Î¨Ò»ID
-		QString senderId;       //·¢ËÍÕßÓÃ»§ID
-		QString receiverId;     //½ÓÊÕÕßÓÃ»§ID
-		QString content;        //ÏûÏ¢ÄÚÈİ(ÎÄ±¾»òÍ¼Æ¬Â·¾¶)
-		MessageType type = MessageType::Text; //ÏûÏ¢ÀàĞÍ
-		MessageStatus status = MessageStatus::Pending; //ÏûÏ¢×´Ì¬
-		qint64 timestamp = 0;      //ÏûÏ¢·¢ËÍÊ±¼ä(Ê±¼ä´Á)
+		QString messageId;      //ï¿½ï¿½Ï¢Î¨Ò»ID
+		QString senderId;       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ID
+		QString receiverId;     //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ID
+		QString content;        //ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½(ï¿½Ä±ï¿½ï¿½ï¿½Í¼Æ¬Â·ï¿½ï¿½)
+		MessageType type = MessageType::Text; //ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
+		MessageStatus status = MessageStatus::Pending; //ï¿½ï¿½Ï¢×´Ì¬
+		qint64 timestamp = 0;      //ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½(Ê±ï¿½ï¿½ï¿½)
 
-		//¸¨Öúº¯Êı£ºÅĞ¶ÏÊÇ·ñÊÇ×Ô¼º·¢ËÍµÄÏûÏ¢(¿ÉÓÃÓÚ:UI¾ö¶¨ÆøÅİÔÚ×ó»¹ÊÇÔÚÓÒ)
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Ï¢(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 		bool isSelf(const QString& currentUserId) const {
 			return senderId == currentUserId;
 		}
-		//ĞòÁĞ»¯£º½«ÁÄÌìĞÅÏ¢×ªJSON·¢ËÍ¸øÍøÂç²ã
+		//ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢×ªJSONï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		QJsonObject toJson() const {
 			QJsonObject json;
 			json["messageId"] = messageId;
@@ -101,7 +101,7 @@ namespace LanChat {
 			json["timestamp"] = timestamp;
 			return json;
 		}
-		//·´ĞòÁĞ»¯£º´ÓÍøÂç²ã½âÎöJSON³ÉÁÄÌìĞÅÏ¢
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½JSONï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 		static Message fromJson(const QJsonObject& json) {
 			Message msg;
 			msg.messageId = json["messageId"].toString();
@@ -110,54 +110,54 @@ namespace LanChat {
 			msg.content = json["content"].toString();
 			msg.type = static_cast<MessageType>(json["type"].toInt());
 			msg.timestamp = json["timestamp"].toVariant().toLongLong();
-			msg.status = MessageStatus::Sent; // ÊÕµ½±ğÈËµÄÏûÏ¢£¬Ä¬ÈÏÎªÒÑ·¢ËÍ
+			msg.status = MessageStatus::Sent; // ï¿½Õµï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ä¬ï¿½ï¿½Îªï¿½Ñ·ï¿½ï¿½ï¿½
 			return msg;
 		}
 	};
-	//»á»°/ÁªÏµÈËÊµÌå(¿ÉÓÃÓÚÁªÏµÈËÁĞ±í¡¢ÏûÏ¢ÁĞ±í)
+	//ï¿½á»°/ï¿½ï¿½Ïµï¿½ï¿½Êµï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ğ±ï¿½)
 	struct ChatSession {
-	//»ù´¡ĞÅÏ¢
-		QString userId;			//¶Ô·½ID
-		QString nickname;		//¶Ô·½êÇ³Æ
-		QString remark;			//±¸×¢Ãû
-		QString avatarPath;		//Í·ÏñÎÄ¼şÂ·¾¶
-		UserStatus status = UserStatus::Offline; //ÓÃ»§×´Ì¬
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+		QString userId;			//ï¿½Ô·ï¿½ID
+		QString nickname;		//ï¿½Ô·ï¿½ï¿½Ç³ï¿½
+		QString remark;			//ï¿½ï¿½×¢ï¿½ï¿½
+		QString avatarPath;		//Í·ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+		UserStatus status = UserStatus::Offline; //ï¿½Ã»ï¿½×´Ì¬
 
-	//»á»°×´Ì¬ĞÅÏ¢
-		QString lastMessage;		//×îºóÒ»ÌõÏûÏ¢ÄÚÈİ
-		qint64 lastTime = 0;		//×îºóÏûÏ¢Ê±¼ä(Ê±¼ä´Á)
-		int unreadCount = 0;		//Î´¶ÁÏûÏ¢Êı
-		bool isTop = false;			//ÊÇ·ñÖÃ¶¥
+	//ï¿½á»°×´Ì¬ï¿½ï¿½Ï¢
+		QString lastMessage;		//ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
+		qint64 lastTime = 0;		//ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½(Ê±ï¿½ï¿½ï¿½)
+		int unreadCount = 0;		//Î´ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
+		bool isTop = false;			//ï¿½Ç·ï¿½ï¿½Ã¶ï¿½
 
-	//¸¨Öúº¯Êı£ºUIÏÔÊ¾µÄÃû³Æ(ÓÅÏÈÏÔÊ¾±¸×¢£¬Æä´ÎêÇ³Æ)
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç³ï¿½)
 		QString displayName() const {
 			return remark.isEmpty() ? nickname : remark;
 		}
 	};
 
-	//ºÃÓÑÉêÇë¼ÇÂ¼(¿ÉÓÃÓÚºÃÓÑÉêÇëÁĞ±í)
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼(ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½)
 	struct FriendRequest {
-		QString requestId;          //ÉêÇëÎ¨Ò»ID
-		QString senderId;			//ÉêÇëÈËÓÃ»§ID
-		QString senderAccount;		//ÉêÇëÈËÕËºÅ
-		QString senderNickname;		//ÉêÇëÈËêÇ³Æ
-		QString avatarPath;			//ÉêÇëÈËÍ·ÏñÂ·¾¶
-		QString verifymsg;			//ÑéÖ¤ÏûÏ¢(ÈçÎÒÊÇÄ³Ä³Ä³)
-		FriendRequestStatus status = FriendRequestStatus::Pending; //´¦Àí×´Ì¬
-		qint64 timestamp = 0;        //ÉêÇëÊ±¼ä(Ê±¼ä´Á)
+		QString requestId;          //ï¿½ï¿½ï¿½ï¿½Î¨Ò»ID
+		QString senderId;			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ID
+		QString senderAccount;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½
+		QString senderNickname;		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç³ï¿½
+		QString avatarPath;			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Â·ï¿½ï¿½
+		QString verifymsg;			//ï¿½ï¿½Ö¤ï¿½ï¿½Ï¢(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³Ä³Ä³)
+		FriendRequestStatus status = FriendRequestStatus::Pending; //ï¿½ï¿½ï¿½ï¿½×´Ì¬
+		qint64 timestamp = 0;        //ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½(Ê±ï¿½ï¿½ï¿½)
 	};
-	//Ó¦ÓÃÉèÖÃÅäÖÃ(¿ÉÓÃÓÚ£ºÉèÖÃÒ³Ãæ)
+	//Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½)
 	struct AppConfig {
-		bool darkTheme = false; // ÉîÉ«Ä£Ê½/Ç³É«Ä£Ê½
-		int fontSize = 14;      // ×ÖÌå´óĞ¡ (¶ÔÓ¦»¬¿é)
-		QString savePath;       // ÎÄ¼ş´æ´¢Â·¾¶
-		bool rememberPassword = false; // ¼Ç×¡ÃÜÂë
+		bool darkTheme = false; // ï¿½ï¿½É«Ä£Ê½/Ç³É«Ä£Ê½
+		int fontSize = 14;      // ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ (ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½)
+		QString savePath;       // ï¿½Ä¼ï¿½ï¿½æ´¢Â·ï¿½ï¿½
+		bool rememberPassword = false; // ï¿½ï¿½×¡ï¿½ï¿½ï¿½ï¿½
 	};
 
 }
 
-//----------ÔªÀàĞÍ×¢²á(qt±ØĞë)----------
-// ±ØĞëÔÚ namespace Íâ²¿×¢²á£¬·ñÔòĞÅºÅ²ÛÎŞ·¨´«µİ×Ô¶¨Òå½á¹¹Ìå
+//----------Ôªï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½(qtï¿½ï¿½ï¿½ï¿½)----------
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ namespace ï¿½â²¿×¢ï¿½á£¬ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅ²ï¿½ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½
 Q_DECLARE_METATYPE(LanChat::UserInfo)
 Q_DECLARE_METATYPE(LanChat::Message)
 Q_DECLARE_METATYPE(LanChat::ChatSession)

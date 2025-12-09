@@ -90,26 +90,24 @@ bool ChatInputWidget::eventFilter(QObject* watched, QEvent* event)
 
 void ChatInputWidget::onSendClicked()
 {
-    qDebug() << "[ChatInputWidget] ========== onSendClicked called ==========";
+    
     Logger::getInstance().log("[ChatInputWidget] ========== onSendClicked called ==========");
     
     QString text = m_textEdit->toPlainText();
-    qDebug() << "[ChatInputWidget] Text:" << text;
+    
     Logger::getInstance().log(QString("[ChatInputWidget] Text: %1").arg(text));
     
     if (text.isEmpty()) {
-        qDebug() << "[ChatInputWidget] Text is empty, returning";
+
         Logger::getInstance().log("[ChatInputWidget] Text is empty, returning");
         return;
     }
 
-    qDebug() << "[ChatInputWidget] Emitting signalSendMessage";
+    
     Logger::getInstance().log("[ChatInputWidget] Emitting signalSendMessage");
     emit signalSendMessage(text);
-    qDebug() << "[ChatInputWidget] Signal emitted, clearing text";
     Logger::getInstance().log("[ChatInputWidget] Signal emitted, clearing text");
     m_textEdit->clear(); // 发送完清空
-    qDebug() << "[ChatInputWidget] Text cleared";
     Logger::getInstance().log("[ChatInputWidget] Text cleared");
 }
 

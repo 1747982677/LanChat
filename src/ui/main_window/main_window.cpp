@@ -18,11 +18,14 @@
 #include "ui/personinfo/ProfileViewDialog.h"
 #include "add_friend_dialog.h"
 #include "friend_request_item.h"
+#include "SessionListItem.h"
 #include "service/auth_service.h"
 #include "utils/logger.h"
+#include "utils/db_manager.h"
 #include "core/network_controller.h"
 #include "core/app_context.h"
 #include "common/types.h"
+#include "model/message_dao.h"
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -37,6 +40,9 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDebug>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include "core/app_context.h"
 #include "core/dblogic_controller.h"
 
@@ -77,7 +83,11 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_sessionList, &SessionList::sessionSelected,
         m_chatPage, &ChatWindow::setSessionInfo);
     
-
+    // 当会话被选中时，更新未读消息提示（因为会清除该会话的未读数）
+    connect(m_sessionList, &SessionList::sessionSelected,
+        this, [this](const SessionInfo&) {
+            updateUnreadBadge();
+        });
 }
 void MainWindow::updateUserReady(const bool& glag)
 {
@@ -213,6 +223,30 @@ void MainWindow::setupLeftNav()
 
         tabLayout->addWidget(btn);
         m_sideButtonGroup->addButton(btn, i);
+        
+        // 保存"消息"按钮的引用（第一个按钮）
+        if (i == 0) {
+            m_messageButton = btn;
+            
+            // 创建未读消息红点标签
+            m_unreadBadge = new QLabel(btn);
+            m_unreadBadge->setAlignment(Qt::AlignCenter);
+            m_unreadBadge->setStyleSheet(
+                "QLabel {"
+                "   background-color: #ff4d4f;"
+                "   color: white;"
+                "   border-radius: 9px;"
+                "   font-size: 11px;"
+                "   font-weight: bold;"
+                "   padding: 1px 5px;"
+                "}"
+            );
+            m_unreadBadge->setMinimumSize(18, 18);
+            m_unreadBadge->hide();  // 初始隐藏
+            
+            // 定位红点到按钮右上角
+            m_unreadBadge->move(btn->width() - 20, 5);
+        }
     }
 
     tabLayout->addStretch();
@@ -227,6 +261,11 @@ void MainWindow::setupLeftNav()
             if (type == PageType::ChatPage || type == PageType::FriendInfo) {
                 m_contactPages->setCurrentIndex(id);
                 setRightPages(type);   // 使用你封装好的页面切换函数
+                
+                // 如果切换到消息页面，清除未读消息提示
+                if (type == PageType::ChatPage) {
+                    updateUnreadBadge();
+                }
             }
             // 2: 设置 → 弹出设置弹窗
             else if (type == SettingsPage) {
@@ -400,7 +439,7 @@ void MainWindow::setupPages()
     //===================== 创建页面 =====================
     m_pages = new QStackedWidget(this);
 
-    //聊天框（使用 ui/chatpage/chatwindow.h 实现的完整聊天窗口）
+    //聊天框
     Logger::getInstance().log("[MainWindow] Creating ChatWindow (ui/chatpage version)...");
     m_chatPage = new ChatWindow(this);
     Logger::getInstance().log(QString("[MainWindow] ChatWindow (chatpage) created at: %1").arg((quintptr)m_chatPage, 0, 16));
@@ -408,6 +447,16 @@ void MainWindow::setupPages()
     // 连接发送消息信号
     connect(m_chatPage, &ChatWindow::sigSendMessage,
             this, &MainWindow::onSendMessage);
+    
+    // 连接接收消息信号 - 更新消息列表
+    NetworkController* netCtrl = AppContext::instance().networkController();
+    if (netCtrl) {
+        connect(netCtrl, &NetworkController::messageReceived,
+                this, &MainWindow::onMessageReceived);
+        Logger::getInstance().log("[MainWindow] Connected to NetworkController::messageReceived for SessionList updates");
+    } else {
+        Logger::getInstance().error("[MainWindow] NetworkController is null, cannot connect messageReceived signal!");
+    }
     
     // 联系人资料
     m_friendInfoPage = new QWidget(this);
@@ -521,6 +570,197 @@ void MainWindow::onSendMessage(const QString& targetUid, const UiMessage& msg)
         qDebug() << "[MainWindow] NetworkController is null!";
     }
     qDebug() << "[MainWindow] onSendMessage finished";
+}
+//根据发送方的Id获取账号、备注等信息
+QString MainWindow::getUserDisplayName(const QString& userId)
+{
+    Logger::getInstance().log(QString("[MainWindow] getUserDisplayName called for userId: %1").arg(userId));
+    
+    // 获取当前登录用户ID
+    AuthService& authService = AuthService::getInstance();
+    QString currentUserId = authService.getCurrentUserId();
+    
+    if (currentUserId.isEmpty()) {
+        Logger::getInstance().warning("[MainWindow] Cannot get user display name: not logged in");
+        return userId;
+    }
+    
+    Logger::getInstance().log(QString("[MainWindow] Current logged in user: %1").arg(currentUserId));
+    
+    // 查询数据库获取用户信息
+    QSqlDatabase db = DatabaseManager::getInstance().database();
+    if (!db.isOpen()) {
+        Logger::getInstance().error("[MainWindow] Database is not open");
+        return userId;
+    }
+    
+    QString displayName = userId;  // 默认使用userId
+    
+    // 1. 先查询是否有备注（从friends表）
+    QSqlQuery friendQuery(db);
+    friendQuery.prepare("SELECT remark FROM friends WHERE userId = :currentUserId AND friendId = :friendId");
+    friendQuery.bindValue(":currentUserId", currentUserId);
+    friendQuery.bindValue(":friendId", userId);
+    
+    Logger::getInstance().log(QString("[MainWindow] Querying friends table for remark..."));
+    QString remark;
+    if (friendQuery.exec() && friendQuery.next()) {
+        remark = friendQuery.value("remark").toString();
+        Logger::getInstance().log(QString("[MainWindow] Friend query result - remark: '%1'").arg(remark));
+        if (!remark.isEmpty()) {
+            displayName = remark;
+            Logger::getInstance().log(QString("[MainWindow] Using remark as displayName: %1").arg(remark));
+            return displayName;
+        }
+    } else {
+        Logger::getInstance().log(QString("[MainWindow] No friend record found or query failed: %1")
+                                 .arg(friendQuery.lastError().text()));
+    }
+    
+    // 2. 查询用户的昵称和邮箱（从public.db的users表）
+    QSqlDatabase publicDb = DatabaseManager::getInstance().database("public");
+    if (!publicDb.isOpen()) {
+        Logger::getInstance().error("[MainWindow] Public database is not open");
+        return userId;
+    }
+    
+    QSqlQuery userQuery(publicDb);
+    userQuery.prepare("SELECT nickname, email FROM users WHERE userId = :userId");
+    userQuery.bindValue(":userId", userId);
+    
+    Logger::getInstance().log(QString("[MainWindow] Querying public.db users table..."));
+    if (userQuery.exec() && userQuery.next()) {
+        QString nickname = userQuery.value("nickname").toString();
+        QString email = userQuery.value("email").toString();
+        
+        Logger::getInstance().log(QString("[MainWindow] User query result - nickname: '%1', email: '%2'")
+                                 .arg(nickname).arg(email));
+        
+        // 优先使用昵称
+        if (!nickname.isEmpty()) {
+            displayName = nickname;
+            Logger::getInstance().log(QString("[MainWindow] Using nickname as displayName: %1").arg(nickname));
+        }
+        // 其次使用邮箱
+        else if (!email.isEmpty()) {
+            displayName = email;
+            Logger::getInstance().log(QString("[MainWindow] Using email as displayName: %1").arg(email));
+        }
+    } else {
+        Logger::getInstance().warning(QString("[MainWindow] User not found in public database: %1, error: %2")
+                                     .arg(userId).arg(userQuery.lastError().text()));
+    }
+    
+    Logger::getInstance().log(QString("[MainWindow] Final displayName for %1: %2").arg(userId).arg(displayName));
+    return displayName;
+}
+
+void MainWindow::onMessageReceived(const QJsonObject& msgJson, const QString& from)
+{
+    qDebug() << "[MainWindow] onMessageReceived called - from:" << from;
+    Logger::getInstance().log(QString("[MainWindow] Message received from: %1").arg(from));
+    
+    // 反序列化消息
+    LanChat::Message msg = LanChat::Message::fromJson(msgJson);
+    
+    // 构造 UiMessage
+    UiMessage uiMsg;
+    uiMsg.mid = msg.messageId;
+    uiMsg.senderId = msg.senderId;
+    uiMsg.content = msg.content;
+    uiMsg.timestamp = QDateTime::fromMSecsSinceEpoch(msg.timestamp);
+    uiMsg.isSelf = false;
+    
+    // 查找或创建会话信息
+    SessionInfo sessionInfo;
+    bool sessionFound = false;
+    
+    // 遍历现有会话列表，查找是否已存在该会话
+    for (int i = 0; i < m_sessionList->count(); ++i) {
+        QWidget* w = m_sessionList->itemWidget(m_sessionList->item(i));
+        SessionListItem* sItem = qobject_cast<SessionListItem*>(w);
+        if (sItem && sItem->getData().uid() == msg.senderId) {
+            sessionInfo = sItem->getData();
+            sessionFound = true;
+            break;
+        }
+    }
+    
+    // 如果会话不存在，创建新会话并查询发送者信息
+    if (!sessionFound) {
+        sessionInfo.setUid(msg.senderId);
+        
+        // 从数据库查询发送者的显示名称
+        QString displayName = getUserDisplayName(msg.senderId);
+        sessionInfo.setUsername(displayName);
+        sessionInfo.setAvatarPath(""); // 可以后续从数据库加载头像
+        Logger::getInstance().log(QString("[MainWindow] Creating new session for: %1 with displayName: %2")
+                                 .arg(msg.senderId).arg(displayName));
+    }
+    
+    // 更新会话信息
+    sessionInfo.addNewMessage(uiMsg);
+    
+    // 更新或插入会话到列表
+    m_sessionList->upsertSession(sessionInfo);
+    
+    // 重新排序会话列表（将有新消息的会话置顶）
+    m_sessionList->sortSessions();
+    
+    // 更新侧边栏未读消息提示
+    updateUnreadBadge();
+    
+    Logger::getInstance().log(QString("[MainWindow] SessionList updated for: %1, unread count: %2")
+                             .arg(msg.senderId).arg(sessionInfo.unreadCount()));
+    qDebug() << "[MainWindow] SessionList updated successfully";
+}
+//获取
+int MainWindow::getTotalUnreadCount()
+{
+    int totalUnread = 0;
+    
+    // 遍历所有会话，累加未读消息数
+    for (int i = 0; i < m_sessionList->count(); ++i) {
+        QWidget* w = m_sessionList->itemWidget(m_sessionList->item(i));
+        SessionListItem* sItem = qobject_cast<SessionListItem*>(w);
+        if (sItem) {
+            totalUnread += sItem->getData().unreadCount();
+        }
+    }
+    
+    return totalUnread;
+}
+
+void MainWindow::updateUnreadBadge()
+{
+    if (!m_unreadBadge || !m_messageButton) {
+        return;
+    }
+    
+    int totalUnread = getTotalUnreadCount();
+    
+    if (totalUnread > 0) {
+        // 显示未读消息数
+        if (totalUnread > 99) {
+            m_unreadBadge->setText("99+");
+        } else {
+            m_unreadBadge->setText(QString::number(totalUnread));
+        }
+        m_unreadBadge->adjustSize();
+        m_unreadBadge->setMinimumSize(18, 18);
+        
+        // 重新定位红点到按钮右上角
+        int badgeX = m_messageButton->width() - m_unreadBadge->width() - 5;
+        int badgeY = 5;
+        m_unreadBadge->move(badgeX, badgeY);
+        
+        m_unreadBadge->show();
+        Logger::getInstance().log(QString("[MainWindow] Unread badge updated: %1 messages").arg(totalUnread));
+    } else {
+        // 没有未读消息，隐藏红点
+        m_unreadBadge->hide();
+        Logger::getInstance().log("[MainWindow] Unread badge hidden (no unread messages)");
+    }
 }
 
 void MainWindow::setupUi()
