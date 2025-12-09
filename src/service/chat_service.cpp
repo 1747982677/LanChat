@@ -151,7 +151,10 @@ bool ChatService::initAsServer(quint16 serverPort)
     if (!m_socketServer->startServer(serverPort)) {
         Logger::getInstance().error("ChatService: Failed to start server.");
         emit errorOccurred("Failed to start server.");
-        return false;
+
+        // 端口占用等原因导致启动失败时，尝试作为客户端连接本地已存在的服务器
+        Logger::getInstance().warning("ChatService: Fallback to client mode (127.0.0.1) after server start failure");
+        return initAsClient("127.0.0.1", serverPort);
     }
     
     Logger::getInstance().log(QString("ChatService: Server started on port %1 for user %2")

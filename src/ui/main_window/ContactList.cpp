@@ -144,10 +144,12 @@ void ContactList::displayContacts(const QJsonArray& contacts)
         });
         
         connect(item, &ContactItem::clicked, this, [this, friendId, displayName](ContactItem* w) {
-            // 打开对应聊天页
-            MainWindow::instance()->setRightPages(MainWindow::ChatPage);
-            // TODO: 设置当前聊天对象
-            // ChatService::getInstance().setActiveChatUserId(friendId);
+            Q_UNUSED(w);
+            // 打开对应聊天页，并切换到该好友的会话
+            MainWindow* mw = MainWindow::instance();
+            if (mw) {
+                mw->openChatPage(friendId, displayName);
+            }
         });
         
         m_containerLayout->insertWidget(i, item);

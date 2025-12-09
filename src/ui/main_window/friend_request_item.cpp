@@ -17,15 +17,25 @@ FriendRequestItem::FriendRequestItem(const QString& requestId,
     setupStyle();
     
     // 设置数据
-    if (!avatarPath.isEmpty()) {
-        QPixmap pixmap(avatarPath);
-        if (!pixmap.isNull()) {
-            m_avatarLabel->setPixmap(pixmap.scaled(50, 50, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    QString finalAvatarPath = avatarPath;
+    
+    // 如果头像路径为空，使用默认头像
+    if (finalAvatarPath.isEmpty()) {
+        finalAvatarPath = ":/lanchat/bubu.jpg";
+    }
+    
+    QPixmap pixmap(finalAvatarPath);
+    if (!pixmap.isNull()) {
+        m_avatarLabel->setPixmap(pixmap.scaled(50, 50, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    } else {
+        // 如果默认头像也加载失败，尝试加载默认头像路径再试一次
+        QPixmap defaultPixmap(":/lanchat/bubu.jpg");
+        if (!defaultPixmap.isNull()) {
+            m_avatarLabel->setPixmap(defaultPixmap.scaled(50, 50, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         } else {
+            // 如果默认头像也加载失败，显示文字提示
             m_avatarLabel->setText("头像");
         }
-    } else {
-        m_avatarLabel->setText("头像");
     }
     
     m_nicknameLabel->setText(senderNickname.isEmpty() ? "未设置昵称" : senderNickname);
@@ -40,6 +50,7 @@ void FriendRequestItem::setupUi()
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
     mainLayout->setContentsMargins(15, 10, 15, 10);
     mainLayout->setSpacing(12);
+    mainLayout->setAlignment(Qt::AlignTop);  // 设置布局顶部对齐
     
     // 头像
     m_avatarLabel = new QLabel(this);
@@ -47,13 +58,14 @@ void FriendRequestItem::setupUi()
     m_avatarLabel->setScaledContents(true);
     m_avatarLabel->setAlignment(Qt::AlignCenter);
     m_avatarLabel->setStyleSheet("border: 1px solid #e0e0e0; border-radius: 4px; background-color: #f5f5f5;");
-    mainLayout->addWidget(m_avatarLabel);
+    mainLayout->addWidget(m_avatarLabel, 0, Qt::AlignTop);  // 头像顶部对齐
     
     // 中间信息区域
     QWidget* infoWidget = new QWidget(this);
     QVBoxLayout* infoLayout = new QVBoxLayout(infoWidget);
     infoLayout->setContentsMargins(0, 0, 0, 0);
     infoLayout->setSpacing(4);
+    infoLayout->setAlignment(Qt::AlignTop);  // 信息区域顶部对齐
     
     m_nicknameLabel = new QLabel(infoWidget);
     m_nicknameLabel->setStyleSheet("font-size: 15px; font-weight: bold; color: #333;");
@@ -68,8 +80,8 @@ void FriendRequestItem::setupUi()
     m_verifymsgLabel->setWordWrap(true);
     infoLayout->addWidget(m_verifymsgLabel);
     
-    infoLayout->addStretch();
-    mainLayout->addWidget(infoWidget, 1);
+    // 移除 addStretch()，让信息置顶显示
+    mainLayout->addWidget(infoWidget, 1, Qt::AlignTop);  // 信息区域顶部对齐
     
     // 同意按钮
     m_acceptButton = new QPushButton("同意", this);
@@ -90,7 +102,7 @@ void FriendRequestItem::setupUi()
         "}"
     );
     connect(m_acceptButton, &QPushButton::clicked, this, &FriendRequestItem::onAcceptButtonClicked);
-    mainLayout->addWidget(m_acceptButton);
+    mainLayout->addWidget(m_acceptButton, 0, Qt::AlignTop);  // 按钮顶部对齐
 }
 
 void FriendRequestItem::setupStyle()

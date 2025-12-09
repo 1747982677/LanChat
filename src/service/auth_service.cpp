@@ -25,26 +25,28 @@ AuthService::AuthService(QObject* parent)
     config.load("config.ini");
     
     // 构造函数：初始化成员变量
-    // 可以尝试从本地加载已保存的 Token
-    m_token = loadTokenFromLocal();
-    if (!m_token.isEmpty()) {
-        // 验证本地 Token 是否有效
-        if (validateToken(m_token)) {
-            // 从 Token 中提取 userId（Token格式：userId_timestamp_hash）
-            QStringList parts = m_token.split('_');
-            if (parts.size() >= 2) {
-                m_currentUserId = parts[0];
-                m_isLoggedIn = true;
-                Logger::getInstance().log("Loaded token from local storage, userId: " + m_currentUserId);
-                qDebug() << "=== AuthService: Loaded userId from token:" << m_currentUserId << "===";
+    // 是否允许自动加载本地 token 可通过配置控制（默认关闭）
+    if (isAutoLoginEnabled()) {
+        m_token = loadTokenFromLocal();
+        if (!m_token.isEmpty()) {
+            // 验证本地 Token 是否有效
+            if (validateToken(m_token)) {
+                // 从 Token 中提取 userId（Token格式：userId_timestamp_hash）
+                QStringList parts = m_token.split('_');
+                if (parts.size() >= 2) {
+                    m_currentUserId = parts[0];
+                    m_isLoggedIn = true;
+                    Logger::getInstance().log("Loaded token from local storage, userId: " + m_currentUserId);
+                    qDebug() << "=== AuthService: Loaded userId from token:" << m_currentUserId << "===";
+                } else {
+                    // Token 格式不正确，清除
+                    m_token.clear();
+                    Logger::getInstance().warning("Invalid token format, clearing token");
+                }
             } else {
-                // Token 格式不正确，清除
                 m_token.clear();
-                Logger::getInstance().warning("Invalid token format, clearing token");
+                Logger::getInstance().warning("Token validation failed, clearing token");
             }
-        } else {
-            m_token.clear();
-            Logger::getInstance().warning("Token validation failed, clearing token");
         }
     }
 }
@@ -301,6 +303,12 @@ QString AuthService::loadTokenFromLocal() const
         Logger::getInstance().log("Token loaded from local storage");
     }
     return token;
+}
+
+bool AuthService::isAutoLoginEnabled() const
+{
+    const Config& config = Config::getInstance();
+    return config.getString("auth/auto_login", "0") == "1";
 }
 
 void AuthService::saveCredentialsToLocal(const QString& account, const QString& password)

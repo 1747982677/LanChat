@@ -1,8 +1,17 @@
-#include "logger.h"
+﻿#include "logger.h"
 #include <QDebug>
+#include <QIODevice>
+#include <QMutex>
+#include <QMutexLocker>
+Logger& Logger::getInstance()
+{
+    static Logger instance;
+    return instance;
+}
 
 Logger::Logger()
     : logFile()
+    , m_level(Level::Info)  // 默认 Info：ERROR/WARN/INFO 都会输出
 {
 }
 
@@ -27,37 +36,63 @@ void Logger::init(const QString& filename)
     }
 }
 
+void Logger::setLevel(Level level)
+{
+    m_level = level;
+}
+
+Logger::Level Logger::level() const
+{
+    return m_level;
+}
+
+bool Logger::shouldLog(Level msgLevel) const
+{
+    // 数值越小越严重（Error=0），当前等级是“最低严重级别”
+    // msgLevel <= m_level 时记录
+    return static_cast<int>(msgLevel) <= static_cast<int>(m_level);
+}
+
 void Logger::write(const QString& levelName, const QString& message)
 {
-    QString timestamp = QDateTime::currentDateTime()
-        .toString("yyyy-MM-dd HH:mm:ss");
-    QString logLine = QString("[%1] %2: %3")
+    const QString timestamp = QDateTime::currentDateTime()
+        .toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+    const QString logLine = QStringLiteral("[%1] %2: %3")
         .arg(timestamp, levelName, message);
 
-    // VS �������
+    // 控制台 / Qt Creator 输出窗口
     qDebug().noquote() << logLine;
-
-    // �ļ�
+    // 保护文件写入，避免多线程竞态破坏内部缓冲
+    QMutexLocker locker(&m_mutex);
     if (logFile.isOpen()) {
         QTextStream out(&logFile);
-        out << logLine << "\n";
+        out << logLine << '\n';
         logFile.flush();
     }
 }
 
 void Logger::warning(const QString& message)
 {
-    write("WARNING", message);
+    if (!shouldLog(Level::Warn)) {
+        return;
+    }
+    write(QStringLiteral("WARNING"), message);
 }
 
 void Logger::log(const QString& message)
 {
-    write("INFO", message);
+    if (!shouldLog(Level::Info)) {
+        return;
+    }
+    write(QStringLiteral("INFO"), message);
 }
 
 void Logger::error(const QString& message)
 {
-    write("ERROR", message);
+    if (!shouldLog(Level::Error)) {
+        return;
+    }
+    write(QStringLiteral("ERROR"), message);
 }
 
 void Logger::close()
@@ -66,4 +101,3 @@ void Logger::close()
         logFile.close();
     }
 }
-

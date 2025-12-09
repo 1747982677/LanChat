@@ -60,15 +60,15 @@ void NetworkWorker::initializeChatService(const QString& UserId)
 
     // 连接 ChatService 的信号
     connect(m_chatService, &ChatService::messageSent,
-        this, &NetworkWorker::onChatServiceMessageSent);
+        this, &NetworkWorker::onChatServiceMessageSent, Qt::UniqueConnection);
     connect(m_chatService, &ChatService::messageReceived,
-        this, &NetworkWorker::onChatServiceMessageReceived);
+        this, &NetworkWorker::onChatServiceMessageReceived, Qt::UniqueConnection);
     connect(m_chatService, &ChatService::errorOccurred,
-        this, &NetworkWorker::onChatServiceError);
+        this, &NetworkWorker::onChatServiceError, Qt::UniqueConnection);
     connect(m_chatService, &ChatService::onlineUsersUpdated,
-        this, &NetworkWorker::onChatServiceOnlineUsersUpdated);
+        this, &NetworkWorker::onChatServiceOnlineUsersUpdated, Qt::UniqueConnection);
     connect(m_chatService, &ChatService::JsonMessageReceived,
-		this, &NetworkWorker::jsonMessageReceived);
+		this, &NetworkWorker::jsonMessageReceived, Qt::UniqueConnection);
 
 	m_chatService->autoInit(8080, 3000); // 使用自动发现，端口8080，超时3000ms
 	emit connected();
@@ -151,8 +151,6 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
     }
     catch (const std::exception& e) {
         QString errorDetail = QString("Exception: %1").arg(e.what());
-        Logger::getInstance().error(QString("[NetworkWorker] Failed to send message, messageId: %1, error: %2")
-            .arg(messageId).arg(errorDetail));
         qWarning() << "Failed to send message, messageId:" << messageId << ", error:" << e.what();
 
         if (!messageId.isEmpty()) {
@@ -162,8 +160,6 @@ void NetworkWorker::sendMessage(const LanChat::Message& message)
     catch (...) {
         // 捕获所有未知异常，避免程序崩溃
         QString errorDetail = "Unknown exception occurred";
-        Logger::getInstance().error(QString("[NetworkWorker] Failed to send message (unknown error), messageId: %1")
-            .arg(messageId));
         qWarning() << "Failed to send message (unknown error), messageId:" << messageId;
 
         if (!messageId.isEmpty()) {

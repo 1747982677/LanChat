@@ -1,4 +1,4 @@
-#ifndef DBLOGIC_CONTROLLER_H
+﻿#ifndef DBLOGIC_CONTROLLER_H
 #define DBLOGIC_CONTROLLER_H
 
 #include "core/base_controller.h"
@@ -9,7 +9,7 @@
 
 /**
  * @brief 数据库与业务逻辑控制器
- * 
+ *
  * 运行在主线程，负责：
  * 1. 管理 DbLogicWorker 的生命周期
  * 2. 提供数据库操作的外部接口
@@ -46,10 +46,10 @@ public slots:
      * @brief 保存消息
      */
     void saveMessage(const QJsonObject& message);
-    
+
     //  修复：返回 requestId，UI 可以用来验证
     QString loadHistoryMessages(const QString& contactId, int limit = 50, int offset = 0);
-    
+
     /**
      * @brief 搜索消息
      */
@@ -64,7 +64,14 @@ public slots:
      * @brief 删除消息
      */
     void deleteMessage(const QString& messageId);
-
+    /**
+     * @brief 设置页：清空所有聊天记录
+     */
+    void clearAllChatHistory();
+    /**
+     * @brief 请求统计 messages 表大小
+     */
+    void getMessagesTableSize();
     /**
      * @brief 加载联系人列表
      * @param userId 当前用户ID
@@ -105,7 +112,7 @@ public slots:
      * @param password 明文密码
      */
     void verifyUserPassword(const QString& email, const QString& password);
-    
+
     /**
      * @brief 发送好友请求
      * @param senderId 发送者用户ID
@@ -116,15 +123,15 @@ public slots:
      * @param verifymsg 验证消息（可选）
      */
     void sendFriendRequest(const QString& senderId, const QString& receiverId,
-                          const QString& senderAccount, const QString& senderNickname,
-                          const QString& avatarPath, const QString& verifymsg = QString());
-    
+        const QString& senderAccount, const QString& senderNickname,
+        const QString& avatarPath, const QString& verifymsg = QString());
+
     /**
      * @brief 查询收到的好友请求（状态为 Pending）
      * @param receiverId 接收者用户ID
      */
     void queryFriendRequests(const QString& receiverId);
-    
+
     /**
      * @brief 接受好友请求
      * @param requestId 请求ID
@@ -145,10 +152,12 @@ signals:
     // 发送给 Worker 的信号
     void requestInitializeDatabase(const QString& dbPath);
     void requestSaveMessage(const QJsonObject& message);
-    
+    // 请求统计 messages 表大小
+    void requestMessagesTableSize();
+
     //  修复：请求信号包含 requestId
     void requestLoadHistoryMessages(const QString& requestId, const QString& contactId, int limit, int offset);
-    
+
     void requestSearchMessages(const QString& keyword);
     void requestUpdateMessageStatus(const QString& messageId, const QString& status);
     void requestDeleteMessage(const QString& messageId);
@@ -160,18 +169,19 @@ signals:
     void requestRegisterUser(const QString& email, const QString& passwordHash);
     void requestVerifyUserPassword(const QString& email, const QString& password);
     void requestSendFriendRequest(const QString& senderId, const QString& receiverId,
-                                 const QString& senderAccount, const QString& senderNickname,
-                                 const QString& avatarPath, const QString& verifymsg);
+        const QString& senderAccount, const QString& senderNickname,
+        const QString& avatarPath, const QString& verifymsg);
     void requestQueryFriendRequests(const QString& receiverId);
     void requestAcceptFriendRequest(const QString& requestId, const QString& senderId, const QString& receiverId);
 
     // 从 Worker 接收的信号（转发）
     void databaseInitialized(bool success);
     void messageSaved(bool success, const QString& messageId);
-    
+    void messagesTableSizeCalculated(bool success, qint64 sizeBytes, const QString& errorMessage);
+
     //  修复：响应信号包含 requestId
     void historyMessagesLoaded(const QString& requestId, const QJsonArray& messages, const QString& contactId);
-    
+
     void searchResultsReady(const QJsonArray& results);
     void messageStatusUpdated(bool success, const QString& messageId);
     void contactListLoaded(const QJsonArray& contacts);
@@ -197,14 +207,18 @@ signals:
 
     void requesAddUser(const UserEntity& localUser);
     void addUserReady(const bool& glag);
+    // Controller -> Worker
+    void requestClearAllChatHistory();
 
+    // Worker -> Controller（再转发给 UI）
+    void allChatHistoryCleared(bool success, const QString& errorMessage);
 protected:
     QObject* createWorker() override;
 
 private:
     void connectSignals();
     static DbLogicController* s_instance;
-    
+
     // 数据库初始化状态
     bool m_dbInitialized;
     QString m_dbPath;  // 保存数据库路径，以便在需要时触发初始化
