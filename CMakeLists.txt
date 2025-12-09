@@ -118,12 +118,6 @@ set(SOURCES
     src/ui/main_window/SessionListItem.cpp
 
 
-
-
-
-  
-    
- 
     src/ui/personinfo/ProfileEditDialog.cpp
     src/ui/personinfo/ProfileViewDialog.cpp
     # UI 文件变量 (来自 feature/mty/db)
@@ -134,6 +128,7 @@ set(SOURCES
 if (QT_VERSION_MAJOR EQUAL 6)
     qt_add_executable(LanChat ${SOURCES}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/ui/main_window/default.qrc" 
     )
     target_link_libraries(LanChat PRIVATE
         Qt6::Core
@@ -145,6 +140,7 @@ if (QT_VERSION_MAJOR EQUAL 6)
 else()
     add_executable(LanChat ${SOURCES}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/assets/resources.qrc"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/ui/main_window/default.qrc"
     )
     target_link_libraries(LanChat
         Qt5::Core

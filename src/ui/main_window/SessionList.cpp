@@ -74,7 +74,7 @@ SessionList::SessionList(QWidget* parent) : QListWidget(parent)
     connect(this, &QListWidget::customContextMenuRequested, this, &SessionList::onContextMenuRequested);
 
     QString resourcePath = "";
-    QString localPath = "";
+    QString localPath = "mock_data.json";
 
     QList<SessionInfo> list;
 

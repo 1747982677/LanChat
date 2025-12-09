@@ -5,7 +5,7 @@ QPixmap PixmapUtils::clipToCircle(const QString& srcPath, int radius)
     QPixmap src(srcPath);
     // 处理默认头像逻辑
     if (src.isNull()) {
-        src.load(":/img/member1.jpg");
+        src.load(":/default/avatar/test1.jpg");
     }
     return clipToCircle(src, radius);
 }
