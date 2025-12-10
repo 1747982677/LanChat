@@ -100,6 +100,15 @@ void MainWindow::queryUserReady(const UserEntity& localUser)
     m_currentUser = localUser;
     Logger::getInstance().log("[MainWindow] 加载当前用户信息成功！");
     
+<<<<<<< Updated upstream
+=======
+    QString img_path = m_currentUser.avatarPath.isEmpty() ? ":/lanchat/bubu.jpg" : "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src" + m_currentUser.avatarPath;
+    QPixmap pixmap(img_path);
+    if (!pixmap.isNull()) {
+        m_avatarLabel->setPixmap(pixmap);
+    }
+
+>>>>>>> Stashed changes
     // 设置用户状态为在线（登录成功后）
     updateUserStatus(true);
     
@@ -268,9 +277,16 @@ void MainWindow::showProfileViewDialog()
     m_userProfile.phone = m_currentUser.phone;
     m_userProfile.signure = m_currentUser.signature;
 	m_userProfile.password = m_currentUser.passwordHash;  // 注意：UserProfile.password 存储的是密码哈希
+<<<<<<< Updated upstream
     m_userProfile.rootpath = "C:/mty/QtProject/LanChat/src";//请换成你的绝对路径
 	m_userProfile.avatarpath = m_userProfile.rootpath +m_currentUser.avatarPath;
     QPixmap pixmap(m_userProfile.avatarpath);
+=======
+    m_userProfile.rootpath = "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src";//请换成你的绝对路径
+    m_userProfile.avatarpath = m_currentUser.avatarPath;
+    QPixmap pixmap(m_userProfile.rootpath + m_userProfile.avatarpath);
+
+>>>>>>> Stashed changes
     m_userProfile.avatar = pixmap;
     // 创建并显示个人信息查看对话框
     ProfileViewDialog* viewDialog = new ProfileViewDialog(m_userProfile, this);

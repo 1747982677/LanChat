@@ -107,6 +107,10 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
     }
 
     qDebug() << "Initializing public database:" << publicDbPath;
+<<<<<<< Updated upstream
+=======
+    publicDbPath = "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src\\model\\public.db";
+>>>>>>> Stashed changes
     bool success2 = DatabaseManager::getInstance().initConnection("public", publicDbPath);
 
     if (!success2) {
