@@ -107,7 +107,9 @@ void DbLogicWorker::initializeDatabase(const QString& dbPath)
     }
 
     qDebug() << "Initializing public database:" << publicDbPath;
-    publicDbPath = "C:\\mty\\QtProject\\public.db";
+
+    publicDbPath = "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src\\model\\public.db";
+
     bool success2 = DatabaseManager::getInstance().initConnection("public", publicDbPath);
 
     if (!success2) {

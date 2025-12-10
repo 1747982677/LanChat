@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     AppContext& context = AppContext::instance();
     // 设置数据库路径
 	//需要根据实际路径修改
-    context.setDatabasePath("C:\\mty\\QtProject\\LanChat\\src\\model\\lanchat.db");
+    context.setDatabasePath("C:\\Users\\King\\Desktop\\Projects\\LanChat\\src\\model\\lanchat.db");
     /*context.setDatabasePath("src\\model\\lanchat.db");*/
 
     // 初始化所有模块
