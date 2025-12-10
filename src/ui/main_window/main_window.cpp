@@ -8,6 +8,7 @@
 // src/ui/main_window/main_window.cpp
 #include "main_window.h"
 #include "ChatWindow.h"
+#include "SessionInfo.h"
 #include "ContactList.h"
 #include "MessageList.h"
 #include "ui/setting/settingdialog.h"
@@ -19,6 +20,9 @@
 #include "friend_request_item.h"
 #include "service/auth_service.h"
 #include "utils/logger.h"
+#include "core/network_controller.h"
+#include "core/app_context.h"
+#include "common/types.h"
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -32,9 +36,10 @@
 #include <QFrame>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QDebug>
 #include "core/app_context.h"
 #include "core/dblogic_controller.h"
-
+#include "utils/password_util.h"
 MainWindow* MainWindow::m_instance = nullptr;
 
 MainWindow* MainWindow::instance()
@@ -100,15 +105,12 @@ void MainWindow::queryUserReady(const UserEntity& localUser)
     m_currentUser = localUser;
     Logger::getInstance().log("[MainWindow] 加载当前用户信息成功！");
     
-<<<<<<< Updated upstream
-=======
     QString img_path = m_currentUser.avatarPath.isEmpty() ? ":/lanchat/bubu.jpg" : "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src" + m_currentUser.avatarPath;
     QPixmap pixmap(img_path);
     if (!pixmap.isNull()) {
         m_avatarLabel->setPixmap(pixmap);
     }
 
->>>>>>> Stashed changes
     // 设置用户状态为在线（登录成功后）
     updateUserStatus(true);
     
@@ -277,16 +279,9 @@ void MainWindow::showProfileViewDialog()
     m_userProfile.phone = m_currentUser.phone;
     m_userProfile.signure = m_currentUser.signature;
 	m_userProfile.password = m_currentUser.passwordHash;  // 注意：UserProfile.password 存储的是密码哈希
-<<<<<<< Updated upstream
-    m_userProfile.rootpath = "C:/mty/QtProject/LanChat/src";//请换成你的绝对路径
-	m_userProfile.avatarpath = m_userProfile.rootpath +m_currentUser.avatarPath;
-    QPixmap pixmap(m_userProfile.avatarpath);
-=======
     m_userProfile.rootpath = "C:\\Users\\King\\Desktop\\Projects\\LanChat\\src";//请换成你的绝对路径
     m_userProfile.avatarpath = m_currentUser.avatarPath;
     QPixmap pixmap(m_userProfile.rootpath + m_userProfile.avatarpath);
-
->>>>>>> Stashed changes
     m_userProfile.avatar = pixmap;
     // 创建并显示个人信息查看对话框
     ProfileViewDialog* viewDialog = new ProfileViewDialog(m_userProfile, this);
@@ -310,7 +305,8 @@ void MainWindow::showProfileViewDialog()
 			m_currentUser.nickname = m_userProfile.nickname;
 			m_currentUser.email = m_userProfile.email;
             m_currentUser.phone = m_userProfile.phone;
-            
+			m_currentUser.signature = m_userProfile.signure;
+            m_currentUser.passwordHash = m_userProfile.password; // 注意：这里存储的是密码哈希
             /*UserEntity user(userid, "", "", "");*/
             DbLogicController* dbCtrl = AppContext::instance().dbLogicController();
             dbCtrl->requesUpdateUser(m_currentUser);
@@ -411,10 +407,14 @@ void MainWindow::setupPages()
     //===================== 创建页面 =====================
     m_pages = new QStackedWidget(this);
 
-    //聊天框
-    Logger::getInstance().log("[MainWindow] Creating ChatWindow...");
+    //聊天框（使用 ui/chatpage/chatwindow.h 实现的完整聊天窗口）
+    Logger::getInstance().log("[MainWindow] Creating ChatWindow (ui/chatpage version)...");
     m_chatPage = new ChatWindow(this);
-    Logger::getInstance().log(QString("[MainWindow] ChatWindow created at: %1").arg((quintptr)m_chatPage, 0, 16));
+    Logger::getInstance().log(QString("[MainWindow] ChatWindow (chatpage) created at: %1").arg((quintptr)m_chatPage, 0, 16));
+    
+    // 连接发送消息信号
+    connect(m_chatPage, &ChatWindow::sigSendMessage,
+            this, &MainWindow::onSendMessage);
     
     // 联系人资料
     m_friendInfoPage = new QWidget(this);
@@ -467,6 +467,68 @@ void MainWindow::openSettingsDialog()
     // 以当前 MainWindow 作为父窗口
     SettingDialog dlg(this);
     dlg.exec();   // 模态对话框（阻塞当前，直到关闭）
+}
+
+void MainWindow::openChatPage(const QString& userId, const QString& displayName)
+{
+    // 切换右侧到聊天页
+    setRightPages(ChatPage);
+
+    // 将右侧页面转换为 ChatWindow，并切换当前聊天对象
+    ChatWindow* chatWin = qobject_cast<ChatWindow*>(m_chatPage);
+    if (chatWin) {
+        SessionInfo info(userId, displayName);
+        // 将会话写入会话列表，确保 uid 使用真实的对方 userId
+        if (m_sessionList) {
+            info.setAvatarPath(""); // 头像可按需补充
+            m_sessionList->upsertSession(info);
+        }
+        chatWin->setSessionInfo(info);
+    }
+}
+
+void MainWindow::onSendMessage(const QString& targetUid, const UiMessage& msg)
+{
+    qDebug() << "[MainWindow] onSendMessage called - target:" << targetUid << "content:" << msg.content;
+    Logger::getInstance().log(QString("[MainWindow] onSendMessage called - target: %1, content: %2")
+                             .arg(targetUid).arg(msg.content));
+    
+    // 构造 LanChat::Message 对象
+    LanChat::Message lanChatMsg;
+    lanChatMsg.messageId = msg.mid.isEmpty() ? QUuid::createUuid().toString(QUuid::WithoutBraces) : msg.mid;
+    // 使用当前登录用户ID
+    AuthService& authService = AuthService::getInstance();
+    QString currentUserId = authService.getCurrentUserId();
+    lanChatMsg.senderId = currentUserId;
+    lanChatMsg.receiverId = targetUid;
+    lanChatMsg.content = msg.content;
+    lanChatMsg.timestamp = msg.timestamp.toMSecsSinceEpoch();  // 用毫秒时间戳
+    lanChatMsg.type = LanChat::MessageType::Text;
+    lanChatMsg.status = LanChat::MessageStatus::Pending;
+    
+    // 先写入本地数据库，保持历史可见
+    {
+        Message daoMsg;
+        daoMsg.sender = lanChatMsg.senderId;
+        daoMsg.receiver = lanChatMsg.receiverId;
+        daoMsg.content = lanChatMsg.content;
+        daoMsg.timestamp = QDateTime::fromMSecsSinceEpoch(lanChatMsg.timestamp);
+        daoMsg.status = static_cast<int>(lanChatMsg.status);
+        MessageDao::insertMessage(daoMsg);
+    }
+
+    qDebug() << "[MainWindow] Calling NetworkController::sendMessage";
+    // 通过 NetworkController 发送消息
+    NetworkController* netCtrl = AppContext::instance().networkController();
+    if (netCtrl) {
+        netCtrl->sendMessage(lanChatMsg);
+        Logger::getInstance().log("[MainWindow] Message sent to NetworkController");
+        qDebug() << "[MainWindow] Message sent to NetworkController";
+    } else {
+        Logger::getInstance().error("[MainWindow] NetworkController is null!");
+        qDebug() << "[MainWindow] NetworkController is null!";
+    }
+    qDebug() << "[MainWindow] onSendMessage finished";
 }
 
 void MainWindow::setupUi()

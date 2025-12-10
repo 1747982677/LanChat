@@ -2,7 +2,7 @@
 
 SessionInfo::SessionInfo(const QString& uid, const QString& username) : m_uid(uid), m_username(username) {}
 
-void SessionInfo::addNewMessage(const Message& msg) {
+void SessionInfo::addNewMessage(const UiMessage& msg) {
     m_messages.append(msg);
 
     m_lastMessage = msg.content;

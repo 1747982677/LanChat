@@ -15,6 +15,8 @@ public:
     explicit SessionList(QWidget* parent = nullptr);
     void loadSessions(const QList<SessionInfo>& list);
     void addSession(const SessionInfo& info);
+    // 确保列表里存在该会话（按 uid 去重，若已存在则更新显示名称/头像等）
+    void upsertSession(const SessionInfo& info);
     void sortSessions();
 
 

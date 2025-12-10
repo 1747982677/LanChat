@@ -14,6 +14,7 @@ public:
         , email("")
         , phone("")
         , password("")
+		, signure("")
     {
         // 创建默认头像
         avatar = QPixmap(100, 100);

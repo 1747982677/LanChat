@@ -1,0 +1,881 @@
+﻿[
+  {
+    "uid": "1001",
+    "username": "产品经理",
+    "avatar": "",
+    "unread": 5,
+    "messages": [
+      {
+        "senderId": "1001",
+        "content": "这个需求很简单",
+        "time": "2023-10-27 09:30:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "1001",
+        "content": "明天上线",
+        "time": "2023-10-27 09:30:05",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1002",
+    "username": "技术群 (测试99+)",
+    "avatar": "../../data/avatar/test1.jpg",
+    "unread": 108,
+    "messages": [
+      {
+        "senderId": "888",
+        "content": "今晚聚餐吗？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？？",
+        "time": "2023-11-01 18:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "好啊，去哪里吃？",
+        "time": "2023-11-01 18:01:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "火锅怎么样？",
+        "time": "2023-11-01 18:02:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "我都可以，你们决定",
+        "time": "2023-11-01 18:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "几点集合？",
+        "time": "2023-11-01 18:05:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "7点老地方见",
+        "time": "2023-11-01 18:06:20",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我可能要晚点到",
+        "time": "2023-11-01 18:07:35",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "好的，等你",
+        "time": "2023-11-01 18:08:50",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "记得带钱包哈哈",
+        "time": "2023-11-01 18:10:05",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "今天谁请客？",
+        "time": "2023-11-01 18:11:20",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "AA制吧",
+        "time": "2023-11-01 18:12:35",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "同意",
+        "time": "2023-11-01 18:13:50",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "没问题",
+        "time": "2023-11-01 18:15:05",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "那家店要预定吗？",
+        "time": "2023-11-01 18:16:20",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "我已经预定好了",
+        "time": "2023-11-01 18:17:35",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "靠谱！",
+        "time": "2023-11-01 18:18:50",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "需要我带什么吗？",
+        "time": "2023-11-01 18:20:05",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "带好胃口就行",
+        "time": "2023-11-01 18:21:20",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "哈哈哈",
+        "time": "2023-11-01 18:22:35",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "我出发了",
+        "time": "2023-11-01 18:50:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "我也准备出发",
+        "time": "2023-11-01 18:51:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "路上小心",
+        "time": "2023-11-01 18:52:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我可能要晚20分钟",
+        "time": "2023-11-01 18:53:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "没关系，我们先点菜",
+        "time": "2023-11-01 18:55:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "456",
+        "content": "我到了，在哪个位置？",
+        "time": "2023-11-01 19:05:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "靠窗的8号桌",
+        "time": "2023-11-01 19:06:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "我也到了",
+        "time": "2023-11-01 19:07:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "看到你们了",
+        "time": "2023-11-01 19:08:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我快到了，5分钟",
+        "time": "2023-11-01 19:20:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "好的，菜已经点了",
+        "time": "2023-11-01 19:21:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "今天人真多",
+        "time": "2023-11-01 19:22:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "是啊，还好预定了",
+        "time": "2023-11-01 19:23:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我到了，在门口",
+        "time": "2023-11-01 19:25:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "挥手示意中",
+        "time": "2023-11-01 19:26:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "看到你了",
+        "time": "2023-11-01 19:27:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "来了来了",
+        "time": "2023-11-01 19:28:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "先喝点茶",
+        "time": "2023-11-01 19:30:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "菜来了",
+        "time": "2023-11-01 19:31:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "看起来不错",
+        "time": "2023-11-01 19:32:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "饿死了，开动吧",
+        "time": "2023-11-01 19:33:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "干杯！",
+        "time": "2023-11-01 19:35:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "庆祝周五！",
+        "time": "2023-11-01 19:36:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "周末愉快！",
+        "time": "2023-11-01 19:37:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "这牛肉真嫩",
+        "time": "2023-11-01 19:38:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "再来点蔬菜",
+        "time": "2023-11-01 19:40:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "要加汤吗？",
+        "time": "2023-11-01 19:41:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "加点吧",
+        "time": "2023-11-01 19:42:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我吃饱了",
+        "time": "2023-11-01 20:15:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "我也差不多了",
+        "time": "2023-11-01 20:16:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "结账吧",
+        "time": "2023-11-01 20:17:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "多少钱？",
+        "time": "2023-11-01 20:18:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "一共480，每人120",
+        "time": "2023-11-01 20:20:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "456",
+        "content": "转给你了",
+        "time": "2023-11-01 20:21:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "888",
+        "content": "我也转了",
+        "time": "2023-11-01 20:22:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "收到，转了",
+        "time": "2023-11-01 20:23:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "都收到了，谢谢",
+        "time": "2023-11-01 20:25:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "下次什么时候聚？",
+        "time": "2023-11-01 20:26:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "下周五？",
+        "time": "2023-11-01 20:27:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "可以啊",
+        "time": "2023-11-01 20:28:45",
+        "isSelf": true
+      },
+      {
+        "senderId": "789",
+        "content": "我可能要加班",
+        "time": "2023-11-01 20:30:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "888",
+        "content": "那再约",
+        "time": "2023-11-01 20:31:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "好的，先走了",
+        "time": "2023-11-01 20:32:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "拜拜",
+        "time": "2023-11-01 20:33:45",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "路上小心",
+        "time": "2023-11-01 20:35:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "明天见",
+        "time": "2023-11-01 20:36:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "到家说一声",
+        "time": "2023-11-01 20:37:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "456",
+        "content": "我到家了",
+        "time": "2023-11-01 21:15:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "888",
+        "content": "我也到了",
+        "time": "2023-11-01 21:16:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "刚到家",
+        "time": "2023-11-01 21:17:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "好的，大家都安全到家就好",
+        "time": "2023-11-01 21:18:45",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "今天很开心",
+        "time": "2023-11-01 21:20:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "是啊，下次再聚",
+        "time": "2023-11-01 21:21:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "晚安",
+        "time": "2023-11-01 22:30:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "晚安",
+        "time": "2023-11-01 22:31:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "明天有什么安排？",
+        "time": "2023-11-02 09:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "在家休息",
+        "time": "2023-11-02 09:01:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "我要去逛街",
+        "time": "2023-11-02 09:02:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "加班中...",
+        "time": "2023-11-02 09:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "辛苦辛苦",
+        "time": "2023-11-02 09:05:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "晚上约饭吗？",
+        "time": "2023-11-02 12:00:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "今晚不行，有约了",
+        "time": "2023-11-02 12:01:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "我也不行，要陪家人",
+        "time": "2023-11-02 12:02:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我还在加班",
+        "time": "2023-11-02 12:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "那算了，下次吧",
+        "time": "2023-11-02 12:05:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "周一见",
+        "time": "2023-11-02 18:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "好的",
+        "time": "2023-11-02 18:01:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "周末愉快",
+        "time": "2023-11-02 18:02:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "789",
+        "content": "终于下班了",
+        "time": "2023-11-02 20:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "辛苦了",
+        "time": "2023-11-02 20:01:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "好好休息",
+        "time": "2023-11-02 20:02:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "谢谢大家",
+        "time": "2023-11-02 20:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "下周再聚",
+        "time": "2023-11-02 20:05:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "一定",
+        "time": "2023-11-02 20:06:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "推荐个电影吧",
+        "time": "2023-11-02 21:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "最近有什么好看的？",
+        "time": "2023-11-02 21:01:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "《流浪地球》不错",
+        "time": "2023-11-02 21:02:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "789",
+        "content": "看过了，确实好看",
+        "time": "2023-11-02 21:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "888",
+        "content": "那我今晚看看",
+        "time": "2023-11-02 21:05:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "我也想看",
+        "time": "2023-11-02 21:06:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "记得准备零食",
+        "time": "2023-11-02 21:07:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "必须的",
+        "time": "2023-11-02 21:08:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我去洗澡了",
+        "time": "2023-11-02 21:10:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "晚安各位",
+        "time": "2023-11-02 22:30:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "晚安",
+        "time": "2023-11-02 22:31:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "好梦",
+        "time": "2023-11-02 22:32:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "明天还要早起",
+        "time": "2023-11-02 22:33:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "加油",
+        "time": "2023-11-02 22:35:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "456",
+        "content": "新的一周开始了",
+        "time": "2023-11-06 08:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "888",
+        "content": "周一综合症",
+        "time": "2023-11-06 08:01:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "大家早上好",
+        "time": "2023-11-06 08:02:30",
+        "isSelf": true
+      },
+      {
+        "senderId": "789",
+        "content": "早，开工了",
+        "time": "2023-11-06 08:03:45",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "今天天气不错",
+        "time": "2023-11-06 08:05:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "是啊，阳光明媚",
+        "time": "2023-11-06 08:06:15",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "中午一起吃饭？",
+        "time": "2023-11-06 11:30:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "456",
+        "content": "好啊",
+        "time": "2023-11-06 11:31:15",
+        "isSelf": false
+      },
+      {
+        "senderId": "789",
+        "content": "我带饭了",
+        "time": "2023-11-06 11:32:30",
+        "isSelf": false
+      },
+      {
+        "senderId": "123",
+        "content": "那我和888去吃",
+        "time": "2023-11-06 11:33:45",
+        "isSelf": true
+      },
+      {
+        "senderId": "888",
+        "content": "12点食堂见",
+        "time": "2023-11-06 11:35:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1003",
+    "username": "女神 (自动计算)",
+    "avatar": "../../data/avatar/test1.jpg",
+    "messages": [
+      {
+        "senderId": "me",
+        "content": "在吗？",
+        "time": "2023-11-02 20:00:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "1003",
+        "content": "去洗澡了",
+        "time": "2023-11-02 20:05:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1004",
+    "username": "UI测试-长文本狂魔",
+    "avatar": "../../data/avatar/test1.jpg",
+    "unread": 1,
+    "messages": [
+      {
+        "senderId": "1004",
+        "content": "这是一条用来测试气泡宽度的超长消息。如果你的聊天气泡没有做最大宽度限制，这条消息可能会直接穿透屏幕。Lorem ipsum dolor sit amet, consectetur adipiscing elit. 测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试。",
+        "time": "2023-11-03 08:00:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1005",
+    "username": "相亲一家人 (35)",
+    "avatar": "../../data/avatar/test1.jpg",
+    "unread": 999,
+    "messages": [
+      {
+        "senderId": "501",
+        "content": "大舅: @所有人 过年回家吗？",
+        "time": "2023-11-03 09:15:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "502",
+        "content": "二姑: 给你们寄了特产，记得查收。",
+        "time": "2023-11-03 09:16:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "me",
+        "content": "收到，谢谢二姑！[爱心]",
+        "time": "2023-11-03 09:20:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "503",
+        "content": "表弟: 谁有多余的显卡？",
+        "time": "2023-11-03 10:00:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1006",
+    "username": "快递外卖 (勿扰)",
+    "avatar": "../../data/avatar/test1.jpg",
+    "messages": [
+      {
+        "senderId": "1006",
+        "content": "您的外卖已放置在门口鞋柜上，祝您用餐愉快！📷 [图片]",
+        "time": "2023-11-03 12:30:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1007",
+    "username": "特殊字符测试 ꧁༺༻꧂",
+    "avatar": "../../data/avatar/test1.jpg",
+    "unread": 2,
+    "messages": [
+      {
+        "senderId": "1007",
+        "content": "Testing symbols: & < > \" ' / \\ | \n Line Break check. Emoji: 🚀🔥🎉💻🐛",
+        "time": "2023-11-03 14:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "me",
+        "content": "Looks good.",
+        "time": "2023-11-03 14:05:00",
+        "isSelf": true
+      }
+    ]
+  },
+  {
+    "uid": "1008",
+    "username": "老板",
+    "avatar": "../../data/avatar/test1.jpg",
+    "unread": 0,
+    "messages": [
+      {
+        "senderId": "1008",
+        "content": "来我不也就是一下。",
+        "time": "2023-11-01 09:00:00",
+        "isSelf": false
+      },
+      {
+        "senderId": "me",
+        "content": "好的，马上到。",
+        "time": "2023-11-01 09:01:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "1008",
+        "content": "刚才那个Bug修复了吗？",
+        "time": "2023-11-03 16:55:00",
+        "isSelf": false
+      }
+    ]
+  },
+  {
+    "uid": "1009",
+    "username": "文件传输助手",
+    "avatar": "../../data/avatar/test1.jpg",
+    "messages": [
+      {
+        "senderId": "me",
+        "content": "2023年度总结.pdf",
+        "time": "2023-11-03 17:00:00",
+        "isSelf": true
+      },
+      {
+        "senderId": "me",
+        "content": "http://www.google.com",
+        "time": "2023-11-03 17:01:00",
+        "isSelf": true
+      }
+    ]
+  }
+]

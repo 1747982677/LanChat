@@ -73,8 +73,9 @@ SessionList::SessionList(QWidget* parent) : QListWidget(parent)
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QListWidget::customContextMenuRequested, this, &SessionList::onContextMenuRequested);
 
+
     QString resourcePath = "";
-    QString localPath = "";
+    QString localPath = "mock_data.json";
 
     QList<SessionInfo> list;
 
@@ -124,6 +125,20 @@ void SessionList::addSession(const SessionInfo& info)
     widget->setData(info);
 
     this->setItemWidget(item, widget);
+}
+
+void SessionList::upsertSession(const SessionInfo& info)
+{
+    // 查找是否已有同 uid 的会话，若有则更新数据后返回
+    for (int i = 0; i < this->count(); ++i) {
+        QWidget* w = this->itemWidget(this->item(i));
+        SessionListItem* sItem = qobject_cast<SessionListItem*>(w);
+        if (sItem && sItem->getData().uid() == info.uid()) {
+            sItem->setData(info);
+            return;
+        }
+    }
+    addSession(info);
 }
 
 void SessionList::onItemClicked(QListWidgetItem* item)

@@ -81,6 +81,11 @@ int main(int argc, char* argv[])
         QString userId = authService.getCurrentUserId();
         if (!userId.isEmpty()) {
             mainWindow->userid = userId;
+            // 使用当前登录用户 ID 初始化网络层（NetworkWorker / ChatService）
+            NetworkController* netCtrl = context.networkController();
+            if (netCtrl) {
+                netCtrl->initializeWithUserId(userId);
+            }
             mainWindow->requestQueryUser();
             mainWindow->show();
             Logger::getInstance().log("User already logged in, userId: " + userId);
@@ -131,6 +136,12 @@ int main(int argc, char* argv[])
                             
                             MainWindow* mainWindow = MainWindow::instance();
                             mainWindow->userid = userId;
+                            // 使用当前登录用户 ID 初始化网络层（NetworkWorker / ChatService）
+                            AppContext& context = AppContext::instance();
+                            NetworkController* netCtrl = context.networkController();
+                            if (netCtrl) {
+                                netCtrl->initializeWithUserId(userId);
+                            }
                             Logger::getInstance().log("Login succeeded, loading user data for userId: " + userId);
                             
                             // 读取用户数据

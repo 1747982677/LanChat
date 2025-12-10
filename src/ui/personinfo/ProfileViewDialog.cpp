@@ -211,7 +211,7 @@ void ProfileViewDialog::setupUI()
 
     // 性别
     infoLayout->addLayout(createInfoRow("签名",
-        m_profile.nickname.isEmpty() ? "未设置" : m_profile.signure));
+        m_profile.signure.isEmpty() ? "未设置" : m_profile.signure));
 
     // 渐变分割线3
     infoLayout->addWidget(createGradientLine(infoFrame));

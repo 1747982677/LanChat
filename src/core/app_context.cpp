@@ -1,6 +1,7 @@
 #include "app_context.h"
 #include <QDebug>
 #include <QDateTime>
+#include "service/auth_service.h"
 
 AppContext* AppContext::s_instance = nullptr;
 
@@ -34,7 +35,7 @@ AppContext& AppContext::instance()
     }
     return *s_instance;
 }
-
+//åˆå§‹åŒ–
 bool AppContext::initialize()
 {
     if (m_initialized) {
@@ -59,6 +60,16 @@ bool AppContext::initialize()
     }
 
     connectControllers();
+
+    // ç¡®ä¿ç™»å½•åç½‘ç»œå±‚ä½¿ç”¨æœ€æ–°çš„ userIdï¼ˆæ”¯æŒé‡æ–°ç™»å½•/åˆ‡æ¢è´¦å·ï¼‰
+    AuthService& auth = AuthService::getInstance();
+    connect(&auth, &AuthService::loginSucceeded,
+            this, [this](const QString& userId, const QString& /*token*/) {
+                if (m_networkController) {
+                    qDebug() << "[AppContext] Re-initializing NetworkController with userId" << userId;
+                    m_networkController->initializeWithUserId(userId);
+                }
+            });
 
     m_initialized = true;
     qDebug() << "AppContext initialized successfully";
@@ -125,7 +136,7 @@ QString AppContext::databasePath() const
 void AppContext::connectControllers()
 {
     if (m_networkController && m_dbLogicController) {
-        //  1£ºÊÕµ½ÍøÂçÏûÏ¢ºó±£´æµ½Êı¾İ¿â
+        //  1ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ó±£´æµ½ï¿½ï¿½ï¿½İ¿ï¿½
         connect(m_networkController, &NetworkController::messageReceived,
                 this, [this](const QJsonObject& message, const QString& from) {
                     qDebug() << "AppContext: Network message received, saving to DB";
@@ -133,29 +144,29 @@ void AppContext::connectControllers()
                     QJsonObject fullMessage = message;
                     fullMessage["from"] = from;
                     fullMessage["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-                    fullMessage["status"] = "received";  // ÊÕµ½µÄÏûÏ¢×´Ì¬Îª received
+                    fullMessage["status"] = "received";  // ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢×´Ì¬Îª received
                     
                     m_dbLogicController->saveMessage(fullMessage);
                 });
 
-        //  2£ºÏûÏ¢·¢ËÍ³É¹¦ -> ¸üĞÂÊı¾İ¿â×´Ì¬
+        //  2ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Í³É¹ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½×´Ì¬
         connect(m_networkController, &NetworkController::messageSendSuccess,
                 this, [this](const QString& messageId) {
                     qDebug() << "AppContext: Message send success, updating status:" << messageId;
                     m_dbLogicController->updateMessageStatus(messageId, "sent");
                 });
 
-        //  3£ºÏûÏ¢·¢ËÍÊ§°Ü -> ¸üĞÂÊı¾İ¿â×´Ì¬ÎªÊ§°Ü
+        //  3ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½×´Ì¬ÎªÊ§ï¿½ï¿½
         connect(m_networkController, &NetworkController::messageSendFailed,
                 this, [this](const QString& messageId, const QString& reason) {
                     qWarning() << "AppContext: Message send failed:" << messageId << reason;
                     m_dbLogicController->updateMessageStatus(messageId, "failed");
                     
-                    // ¿ÉÒÔÍ¨Öª UI ÏÔÊ¾ÖØÊÔ°´Å¥
+                    // ï¿½ï¿½ï¿½ï¿½Í¨Öª UI ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ô°ï¿½Å¥
                     emit applicationError(QString("Message send failed: %1").arg(reason));
                 });
 
-        // ´íÎóĞÅºÅ×ª·¢
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½×ªï¿½ï¿½
         connect(m_networkController, &NetworkController::errorOccurred,
                 this, &AppContext::applicationError);
         connect(m_dbLogicController, &DbLogicController::errorOccurred,
