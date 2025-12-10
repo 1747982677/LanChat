@@ -24,7 +24,6 @@ ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget
     m_avatarLabel = new QLabel(this);
     m_avatarLabel->setFixedSize(40, 40);
     m_avatarLabel->setScaledContents(true);
-<<<<<<< Updated upstream
     
     // 加载头像，如果失败则使用默认头像
     QPixmap pix(avatarPath);
@@ -37,19 +36,7 @@ ContactItem::ContactItem(const QString& name, const QString& avatarPath, QWidget
             m_avatarLabel->setPixmap(defaultPixmap);
         }
     }
-=======
-     // 加载头像，如果失败则使用默认头像
-     QPixmap pix(avatarPath);
-     if (!pix.isNull()) {
-         m_avatarLabel->setPixmap(pix);
-     } else {
-         // 如果加载失败（可能是路径无效），使用默认头像
-         QPixmap defaultPixmap(":/lanchat/bubu.jpg");
-         if (!defaultPixmap.isNull()) {
-             m_avatarLabel->setPixmap(defaultPixmap);
-         }
-     }
->>>>>>> Stashed changes
+
     layout->addWidget(m_avatarLabel);
 
     m_nameLabel = new QLabel(name, this);
