@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/lanchat">
-        <!-- Icons and image resources will be added here -->
+        <file>bubu.jpg</file>
+		<file>warning_red.png</file>
     </qresource>
 </RCC>

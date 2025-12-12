@@ -48,6 +48,12 @@ void Config::setBool(const QString& key, bool value) {
     }
 }
 
+void Config::remove(const QString& key) {
+    if (settings) {
+        settings->remove(key);
+    }
+}
+
 void Config::save() {
     if (settings) {
         settings->sync();

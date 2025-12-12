@@ -21,7 +21,7 @@ namespace LanChat {
 	enum class MessageStatus {
 		Pending = 0, //发送中(转圈loading)
 		Sent = 1,    //已发送
-		Read = 2     //已读(绿色对勾)
+		Read = 2,    //已读(绿色对勾)
 		Failed = 3   //发送失败(红色感叹号)
 	};
 	//用户状态
@@ -93,7 +93,7 @@ namespace LanChat {
 		//序列化：将聊天信息转JSON发送给网络层
 		QJsonObject toJson() const {
 			QJsonObject json;
-			json["msgId"] = msgId;
+			json["messageId"] = messageId;
 			json["senderId"] = senderId;
 			json["receiverId"] = receiverId;
 			json["content"] = content;
@@ -104,7 +104,7 @@ namespace LanChat {
 		//反序列化：从网络层解析JSON成聊天信息
 		static Message fromJson(const QJsonObject& json) {
 			Message msg;
-			msg.msgId = json["msgId"].toString();
+			msg.messageId = json["messageId"].toString();
 			msg.senderId = json["senderId"].toString();
 			msg.receiverId = json["receiverId"].toString();
 			msg.content = json["content"].toString();
@@ -161,7 +161,6 @@ namespace LanChat {
 Q_DECLARE_METATYPE(LanChat::UserInfo)
 Q_DECLARE_METATYPE(LanChat::Message)
 Q_DECLARE_METATYPE(LanChat::ChatSession)
-Q_DECLARE_METATYPE(LanChat::FriendRequest)
 Q_DECLARE_METATYPE(LanChat::FriendRequest)
 
 
